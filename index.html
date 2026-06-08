@@ -525,10 +525,16 @@ function interpret(cmd) {
     tts('API 키가 없어요. 오른쪽 위 열쇠 버튼을 눌러 키를 입력해 주세요.');
     return Promise.resolve();
   }
-  var sys = '당신은 노인 건강 앱 스마트 메타케어의 음성 비서입니다.\n'
-    + '사용자 명령을 분석하여 JSON만 응답하세요.\n'
-    + '{"action":"페이지이동|AI코치|날짜추가|없음","page":"home|upload|excel|rec|chat","say":"사용자에게 할 말","query":"AI코치 질문"}\n'
-    + '매핑: 홈=home, 기록/사진=upload, 기록장=excel, 추천/식단=rec, 코치/질문=chat';
+  var sys = '당신은 음성 명령 분류기입니다. 반드시 JSON만 출력하세요. 설명 금지.\n\n'
+    + '출력 형식: {"action":"페이지이동|AI코치|날짜추가|없음","page":"home|upload|excel|rec|chat","say":"짧은 안내말","query":"질문내용"}\n\n'
+    + '규칙:\n'
+    + '- 기록장/달력/일지 → 페이지이동, excel\n'
+    + '- 뭐먹을까/식단/추천/음식 → AI코치, chat, query에 질문 포함\n'
+    + '- 사진/카메라/촬영 → 페이지이동, upload\n'
+    + '- 홈/처음 → 페이지이동, home\n'
+    + '- 코치/질문/AI → AI코치, chat\n'
+    + '- 날짜추가 → 날짜추가\n'
+    + '- 나머지 → AI코치, chat으로 처리';
 
   return fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
