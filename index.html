@@ -1311,6 +1311,7 @@ function goPage(p){
   activatePage('pg-'+p,'nb-'+p);
   if(p==='excel'&&CUR_USER&&CUR_USER.mode!=='health') loadSymCards();
   if(p==='rec'&&CUR_USER&&CUR_USER.mode!=='health'){loadPSAHistory();loadSymAvg();}
+  if(p==='chat'){setTimeout(function(){var cs=document.getElementById('chat-scroll');if(cs)cs.scrollTop=cs.scrollHeight;},100);}
 }
 function goRec(){
   var isHealth=CUR_USER&&CUR_USER.mode==='health';
@@ -1468,11 +1469,12 @@ function sendChatP(){
   var inp=document.getElementById('chat-in'),msg=inp.value.trim();if(!msg)return Promise.resolve();
   inp.value='';
   var cs=document.getElementById('chat-scroll');
+  function scrollDown(){ setTimeout(function(){ cs.scrollTop=cs.scrollHeight; },80); }
   var uw=document.createElement('div');uw.className='bub-wu';
   uw.innerHTML='<div class="bub user">'+esc(msg)+'</div>';cs.appendChild(uw);
   var ld=document.createElement('div');
   ld.innerHTML='<div class="bub-lbl">AI 코치</div><div class="bub ai"><div class="dots"><span></span><span></span><span></span></div></div>';
-  cs.appendChild(ld);cs.scrollTop=cs.scrollHeight;chatBusy=true;
+  cs.appendChild(ld);scrollDown();chatBusy=true;
   return fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{'Content-Type':'application/json','x-api-key':ANT_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
@@ -1481,9 +1483,9 @@ function sendChatP(){
   .then(function(r){return r.json();})
   .then(function(d){
     var reply=(d.content&&d.content[0]&&d.content[0].text)||'답변을 가져오지 못했어요.';
-    ld.querySelector('.bub.ai').textContent=reply;cs.scrollTop=cs.scrollHeight;chatBusy=false;tts(reply);
+    ld.querySelector('.bub.ai').textContent=reply;scrollDown();chatBusy=false;tts(reply);
   })
-  .catch(function(){ld.querySelector('.bub.ai').textContent='오류가 발생했어요.';cs.scrollTop=cs.scrollHeight;chatBusy=false;});
+  .catch(function(){ld.querySelector('.bub.ai').textContent='오류가 발생했어요.';scrollDown();chatBusy=false;});
 }
 
 /* ══ AI 사진 분석 ══ */
