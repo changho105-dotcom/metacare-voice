@@ -4,2245 +4,398 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1A2F4C">
 <title>스마트 메타케어</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --navy:#1A2F4C;--teal:#2A7B7B;--tl:#E1F5EE;--tld:#0F6E56;
-  --cream:#F5F4F2;--warn:#BA7517;--wb:#FAEEDA;--gold:#C8A96E;
-  --bd:rgba(0,0,0,.10);--wh:#fff;--r:14px;--rs:10px;
-  --tx:#1A2F4C;--mu:#6B7280;
-  --red:#C0392B;--red-l:#FDECEA;
-  --purple:#6B3FA0;--purple-l:#F0EAFB;
-}
-html,body{height:100%;overflow:hidden;}
-body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--navy);-webkit-tap-highlight-color:transparent;font-size:17px;}
-.app{width:100%;height:100%;background:var(--cream);display:flex;flex-direction:column;overflow:hidden;max-width:480px;margin:0 auto;}
-
-/* ══ 전체 화면 레이어 ══ */
-.fullscreen{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;overflow-y:auto;}
-.fullscreen.off{display:none;}
-
-/* ══ 프로필 선택 화면 ══ */
-#profile-screen{background:var(--navy);}
-.ps-header{padding:56px 28px 24px;text-align:center;}
-.ps-logo{font-size:52px;margin-bottom:12px;}
-.ps-title{color:#fff;font-size:26px;font-weight:700;margin-bottom:6px;}
-.ps-sub{color:rgba(255,255,255,.5);font-size:14px;}
-.ps-body{padding:0 20px 32px;display:flex;flex-direction:column;gap:12px;}
-.profile-card{background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.12);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;-webkit-appearance:none;width:100%;text-align:left;transition:all .15s;}
-.profile-card:active{background:rgba(255,255,255,.14);border-color:var(--teal);}
-.profile-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
-.profile-avatar.health{background:rgba(42,123,123,.35);}
-.profile-avatar.cancer{background:rgba(107,63,160,.35);}
-.profile-avatar.admin{background:rgba(192,57,43,.25);}
-.profile-info{flex:1;}
-.profile-name{color:#fff;font-size:18px;font-weight:700;margin-bottom:4px;}
-.profile-mode{font-size:13px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-block;}
-.profile-mode.health{background:rgba(42,123,123,.3);color:#7DFFC8;}
-.profile-mode.cancer{background:rgba(107,63,160,.3);color:#D4B8FF;}
-.profile-arr{color:rgba(255,255,255,.3);font-size:22px;}
-.admin-btn{background:rgba(192,57,43,.15);border:1.5px solid rgba(192,57,43,.3);border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;width:100%;text-align:left;-webkit-appearance:none;transition:all .15s;margin-top:8px;}
-.admin-btn:active{background:rgba(192,57,43,.25);}
-.admin-btn-icon{width:44px;height:44px;border-radius:50%;background:rgba(192,57,43,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.admin-btn-icon i{font-size:20px;color:#FF8A80;}
-.admin-btn-txt{color:rgba(255,255,255,.7);font-size:15px;font-weight:600;}
-.ps-empty{text-align:center;padding:40px 20px;color:rgba(255,255,255,.4);font-size:15px;line-height:1.8;}
-.ps-empty i{font-size:44px;display:block;margin-bottom:12px;color:rgba(255,255,255,.15);}
-
-/* ══ Admin 비밀번호 모달 ══ */
-.modal-overlay{position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;}
-.modal-overlay.off{display:none;}
-.modal-box{width:calc(100% - 48px);max-width:360px;background:var(--wh);border-radius:20px;padding:28px 24px 24px;}
-.modal-ttl{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:6px;}
-.modal-sub{font-size:13px;color:var(--mu);margin-bottom:18px;line-height:1.5;}
-.modal-in{width:100%;padding:14px 15px;font-size:16px;border:1.5px solid var(--bd);border-radius:var(--rs);font-family:inherit;color:var(--tx);-webkit-appearance:none;margin-bottom:12px;}
-.modal-in:focus{outline:none;border-color:var(--teal);}
-.modal-row{display:flex;gap:10px;}
-.modal-btn{flex:1;padding:14px;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;-webkit-appearance:none;}
-.modal-btn.confirm{background:var(--navy);color:#fff;}
-.modal-btn.cancel{background:var(--cream);color:var(--mu);}
-
-/* ══ Admin 대시보드 ══ */
-#admin-screen{background:var(--cream);overflow-y:auto;}
-.admin-topbar{background:var(--red);padding:env(safe-area-inset-top,14px) 20px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.admin-topbar-title{color:#fff;font-size:18px;font-weight:700;}
-.admin-back{background:none;border:none;color:rgba(255,255,255,.8);font-size:20px;cursor:pointer;padding:4px;display:flex;align-items:center;}
-.admin-body{padding:18px;display:flex;flex-direction:column;gap:16px;padding-bottom:40px;}
-.admin-section{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;}
-.admin-section-hd{background:var(--navy);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
-.admin-section-title{color:#fff;font-size:15px;font-weight:700;}
-.admin-add-btn{background:var(--teal);border:none;border-radius:8px;padding:7px 13px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;}
-.admin-user-row{padding:14px 16px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--bd);}
-.admin-user-row:first-of-type{border-top:none;}
-.admin-user-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
-.admin-user-avatar.health{background:var(--tl);}
-.admin-user-avatar.cancer{background:var(--purple-l);}
-.admin-user-info{flex:1;}
-.admin-user-name{font-size:15px;font-weight:700;color:var(--navy);}
-.admin-user-detail{font-size:12px;color:var(--mu);margin-top:2px;}
-.admin-user-actions{display:flex;gap:6px;}
-.admin-action-btn{background:none;border:1px solid var(--bd);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;}
-.admin-action-btn.view{color:var(--teal);}
-.admin-action-btn.del{color:var(--red);}
-.admin-api-row{padding:14px 16px;}
-.admin-api-label{font-size:13px;font-weight:700;color:var(--mu);margin-bottom:8px;}
-.admin-api-in{width:100%;padding:12px 14px;font-size:14px;border:1px solid var(--bd);border-radius:var(--rs);font-family:inherit;color:var(--tx);background:var(--cream);-webkit-appearance:none;margin-bottom:8px;}
-.admin-api-in:focus{outline:none;border-color:var(--teal);}
-.admin-save-btn{width:100%;padding:13px;background:var(--navy);color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
-
-/* ══ 사용자 추가 모달 ══ */
-#add-user-modal{z-index:10001;}
-.add-user-box{width:calc(100% - 40px);max-width:400px;background:var(--wh);border-radius:20px;padding:24px 20px;max-height:88vh;overflow-y:auto;}
-.aub-title{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:16px;}
-.aub-label{font-size:13px;font-weight:700;color:var(--mu);margin-bottom:6px;margin-top:12px;}
-.aub-in{width:100%;padding:13px 14px;font-size:15px;border:1.5px solid var(--bd);border-radius:var(--rs);font-family:inherit;color:var(--tx);-webkit-appearance:none;}
-.aub-in:focus{outline:none;border-color:var(--teal);}
-.mode-toggle-row{display:flex;gap:8px;margin-top:4px;}
-.mode-tog{flex:1;padding:12px;border:1.5px solid var(--bd);border-radius:var(--rs);background:var(--cream);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center;-webkit-appearance:none;transition:all .15s;}
-.mode-tog.sel.health{background:var(--tl);border-color:var(--teal);color:var(--tld);}
-.mode-tog.sel.cancer{background:var(--purple-l);border-color:var(--purple);color:var(--purple);}
-.stage-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
-.stage-tog{padding:12px 8px;border:1.5px solid var(--bd);border-radius:var(--rs);background:var(--cream);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:center;-webkit-appearance:none;transition:all .15s;}
-.stage-tog.sel{background:var(--purple-l);border-color:var(--purple);color:var(--purple);}
-.aub-btns{display:flex;gap:10px;margin-top:18px;}
-.aub-btn{flex:1;padding:14px;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
-.aub-btn.confirm{background:var(--navy);color:#fff;}
-.aub-btn.cancel{background:var(--cream);color:var(--mu);}
-
-/* ══ 사용자 데이터 열람 ══ */
-#view-user-screen{background:var(--cream);}
-.view-topbar{background:var(--purple);padding:env(safe-area-inset-top,14px) 20px 16px;display:flex;align-items:center;gap:12px;}
-.view-back{background:none;border:none;color:rgba(255,255,255,.8);font-size:20px;cursor:pointer;padding:4px;display:flex;align-items:center;}
-.view-topbar-title{color:#fff;font-size:17px;font-weight:700;}
-.view-body{padding:16px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;flex:1;}
-.data-card{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);padding:16px 18px;}
-.data-card-title{font-size:14px;font-weight:700;color:var(--mu);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
-.data-card-title i{font-size:16px;}
-.data-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd);}
-.data-row:last-child{border-bottom:none;}
-.data-key{font-size:13px;color:var(--mu);}
-.data-val{font-size:14px;font-weight:700;color:var(--navy);}
-
-/* ══ 온보딩 ══ */
-#onboarding{background:var(--navy);}
-.ob-step{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:44px 28px;gap:18px;}
-.ob-step.on{display:flex;}
-.ob-logo{font-size:56px;}
-.ob-title{color:#fff;font-size:26px;font-weight:700;text-align:center;line-height:1.35;}
-.ob-sub{color:rgba(255,255,255,.55);font-size:14px;text-align:center;line-height:1.75;}
-.ob-in{width:100%;padding:15px 18px;border:2px solid rgba(255,255,255,.18);border-radius:13px;background:rgba(255,255,255,.09);color:#fff;font-size:16px;font-family:inherit;outline:none;}
-.ob-in::placeholder{color:rgba(255,255,255,.32);}
-.ob-in:focus{border-color:var(--teal);}
-.ob-btn{width:100%;padding:16px;background:var(--teal);color:#fff;border:none;border-radius:13px;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;-webkit-appearance:none;}
-.ob-btn:active{opacity:.85;}
-.ob-skip{color:rgba(255,255,255,.35);font-size:13px;cursor:pointer;text-decoration:underline;}
-.mode-cards{width:100%;display:flex;flex-direction:column;gap:12px;}
-.mc{border:2px solid rgba(255,255,255,.13);border-radius:16px;padding:20px 18px;display:flex;align-items:center;gap:16px;cursor:pointer;width:100%;text-align:left;background:rgba(255,255,255,.06);-webkit-appearance:none;transition:all .15s;}
-.mc:active,.mc.sel{border-color:var(--teal);background:rgba(42,123,123,.2);}
-.mc-icon{font-size:40px;flex-shrink:0;width:50px;text-align:center;}
-.mc-name{color:#fff;font-size:18px;font-weight:700;margin-bottom:4px;}
-.mc-desc{color:rgba(255,255,255,.5);font-size:13px;line-height:1.5;}
-.stage-grid{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.sg{background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.13);border-radius:13px;padding:15px 10px;cursor:pointer;text-align:center;-webkit-appearance:none;transition:all .15s;}
-.sg:active,.sg.sel{border-color:var(--teal);background:rgba(42,123,123,.2);}
-.sg-num{color:var(--teal);font-size:24px;font-weight:700;}
-.sg-label{color:#fff;font-size:13px;font-weight:600;margin-top:4px;}
-.sg-desc{color:rgba(255,255,255,.45);font-size:11px;margin-top:3px;line-height:1.4;}
-.tx-list{width:100%;display:flex;flex-direction:column;gap:8px;}
-.tx-item{background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.13);border-radius:11px;padding:13px 15px;cursor:pointer;display:flex;align-items:center;gap:11px;width:100%;text-align:left;-webkit-appearance:none;transition:border-color .15s;}
-.tx-item:active,.tx-item.sel{border-color:var(--teal);background:rgba(42,123,123,.18);}
-.tx-item i{font-size:19px;color:rgba(255,255,255,.4);flex-shrink:0;}
-.tx-item.sel i{color:var(--teal);}
-.tx-label{color:#fff;font-size:14px;font-weight:600;}
-
-/* ══ 헤더 ══ */
-.topbar{background:var(--navy);padding:env(safe-area-inset-top,14px) 20px 15px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;min-height:62px;}
-.tb-title{color:#fff;font-size:19px;font-weight:700;}
-.tb-sub{color:rgba(255,255,255,.46);font-size:12px;margin-top:2px;}
-.tb-right{display:flex;align-items:center;gap:7px;}
-.tb-badge{font-size:12px;padding:5px 11px;border-radius:20px;font-weight:700;white-space:nowrap;}
-.tb-badge.health{background:var(--teal);color:#fff;}
-.tb-badge.cancer{background:var(--purple);color:#fff;}
-.tb-icon-btn{background:none;border:none;color:rgba(255,255,255,.48);font-size:19px;cursor:pointer;padding:4px;display:flex;align-items:center;}
-
-/* ══ 음성 FAB ══ */
-.vfab{position:fixed;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);width:62px;height:62px;border-radius:50%;border:none;cursor:pointer;z-index:200;display:none;align-items:center;justify-content:center;background:var(--teal);box-shadow:0 4px 18px rgba(42,123,123,.5);transition:background .2s;}
-.vfab[style*="display: none"],.vfab[style*="display:none"]{pointer-events:none!important;}
-.vfab[style*="display: flex"],.vfab[style*="display:flex"]{pointer-events:auto;}
-.vfab i{font-size:28px;color:#fff;}
-.vfab.listening{background:#c0392b;animation:pulse 1s infinite;}
-.vfab.thinking{background:var(--gold);}
-.vfab.speaking{background:#1976D2;}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-
-/* ══ 음성 바 ══ */
-.vbar{position:fixed;top:66px;left:50%;transform:translateX(-50%);width:calc(100% - 28px);max-width:452px;background:var(--navy);color:#fff;border-radius:13px;padding:12px 16px;font-size:14px;font-weight:600;z-index:250;display:none;align-items:center;gap:10px;box-shadow:0 4px 16px rgba(0,0,0,.3);}
-.vbar.on{display:flex;}
-.vdot{width:9px;height:9px;border-radius:50%;background:#aaa;flex-shrink:0;}
-.vdot.L{background:#c0392b;animation:pulse 1s infinite;}
-.vdot.T{background:var(--gold);}
-.vdot.S{background:#1976D2;}
-
-/* ══ 페이지 ══ */
-.pages{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:78px;}
-.page{display:none;padding:17px;flex-direction:column;gap:15px;}
-.page.active{display:flex;}
-#pg-chat{padding:0;}
-
-/* ══ 공통 컴포넌트 ══ */
-.sl{font-size:16px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:7px;}
-.sl i{color:var(--teal);font-size:19px;}
-.card{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);padding:17px 19px;}
-.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
-.sc{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);padding:15px;text-align:center;}
-.slb{font-size:13px;color:var(--mu);margin-bottom:6px;}
-.sv{font-size:25px;font-weight:700;color:var(--navy);}
-.sv.g{color:var(--tld);}
-.dots{display:flex;gap:5px;align-items:center;}
-.dots span{width:7px;height:7px;background:var(--teal);border-radius:50%;animation:bo .9s infinite;}
-.dots span:nth-child(2){animation-delay:.15s;}
-.dots span:nth-child(3){animation-delay:.3s;}
-@keyframes bo{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
-.teal-banner{background:linear-gradient(135deg,#2A7B7B,#1A5C5C);border-radius:var(--r);padding:20px 18px;display:flex;align-items:center;gap:16px;position:relative;overflow:hidden;border:none;width:100%;text-align:left;cursor:pointer;-webkit-appearance:none;}
-.teal-banner:active{opacity:.88;}
-.teal-banner::after{content:'';position:absolute;right:-18px;top:-18px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.06);}
-.banner-icon{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.banner-icon i{font-size:30px;color:#fff;}
-.banner-txt{flex:1;}
-.banner-ttl{color:#fff;font-size:18px;font-weight:700;margin-bottom:4px;}
-.banner-sub{color:rgba(255,255,255,.75);font-size:13px;line-height:1.5;}
-.banner-arr{color:rgba(255,255,255,.5);font-size:22px;flex-shrink:0;}
-.psa-banner{background:linear-gradient(135deg,#4a1d96,#6B3FA0);border-radius:var(--r);padding:19px 19px;position:relative;overflow:hidden;}
-.psa-banner::after{content:'';position:absolute;right:-14px;top:-14px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.06);}
-.psa-main{display:flex;align-items:flex-end;gap:7px;margin:5px 0 4px;}
-.psa-val{color:#fff;font-size:42px;font-weight:700;line-height:1;}
-.psa-unit{color:rgba(255,255,255,.62);font-size:15px;margin-bottom:6px;}
-.psa-lbl{color:rgba(255,255,255,.58);font-size:12px;}
-.psa-trend{margin-top:9px;}
-.psa-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;}
-.psa-badge.good{background:rgba(15,110,86,.35);color:#7DFFC8;}
-.psa-badge.warn{background:rgba(186,117,23,.35);color:#FFD98E;}
-.psa-badge.danger{background:rgba(192,57,43,.35);color:#FFB0B0;}
-.psa-log-btn{position:absolute;right:15px;top:15px;background:rgba(255,255,255,.16);border:none;border-radius:9px;padding:8px 13px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;-webkit-appearance:none;}
-.vguide{background:linear-gradient(135deg,#1A2F4C,#243F60);border-radius:var(--r);padding:14px 16px;}
-.vg-ttl{font-size:13px;font-weight:700;color:#fff;margin-bottom:9px;display:flex;align-items:center;gap:6px;}
-.vg-ttl i{color:var(--teal);}
-.vg-item{font-size:13px;color:rgba(255,255,255,.8);padding:7px 10px;background:rgba(255,255,255,.08);border-radius:8px;margin-bottom:5px;display:flex;align-items:center;gap:8px;}
-.vg-item i{color:var(--teal);font-size:14px;flex-shrink:0;}
-.sym-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
-.sym-btn{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);padding:14px 6px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-appearance:none;}
-.sym-btn:active{background:var(--cream);}
-.sym-btn i{font-size:24px;}
-.sym-btn.pain i{color:var(--red);}
-.sym-btn.urine i{color:#1976D2;}
-.sym-btn.fatigue i{color:var(--warn);}
-.sym-lbl{font-size:12px;font-weight:700;color:var(--navy);}
-.sym-val{font-size:11px;color:var(--mu);}
-.med-list-wrap{display:flex;flex-direction:column;gap:8px;}
-.med-item{background:var(--wh);border:1px solid var(--bd);border-radius:var(--rs);padding:12px 14px;display:flex;align-items:center;gap:12px;}
-.med-check{width:26px;height:26px;border-radius:50%;border:2px solid var(--bd);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s;}
-.med-check.done{background:var(--teal);border-color:var(--teal);}
-.med-check.done i{color:#fff;}
-.med-info{flex:1;}
-.med-name{font-size:14px;font-weight:700;color:var(--navy);}
-.med-time{font-size:11px;color:var(--mu);margin-top:2px;display:flex;align-items:center;gap:3px;}
-.med-add-btn{background:none;border:1.5px dashed rgba(42,123,123,.35);border-radius:var(--rs);padding:11px;color:var(--teal);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;-webkit-appearance:none;}
-.psa-row{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;background:var(--wh);border:1px solid var(--bd);border-radius:var(--rs);}
-.psa-row-date{font-size:12px;color:var(--mu);}
-.psa-row-val{font-size:17px;font-weight:700;color:var(--navy);}
-.psa-arrow{font-size:12px;font-weight:700;margin-right:4px;}
-.psa-arrow.up{color:var(--red);}
-.psa-arrow.dn{color:var(--tld);}
-.psa-arrow.eq{color:var(--mu);}
-.nrs-wrap{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);padding:15px 17px;}
-.nrs-lbl{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:11px;display:flex;align-items:center;gap:6px;}
-.nrs-scale{display:flex;gap:3px;}
-.nrs-dot{flex:1;aspect-ratio:1;border-radius:6px;border:1.5px solid var(--bd);background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--mu);cursor:pointer;transition:all .12s;}
-.nrs-dot.sel{color:#fff;border-color:transparent;}
-.nrs-dot.sel.low{background:#2A7B7B;}
-.nrs-dot.sel.mid{background:var(--warn);}
-.nrs-dot.sel.high{background:var(--red);}
-.type-toggle{display:flex;gap:9px;}
-.tbtn{flex:1;padding:13px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--wh);color:var(--mu);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;-webkit-appearance:none;}
-.tbtn.active.food{background:var(--tl);border-color:var(--teal);color:var(--tld);}
-.tbtn.active.ex{background:var(--wb);border-color:var(--warn);color:#854F0B;}
-.tbtn.active.sym{background:var(--red-l);border-color:var(--red);color:var(--red);}
-.tbtn.active.med{background:var(--purple-l);border-color:var(--purple);color:var(--purple);}
-.fi{width:100%;padding:14px 15px;font-size:15px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--wh);color:var(--tx);font-family:inherit;-webkit-appearance:none;}
-.fi:focus{outline:none;border-color:var(--teal);}
-textarea.fi{resize:none;}
-.big-btn{width:100%;padding:18px;border:none;border-radius:var(--r);font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px;-webkit-appearance:none;color:#fff;}
-.big-btn:active{opacity:.85;}
-.big-btn.navy{background:var(--navy);}
-.big-btn.red{background:var(--red);}
-.big-btn.purple{background:var(--purple);}
-.fb-box{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);padding:16px 18px;font-size:14px;color:var(--navy);line-height:1.85;}
-.preview-area{width:100%;height:220px;border-radius:var(--r);overflow:hidden;background:#d5d3cf;position:relative;}
-.preview-area img{width:100%;height:100%;object-fit:cover;}
-.preview-retake{position:absolute;bottom:11px;right:11px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:18px;padding:8px 14px;font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;}
-.xl-toolbar{display:flex;align-items:center;justify-content:space-between;}
-.autosave-badge{font-size:12px;color:var(--tld);display:flex;align-items:center;gap:4px;opacity:0;transition:opacity .4s;}
-.autosave-badge.show{opacity:1;}
-.day-card{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;}
-.day-hd{background:var(--navy);padding:11px 14px;display:flex;align-items:center;gap:9px;}
-.day-date{background:transparent;border:none;color:#fff;font-size:14px;font-weight:700;font-family:inherit;flex:1;-webkit-appearance:none;}
-.day-date:focus{outline:none;}
-.day-del{background:none;border:none;color:rgba(255,255,255,.38);font-size:18px;cursor:pointer;display:flex;align-items:center;padding:3px;}
-.meal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:12px 12px 9px;}
-.meal-slot{display:flex;flex-direction:column;gap:4px;}
-.meal-lbl{text-align:center;font-size:11px;font-weight:700;}
-.meal-lbl.am{color:var(--tld);}
-.meal-lbl.pm{color:var(--warn);}
-.meal-lbl.ev{color:#854F0B;}
-.meal-photo-empty{aspect-ratio:1;border-radius:8px;border:1.5px dashed rgba(42,123,123,.35);background:rgba(42,123,123,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;}
-.meal-photo-empty i{font-size:24px;color:var(--teal);}
-.meal-photo-empty span{font-size:10px;color:var(--mu);}
-.meal-photo-filled{aspect-ratio:1;border-radius:8px;overflow:hidden;position:relative;}
-.meal-photo-filled img{width:100%;height:100%;object-fit:cover;display:block;}
-.meal-photo-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:rgba(0,0,0,.35);opacity:0;transition:opacity .12s;cursor:pointer;}
-.meal-photo-filled:active .meal-photo-overlay{opacity:1;}
-.meal-photo-overlay i{font-size:18px;color:#fff;}
-.meal-photo-overlay span{font-size:9px;color:#fff;}
-.steps-row{display:flex;align-items:center;gap:9px;padding:8px 12px 12px;border-top:1px solid var(--bd);}
-.steps-lbl{font-size:12px;font-weight:700;color:var(--mu);display:flex;align-items:center;gap:4px;width:60px;flex-shrink:0;}
-.steps-lbl i{font-size:14px;color:var(--teal);}
-.steps-in{flex:1;padding:9px 11px;border:1px solid var(--bd);border-radius:var(--rs);font-size:13px;font-family:inherit;color:var(--tx);background:var(--cream);-webkit-appearance:none;}
-.steps-in:focus{outline:none;border-color:var(--teal);background:#fff;}
-.xl-empty{text-align:center;padding:40px 18px;color:var(--mu);font-size:14px;line-height:1.8;}
-.xl-empty i{font-size:44px;color:rgba(42,123,123,.2);display:block;margin-bottom:11px;}
-.xl-btns{display:flex;gap:9px;}
-.xl-add-btn{flex:1;padding:16px;background:none;border:2px dashed rgba(42,123,123,.3);border-radius:var(--r);color:var(--teal);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;-webkit-appearance:none;}
-.xl-add-btn:active{background:var(--tl);}
-.xl-export-btn{padding:16px 18px;background:var(--navy);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;white-space:nowrap;-webkit-appearance:none;}
-.pr-log-card{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;}
-.pr-log-hd{background:var(--navy);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;}
-.pr-log-date{color:#fff;font-size:13px;font-weight:700;}
-.pr-log-del{background:none;border:none;color:rgba(255,255,255,.35);cursor:pointer;font-size:16px;display:flex;align-items:center;}
-.pr-log-body{padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
-.pr-log-row{display:flex;align-items:center;gap:9px;}
-.pr-log-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.pr-log-icon.pain{background:var(--red-l);}
-.pr-log-icon.pain i{color:var(--red);}
-.pr-log-icon.urine{background:#E3F2FD;}
-.pr-log-icon.urine i{color:#1976D2;}
-.pr-log-icon.fatigue{background:var(--wb);}
-.pr-log-icon.fatigue i{color:var(--warn);}
-.pr-log-key{font-size:12px;color:var(--mu);width:48px;flex-shrink:0;}
-.pr-log-val{font-size:14px;font-weight:700;color:var(--navy);}
-.rlist{display:flex;flex-direction:column;gap:11px;}
-.rec{background:var(--wh);border:1px solid var(--bd);border-left:4px solid var(--teal);border-radius:0 var(--r) var(--r) 0;padding:14px 16px;}
-.rec.ex{border-left-color:#854F0B;}
-.rec-row{display:flex;justify-content:space-between;align-items:flex-start;gap:9px;}
-.rec-meta{font-size:12px;color:var(--mu);margin-bottom:4px;display:flex;align-items:center;gap:4px;}
-.rec-name{font-size:16px;font-weight:700;color:var(--navy);}
-.rec-note{font-size:12px;color:var(--mu);margin-top:4px;line-height:1.5;}
-.pill{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;}
-.pk{background:var(--tl);color:#085041;}
-.pe{background:var(--wb);color:#633806;}
-.pg-bars{display:flex;flex-direction:column;gap:12px;}
-.pt{display:flex;justify-content:space-between;font-size:13px;color:var(--mu);margin-bottom:5px;}
-.pb{height:8px;background:var(--bd);border-radius:5px;overflow:hidden;}
-.pf{height:100%;border-radius:5px;background:var(--teal);}
-.pf.w{background:#EF9F27;}.pf.or{background:#D85A30;}
-.chat-wrap{display:flex;flex-direction:column;height:100%;}
-.chat-scroll{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch;}
-.qbtns{display:flex;flex-direction:column;gap:9px;}
-.qbtn{background:var(--wh);border:1px solid var(--bd);border-radius:var(--rs);padding:14px;font-size:15px;color:var(--navy);cursor:pointer;text-align:left;font-family:inherit;display:flex;align-items:center;gap:12px;width:100%;-webkit-appearance:none;}
-.qbtn:active{background:var(--tl);}
-.qbtn i{color:var(--teal);font-size:19px;flex-shrink:0;}
-.bub{padding:14px 16px;border-radius:var(--r);font-size:14px;line-height:1.8;max-width:88%;}
-.bub.ai{background:var(--wh);border:1px solid var(--bd);color:var(--navy);align-self:flex-start;}
-.bub.user{background:var(--navy);color:#fff;align-self:flex-end;}
-.bub-lbl{font-size:11px;color:var(--mu);margin-bottom:4px;font-weight:700;}
-.bub-wu{display:flex;flex-direction:column;align-items:flex-end;}
-.chat-bar{display:flex;gap:8px;padding:10px 14px calc(env(safe-area-inset-bottom,0px) + 10px);background:var(--wh);border-top:1px solid var(--bd);flex-shrink:0;}
-.chat-bar input{flex:1;padding:13px 14px;font-size:14px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--cream);color:var(--tx);font-family:inherit;-webkit-appearance:none;}
-.chat-bar input:focus{outline:none;border-color:var(--teal);}
-.send-btn{padding:13px 17px;background:var(--navy);color:#fff;border:none;border-radius:var(--rs);cursor:pointer;font-size:18px;display:flex;align-items:center;-webkit-appearance:none;}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:flex-end;justify-content:center;}
-.overlay.on{display:flex;}
-.sheet{background:var(--wh);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:19px 17px 30px;}
-.sh-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:14px;}
-.sh-btn{width:100%;padding:15px 16px;background:none;border:none;border-top:1px solid var(--bd);font-size:15px;font-family:inherit;text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--navy);-webkit-appearance:none;}
-.sh-btn:first-of-type{border-top:none;}
-.sh-btn i{font-size:20px;color:var(--teal);}
-.sh-cancel{width:100%;padding:15px;background:none;border:none;border-top:1px solid var(--bd);font-size:15px;font-family:inherit;color:var(--mu);cursor:pointer;margin-top:4px;-webkit-appearance:none;}
-.sh-in{width:100%;padding:13px 14px;font-size:15px;border:1.5px solid var(--bd);border-radius:var(--rs);font-family:inherit;color:var(--tx);-webkit-appearance:none;margin-bottom:9px;}
-.sh-in:focus{outline:none;border-color:var(--teal);}
-.sh-save-btn{width:100%;padding:15px;color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;-webkit-appearance:none;}
-.sh-save-btn.purple{background:var(--purple);}
-.sh-save-btn.teal{background:var(--teal);}
-.nrs-sheet-scale{display:flex;gap:4px;padding:4px 0 13px;}
-.nrs-sd{flex:1;padding:10px 2px;border-radius:8px;border:1.5px solid var(--bd);background:var(--cream);text-align:center;font-size:12px;font-weight:700;color:var(--mu);cursor:pointer;transition:all .12s;}
-.nrs-sd.sel{color:#fff;border-color:transparent;}
-.nrs-sd.sel.low{background:#2A7B7B;}
-.nrs-sd.sel.mid{background:var(--warn);}
-.nrs-sd.sel.high{background:var(--red);}
-.viewer{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;}
-.viewer.on{display:flex;}
-.viewer-wrap{display:flex;align-items:center;justify-content:center;width:100%;flex:1;}
-.viewer-wrap img{max-width:92vw;max-height:68vh;object-fit:contain;border-radius:9px;transition:transform .25s;}
-.viewer-btns{display:flex;gap:8px;padding:14px;flex-wrap:wrap;justify-content:center;}
-.vbtn{padding:10px 14px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;-webkit-appearance:none;}
-.vbtn.rot{background:rgba(255,255,255,.13);color:#fff;}
-.vbtn.chg{background:var(--teal);color:#fff;}
-.vbtn.del{background:#c0392b;color:#fff;}
-.vbtn.cls{background:rgba(255,255,255,.09);color:rgba(255,255,255,.62);}
-.bnav{background:var(--wh);border-top:1px solid var(--bd);display:flex;flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0);}
-.nb{flex:1;padding:10px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;background:none;border:none;color:var(--mu);font-size:10px;font-family:inherit;-webkit-appearance:none;}
-.nb i{font-size:23px;}
-.nb.active{color:var(--teal);}
-.photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
-.pg-item{aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;background:#d5d3cf;position:relative;}
-.pg-item img{width:100%;height:100%;object-fit:cover;display:block;}
-.ph-tag{position:absolute;bottom:3px;left:3px;background:rgba(26,47,76,.68);color:#fff;font-size:9px;padding:2px 5px;border-radius:6px;}
-.pg-empty{aspect-ratio:1;border-radius:8px;border:1.5px dashed rgba(42,123,123,.32);background:rgba(42,123,123,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--mu);font-size:9px;text-align:center;}
-.pg-empty i{font-size:20px;color:var(--teal);}
-.tip-box{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);padding:15px 17px;font-size:14px;color:var(--navy);line-height:1.85;}
-.tip-lbl{font-size:11px;font-weight:700;color:var(--teal);margin-bottom:7px;}
-.section-divider{display:flex;align-items:center;gap:9px;color:var(--mu);font-size:12px;}
-.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--bd);}
-.toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 82px);left:50%;transform:translateX(-50%);background:rgba(26,47,76,.93);color:#fff;padding:11px 19px;border-radius:21px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none;}
-.toast.show{opacity:1;}
-.chart-wrap{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);padding:16px 18px;}
-.chart-title{font-size:13px;font-weight:700;color:var(--mu);margin-bottom:12px;}
-.chart-empty{text-align:center;padding:20px;color:var(--mu);font-size:13px;}
-#report-screen{background:#f0f0f0;z-index:8000;}
-.report-topbar{background:var(--navy);padding:env(safe-area-inset-top,14px) 20px 15px;display:flex;align-items:center;justify-content:space-between;}
-.report-back{background:none;border:none;color:rgba(255,255,255,.8);font-size:20px;cursor:pointer;padding:4px;display:flex;align-items:center;}
-.report-body{padding:16px;overflow-y:auto;flex:1;}
-.report-page{background:#fff;border-radius:12px;padding:22px 18px;box-shadow:0 2px 12px rgba(0,0,0,.1);}
-.report-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid var(--navy);}
-.report-logo{font-size:13px;font-weight:700;color:var(--navy);}
-.report-logo-sub{font-size:10px;color:var(--mu);margin-top:2px;}
-.report-patient-name{font-size:15px;font-weight:700;color:var(--navy);text-align:right;}
-.report-patient-info{font-size:10px;color:var(--mu);margin-top:2px;text-align:right;}
-.report-sec{margin-bottom:16px;}
-.report-sec-title{font-size:11px;font-weight:700;color:#fff;background:var(--navy);padding:4px 10px;border-radius:4px;margin-bottom:9px;display:inline-block;}
-.report-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:9px;}
-.report-stat{background:var(--cream);border-radius:8px;padding:9px;text-align:center;}
-.report-stat-val{font-size:19px;font-weight:700;color:var(--navy);}
-.report-stat-lbl{font-size:9px;color:var(--mu);margin-top:2px;}
-.report-tbl{width:100%;border-collapse:collapse;font-size:11px;}
-.report-tbl th{background:var(--cream);padding:5px 7px;text-align:left;font-weight:700;color:var(--navy);border-bottom:1px solid var(--bd);}
-.report-tbl td{padding:5px 7px;border-bottom:1px solid var(--bd);color:var(--tx);}
-.report-tbl tr:last-child td{border-bottom:none;}
-.report-ai{background:var(--tl);border-radius:8px;padding:11px 13px;font-size:12px;color:var(--navy);line-height:1.7;}
-.report-ai-lbl{font-size:10px;font-weight:700;color:var(--teal);margin-bottom:4px;}
-.report-footer{margin-top:14px;padding-top:10px;border-top:1px solid var(--bd);font-size:9px;color:var(--mu);text-align:center;line-height:1.6;}
-.report-btn{width:100%;padding:15px;color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;}
-</style>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<div id="app">
 
-<!-- ══════════ 프로필 선택 화면 ══════════ -->
-<div id="profile-screen" class="fullscreen">
-  <div class="ps-header">
-    <div class="ps-logo">🧬</div>
-    <div class="ps-title">스마트 메타케어</div>
-    <div class="ps-sub">사용자를 선택하세요</div>
-  </div>
-  <div class="ps-body">
-    <div id="profile-list">
-      <div class="ps-empty">
-        <i class="ti ti-users"></i>
-        등록된 사용자가 없습니다.<br>Admin으로 로그인하여 사용자를 추가하세요.
-      </div>
-    </div>
-    <!-- Admin 버튼 -->
-    <button class="admin-btn" onclick="openAdminLogin()">
-      <div class="admin-btn-icon"><i class="ti ti-shield-lock"></i></div>
-      <div>
-        <div class="admin-btn-txt">Admin 로그인</div>
-        <div style="color:rgba(255,255,255,.35);font-size:12px;margin-top:2px;">사용자 관리 · API 설정</div>
-      </div>
-      <i class="ti ti-chevron-right" style="color:rgba(255,255,255,.25);font-size:20px;margin-left:auto;"></i>
-    </button>
-  </div>
-</div>
-
-<!-- ══════════ Admin 비밀번호 모달 ══════════ -->
-<div class="modal-overlay off" id="admin-login-modal">
-  <div class="modal-box">
-    <div class="modal-ttl">🔐 Admin 로그인</div>
-    <div class="modal-sub">관리자 비밀번호를 입력하세요</div>
-    <input class="modal-in" type="password" id="admin-pw-in" placeholder="비밀번호" onkeydown="if(event.key==='Enter')checkAdminPw()">
-    <div class="modal-row">
-      <button class="modal-btn cancel" onclick="closeAdminLogin()">취소</button>
-      <button class="modal-btn confirm" onclick="checkAdminPw()">확인</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════ Admin 대시보드 ══════════ -->
-<div id="admin-screen" style="position:fixed;inset:0;z-index:9999;background:var(--cream);display:none;flex-direction:column;">
-  <div class="admin-topbar">
-    <button class="admin-back" onclick="exitAdmin()"><i class="ti ti-arrow-left"></i></button>
-    <div class="admin-topbar-title">🛡️ Admin 대시보드</div>
-    <div style="width:32px;"></div>
-  </div>
-  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:14px;padding-bottom:40px;">
-
-    <!-- 사용자 관리 -->
-    <div class="admin-section">
-      <div class="admin-section-hd">
-        <div class="admin-section-title">👥 사용자 관리</div>
-        <button class="admin-add-btn" onclick="openAddUser()"><i class="ti ti-plus"></i>추가</button>
-      </div>
-      <div id="admin-user-list">
-        <div style="padding:20px;text-align:center;color:var(--mu);font-size:14px;">등록된 사용자가 없습니다</div>
-      </div>
-    </div>
-
-    <!-- 데이터 백업/복원 -->
-    <div class="admin-section">
-      <div class="admin-section-hd">
-        <div class="admin-section-title">💾 데이터 백업 / 복원</div>
-      </div>
-      <div class="admin-api-row">
-        <div style="font-size:13px;color:var(--mu);margin-bottom:10px;line-height:1.6;">코드 업데이트 전 반드시 백업하세요.</div>
-        <button class="admin-save-btn" style="margin-bottom:10px;" onclick="backupData()">📥 전체 데이터 백업</button>
-        <input type="file" id="restore-file" accept=".json" style="display:none;" onchange="restoreData(event)">
-        <button class="admin-save-btn" style="background:var(--teal);" onclick="document.getElementById('restore-file').click()">📤 백업 파일로 복원</button>
-      </div>
-    </div>
-
-    <!-- Admin 비밀번호 변경 -->
-    <div class="admin-section">
-      <div class="admin-section-hd">
-        <div class="admin-section-title">🔐 비밀번호 변경</div>
-      </div>
-      <div class="admin-api-row">
-        <input class="admin-api-in" type="password" id="new-pw-in" placeholder="새 비밀번호">
-        <input class="admin-api-in" type="password" id="new-pw-confirm" placeholder="비밀번호 확인">
-        <button class="admin-save-btn" onclick="changeAdminPw()">변경</button>
-      </div>
-    </div>
-
-    <!-- 앱 초기화 -->
-    <div class="admin-section">
-      <div class="admin-section-hd">
-        <div class="admin-section-title">⚠️ 앱 초기화</div>
-      </div>
-      <div class="admin-api-row">
-        <div style="font-size:13px;color:var(--mu);margin-bottom:10px;line-height:1.6;">API 키, 사용자 목록, 모든 데이터가 삭제됩니다.</div>
-        <button class="admin-save-btn" style="background:var(--red);" onclick="doFullReset()">전체 초기화</button>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ══════════ 사용자 추가 모달 ══════════ -->
-<div class="modal-overlay off" id="add-user-modal">
-  <div class="add-user-box">
-    <div class="aub-title">👤 새 사용자 추가</div>
-    <div class="aub-label">이름</div>
-    <input class="aub-in" type="text" id="new-user-name" placeholder="이름 입력" maxlength="20">
-    <div class="aub-label">모드</div>
-    <div class="mode-toggle-row" style="flex-wrap:wrap;gap:7px;">
-      <button class="mode-tog cancer" id="new-mode-cancer" onclick="selectNewMode('cancer')" style="font-size:13px;">🔬 암환자</button>
-      <button class="mode-tog health" id="new-mode-keto" onclick="selectNewMode('keto')" style="font-size:13px;">🥑 케토제닉</button>
-      <button class="mode-tog health" id="new-mode-lchf" onclick="selectNewMode('lchf')" style="font-size:13px;">🥩 저탄고지</button>
-      <button class="mode-tog health" id="new-mode-diet" onclick="selectNewMode('diet')" style="font-size:13px;">🥗 다이어트</button>
-    </div>
-    <!-- 암 종류 (암환자 모드만) -->
-    <div id="new-ctype-wrap" style="display:none;">
-      <div class="aub-label">암 종류</div>
-      <div class="mode-toggle-row">
-        <button class="mode-tog" id="new-ctype-prostate" onclick="selectNewCtype('prostate')" style="font-size:13px;">전립선암</button>
-        <button class="mode-tog" id="new-ctype-other" onclick="selectNewCtype('other')" style="font-size:13px;">기타 암</button>
-      </div>
-    </div>
-    <!-- 병기 (전립선암만) -->
-    <div id="new-stage-wrap" style="display:none;">
-      <div class="aub-label">병기</div>
-      <div class="stage-row">
-        <button class="stage-tog" id="ns1" onclick="selectNewStage(1)">1기<br><span style="font-size:10px;font-weight:400;">국소 저위험</span></button>
-        <button class="stage-tog" id="ns2" onclick="selectNewStage(2)">2기<br><span style="font-size:10px;font-weight:400;">국소 중·고위험</span></button>
-        <button class="stage-tog" id="ns3" onclick="selectNewStage(3)">3기<br><span style="font-size:10px;font-weight:400;">국소 진행성</span></button>
-        <button class="stage-tog" id="ns4" onclick="selectNewStage(4)">4기<br><span style="font-size:10px;font-weight:400;">전이성</span></button>
-      </div>
-    </div>
-    <div class="aub-btns">
-      <button class="aub-btn cancel" onclick="closeAddUser()">취소</button>
-      <button class="aub-btn confirm" onclick="confirmAddUser()">추가</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════ 사용자 데이터 열람 ══════════ -->
-<div id="view-user-screen" class="fullscreen off">
-  <div class="view-topbar">
-    <button class="view-back" onclick="exitViewUser()"><i class="ti ti-arrow-left"></i></button>
-    <div class="view-topbar-title" id="view-user-title">사용자 데이터</div>
-  </div>
-  <div class="view-body" id="view-user-body"></div>
-</div>
-
-<!-- ══════════ 온보딩 (첫 Admin 설정) ══════════ -->
-<div id="onboarding" class="fullscreen off">
-  <div class="ob-step on" id="ob-init">
-    <div class="ob-logo">🧬</div>
-    <div class="ob-title">스마트 메타케어<br>최초 설정</div>
-    <div class="ob-sub">Admin 비밀번호와 API 키를 설정합니다.<br>한 번만 하면 됩니다.</div>
-    <input class="ob-in" type="password" id="init-ant" placeholder="Anthropic API 키 (sk-ant-...)">
-    <input class="ob-in" type="password" id="init-el"  placeholder="ElevenLabs API 키 (선택)">
-    <input class="ob-in" type="password" id="init-pw"  placeholder="Admin 비밀번호 설정">
-    <button class="ob-btn" onclick="finishInit()">설정 완료 →</button>
-  </div>
-</div>
-
-<!-- ══════════ 앱 본체 ══════════ -->
-<div class="app" id="main-app" style="display:none;">
-
-  <!-- 헤더 -->
-  <div class="topbar">
-    <div>
-      <div class="tb-title">스마트 메타케어</div>
-      <div class="tb-sub" id="tb-sub">환영합니다</div>
-    </div>
-    <div class="tb-right">
-      <span class="tb-badge" id="tb-badge">-</span>
-      <button class="tb-icon-btn" onclick="logoutUser()" title="사용자 변경"><i class="ti ti-logout"></i></button>
-    </div>
+  <!-- ── 최초 설정 ── -->
+  <div id="scr-init" class="screen dark center">
+    <div class="logo">🧬</div>
+    <h1>스마트 메타케어</h1>
+    <p class="sub">처음 한 번만 설정합니다</p>
+    <input id="inp-ant" class="inp" type="password" placeholder="Anthropic API 키 (sk-ant-...)">
+    <input id="inp-pw"  class="inp" type="password" placeholder="Admin 비밀번호 설정">
+    <button class="btn-primary" onclick="A.init()">설정 완료 →</button>
   </div>
 
-  <!-- 음성 바 -->
-  <div class="vbar" id="vbar">
-    <div class="vdot" id="vdot"></div>
-    <span id="vtxt">듣고 있어요...</span>
-  </div>
-
-  <!-- 페이지 -->
-  <div class="pages" id="pages">
-
-    <!-- 홈: 건강관리 (케토/저탄고지/다이어트 공통) -->
-    <div id="pg-home-health" class="page active">
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;">
-        <div>
-          <div style="font-size:22px;font-weight:700;color:var(--navy);">안녕하세요, <span class="uname">사용자</span> 님 👋</div>
-          <div style="font-size:13px;color:var(--mu);margin-top:4px;" id="health-mode-sub">건강 관리 중</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:12px;color:var(--mu);" id="health-days-label">연속</div>
-          <div style="font-size:26px;font-weight:700;color:var(--tld);" id="keto-days">0일</div>
-        </div>
-      </div>
-
-      <!-- 목표 현황 카드 (모드별 다름) -->
-      <div id="health-goal-card" style="background:linear-gradient(135deg,#2A7B7B,#1A5C5C);border-radius:var(--r);padding:18px 20px;color:#fff;">
-        <div style="font-size:12px;opacity:.7;margin-bottom:8px;" id="health-goal-label">오늘의 목표</div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap;">
-          <div id="health-goal-items"></div>
-        </div>
-      </div>
-
-      <button class="teal-banner" onclick="openSheet('up-sheet')">
-        <div class="banner-icon"><i class="ti ti-camera"></i></div>
-        <div class="banner-txt">
-          <div class="banner-ttl">식사 사진 → AI 분석</div>
-          <div class="banner-sub" id="health-banner-sub">촬영하면 식단 분석을 즉시 알려드려요</div>
-        </div>
-        <i class="ti ti-chevron-right banner-arr"></i>
+  <!-- ── 프로필 선택 ── -->
+  <div id="scr-profile" class="screen dark">
+    <div class="profile-hd">
+      <div class="logo">🧬</div>
+      <h2>스마트 메타케어</h2>
+      <p class="sub">사용자를 선택하세요</p>
+    </div>
+    <div id="profile-list" class="profile-body"></div>
+    <div class="profile-body" style="padding-top:0;">
+      <button class="admin-entry" onclick="A.goScreen('scr-admin-pw')">
+        <span class="admin-icon"><i class="ti ti-shield-lock"></i></span>
+        <span>🔐 Admin 로그인</span>
+        <i class="ti ti-chevron-right" style="margin-left:auto;opacity:.3;"></i>
       </button>
-
-      <div class="sl"><i class="ti ti-photo"></i> 최근 기록 사진</div>
-      <div class="card" style="padding:12px;">
-        <div class="photo-grid" id="home-photo-grid"></div>
-      </div>
-
-      <div class="sl"><i class="ti ti-chart-bar"></i> 오늘의 식단 현황</div>
-      <div class="stat-row">
-        <div class="sc"><div class="slb">오늘 식사 기록</div><div class="sv g" id="stat-meals">0끼</div><div style="font-size:11px;color:var(--tld);margin-top:3px;">아침·점심·저녁</div></div>
-        <div class="sc"><div class="slb">오늘 만보</div><div class="sv" id="stat-steps">-</div><div style="font-size:11px;color:var(--mu);margin-top:3px;">목표 10,000보</div></div>
-      </div>
-      <div class="stat-row">
-        <div class="sc"><div class="slb">총 기록일</div><div class="sv" id="stat-days">0일</div></div>
-        <div class="sc"><div class="slb">최근 기록</div><div class="sv" id="stat-last" style="font-size:16px;">없음</div></div>
-      </div>
-
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div class="sl"><i class="ti ti-bulb"></i> <span id="tip-title">오늘의 팁</span></div>
-        <button onclick="refreshDietTip()" style="background:none;border:none;color:var(--teal);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;font-family:inherit;padding:4px;"><i class="ti ti-refresh"></i>새 팁</button>
-      </div>
-      <div class="tip-box"><div class="tip-lbl" id="tip-label">AI 코치의 조언</div><div id="keto-tip-text">로딩 중...</div></div>
-
-      <div class="vguide">
-        <div class="vg-ttl"><i class="ti ti-microphone"></i> 이렇게 말해보세요</div>
-        <div class="vg-item"><i class="ti ti-camera"></i>"사진 찍어줘" — 식단 AI 분석</div>
-        <div class="vg-item" id="voice-guide-1"><i class="ti ti-salad"></i>"오늘 뭐 먹을까" — 식단 추천</div>
-        <div class="vg-item"><i class="ti ti-table"></i>"기록장 보여줘"</div>
-      </div>
     </div>
+  </div>
 
-    <!-- 홈: 암환자 -->
-    <div id="pg-home-cancer" class="page">
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;">
-        <div>
-          <div style="font-size:21px;font-weight:700;color:var(--navy);">안녕하세요, <span class="uname">사용자</span> 님</div>
-          <div style="font-size:13px;color:var(--mu);margin-top:3px;" id="cancer-stage-lbl">암 치유 관리 중</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:12px;color:var(--mu);">관리</div>
-          <div style="font-size:25px;font-weight:700;color:var(--purple);" id="cancer-days">0일</div>
-        </div>
-      </div>
-      <div id="psa-section">
-        <div class="psa-banner">
-          <div class="psa-lbl">최근 PSA 수치</div>
-          <div class="psa-main">
-            <div class="psa-val" id="psa-display">--</div>
-            <div class="psa-unit">ng/mL</div>
-          </div>
-          <div class="psa-trend">
-            <span class="psa-badge warn" id="psa-badge">기록 없음</span>
-            <span style="color:rgba(255,255,255,.42);font-size:11px;margin-left:7px;" id="psa-date-lbl"></span>
-          </div>
-          <button class="psa-log-btn" onclick="openPSASheet()"><i class="ti ti-plus"></i> PSA 기록</button>
-        </div>
-      </div>
-      <button class="teal-banner" onclick="openSheet('up-sheet')">
-        <div class="banner-icon"><i class="ti ti-camera"></i></div>
-        <div class="banner-txt">
-          <div class="banner-ttl">식사 사진 → AI 분석</div>
-          <div class="banner-sub">항산화·저당 관점의 암 환자 맞춤 식단 분석</div>
-        </div>
-        <i class="ti ti-chevron-right banner-arr"></i>
-      </button>
-      <div class="sl"><i class="ti ti-activity" style="color:var(--red);"></i> 오늘의 증상</div>
-      <div class="sym-grid">
-        <button class="sym-btn pain" onclick="openSymSheet('pain')">
-          <i class="ti ti-flame"></i><div class="sym-lbl">통증</div><div class="sym-val" id="sym-pain-disp">미기록</div>
-        </button>
-        <button class="sym-btn urine" id="sym-urine-btn" onclick="openSymSheet('urine')">
-          <i class="ti ti-droplet"></i><div class="sym-lbl">배뇨</div><div class="sym-val" id="sym-urine-disp">미기록</div>
-        </button>
-        <button class="sym-btn fatigue" onclick="openSymSheet('fatigue')">
-          <i class="ti ti-zzz"></i><div class="sym-lbl">피로</div><div class="sym-val" id="sym-fatigue-disp">미기록</div>
-        </button>
-      </div>
-      <div class="sl"><i class="ti ti-pill" style="color:var(--purple);"></i> 오늘의 복약</div>
-      <div class="med-list-wrap" id="med-list-home"></div>
-      <div class="vguide">
-        <div class="vg-ttl"><i class="ti ti-microphone"></i> 이렇게 말해보세요</div>
-        <div class="vg-item"><i class="ti ti-camera"></i>"사진 찍어줘" — 식단 분석</div>
-        <div class="vg-item"><i class="ti ti-chart-line"></i>"PSA 기록해줘"</div>
-        <div class="vg-item"><i class="ti ti-flame"></i>"통증 5점이야"</div>
-      </div>
+  <!-- ── Admin 비밀번호 ── -->
+  <div id="scr-admin-pw" class="screen dark center">
+    <div style="font-size:48px;">🔐</div>
+    <h2>Admin 로그인</h2>
+    <input id="admin-pw-input" class="inp pw-inp" type="password" placeholder="••••••"
+           onkeydown="if(event.key==='Enter')A.checkPw()">
+    <div class="row gap">
+      <button class="btn-ghost" onclick="A.goScreen('scr-profile')">취소</button>
+      <button class="btn-primary" onclick="A.checkPw()">확인</button>
     </div>
+  </div>
 
-    <!-- 식단 기록 (공통) -->
-    <div id="pg-upload" class="page">
-      <div class="sl"><i class="ti ti-camera"></i> 식사 기록 &amp; AI 분석</div>
-      <button class="teal-banner" style="flex-direction:column;gap:10px;align-items:center;justify-content:center;min-height:120px;" onclick="openSheet('up-sheet')">
-        <div class="banner-icon" style="width:55px;height:55px;"><i class="ti ti-camera" style="font-size:27px;"></i></div>
-        <div style="text-align:center;">
-          <div class="banner-ttl" style="font-size:16px;">카메라 / 갤러리</div>
-          <div class="banner-sub">사진을 찍으면 AI가 즉시 분석합니다</div>
-        </div>
-      </button>
-      <div id="preview-area" class="preview-area" style="display:none;">
-        <img id="preview-img" src="" alt="">
-        <button class="preview-retake" onclick="openSheet('up-sheet')"><i class="ti ti-refresh"></i> 다시 선택</button>
-      </div>
-      <div class="fb-box" id="fb-box" style="display:none;"></div>
-      <div class="section-divider">직접 입력</div>
-      <div class="type-toggle">
-        <button class="tbtn food active" id="tb-food" onclick="setType('food')"><i class="ti ti-salad"></i>식사</button>
-        <button class="tbtn ex" id="tb-ex" onclick="setType('ex')"><i class="ti ti-run"></i>운동</button>
-      </div>
-      <!-- 식사 입력 -->
-      <div id="food-form">
-        <input class="fi" type="text" id="up-name" placeholder="메뉴명 / 음식 이름 (선택)">
-        <textarea class="fi" rows="2" id="up-memo" placeholder="메모 - 재료, 특이사항 등 (선택)"></textarea>
-        <button class="big-btn navy" onclick="doAnalyze()"><i class="ti ti-sparkles"></i>AI 식단 분석</button>
-      </div>
-      <!-- 운동 입력 -->
-      <div id="ex-form" style="display:none;">
-        <input class="fi" type="text" id="ex-type" placeholder="운동 종류 (예: 빠르게 걷기, 자전거)">
-        <input class="fi" type="text" id="ex-duration" placeholder="운동 시간 (예: 30분)" style="margin-top:9px;">
-        <input class="fi" type="text" id="ex-intensity" placeholder="강도 (예: 저강도, 중강도, 고강도)" style="margin-top:9px;">
-        <textarea class="fi" rows="2" id="ex-memo" placeholder="메모 (선택)" style="margin-top:9px;"></textarea>
-        <button class="big-btn navy" style="background:var(--warn);" onclick="doAnalyzeEx()"><i class="ti ti-sparkles"></i>AI 운동 분석</button>
-      </div>
-      <!-- 암환자 전용 증상/복약 -->
-      <div id="cancer-upload-extra" style="display:none;">
-        <div class="section-divider">증상 · 복약 기록</div>
-        <div class="type-toggle">
-          <button class="tbtn sym active" id="tb-sym" onclick="setCancerTab('sym')"><i class="ti ti-activity"></i>증상</button>
-          <button class="tbtn med" id="tb-med" onclick="setCancerTab('med')"><i class="ti ti-pill"></i>복약</button>
-        </div>
-        <div id="sym-form">
-          <div class="nrs-wrap">
-            <div class="nrs-lbl"><i class="ti ti-flame" style="color:var(--red);"></i> 통증 강도 (NRS 0~10)</div>
-            <div class="nrs-scale" id="nrs-pain"></div>
-          </div>
-          <div class="nrs-wrap" id="nrs-urine-wrap">
-            <div class="nrs-lbl"><i class="ti ti-droplet" style="color:#1976D2;"></i> 배뇨 불편 (0~10)</div>
-            <div class="nrs-scale" id="nrs-urine"></div>
-          </div>
-          <div class="nrs-wrap">
-            <div class="nrs-lbl"><i class="ti ti-zzz" style="color:var(--warn);"></i> 피로도 (0~10)</div>
-            <div class="nrs-scale" id="nrs-fatigue"></div>
-          </div>
-          <textarea class="fi" rows="2" id="sym-memo" placeholder="특이사항 메모 (선택)"></textarea>
-          <button class="big-btn red" onclick="saveSym()"><i class="ti ti-check"></i>증상 저장</button>
-        </div>
-        <div id="med-form" style="display:none;">
-          <input class="fi" type="text" id="med-name-in" placeholder="약 이름">
-          <input class="fi" type="text" id="med-dose-in" placeholder="용량 (예: 1정, 10mg)" style="margin-top:9px;">
-          <input class="fi" type="text" id="med-time-in" placeholder="복약 시간 (예: 아침 8시)" style="margin-top:9px;">
-          <button class="big-btn purple" onclick="saveMedFromForm()"><i class="ti ti-pill"></i>복약 저장</button>
-        </div>
-      </div>
+  <!-- ── Admin 대시보드 ── -->
+  <div id="scr-admin" class="screen light">
+    <div class="topbar red">
+      <button class="back-btn" onclick="A.goScreen('scr-profile')"><i class="ti ti-arrow-left"></i></button>
+      <span class="topbar-title">🛡️ Admin</span>
     </div>
-
-    <!-- 기록장 -->
-    <div id="pg-excel" class="page">
-      <div class="xl-toolbar">
-        <div class="sl" style="margin:0;"><i class="ti ti-table"></i> 식단 기록장</div>
-        <div class="autosave-badge" id="autosave-badge"><i class="ti ti-device-floppy"></i> 저장됨</div>
-      </div>
-      <div id="xl-empty" class="xl-empty"><i class="ti ti-notebook"></i>아직 기록이 없어요.<br>아래 버튼으로 오늘을 기록해보세요.</div>
-      <div id="xl-cards" style="display:flex;flex-direction:column;gap:11px;"></div>
-      <div class="xl-btns">
-        <button class="xl-add-btn" onclick="xlAddDay()"><i class="ti ti-plus"></i> 날짜 추가</button>
-        <button class="xl-export-btn" onclick="xlExport()"><i class="ti ti-download"></i> 엑셀</button>
-      </div>
-      <!-- 암환자 증상 기록 -->
-      <div id="sym-log-section" style="display:none;">
-        <div style="height:1px;background:var(--bd);margin:4px 0;"></div>
-        <div class="xl-toolbar" style="margin-top:4px;">
-          <div class="sl" style="margin:0;"><i class="ti ti-activity" style="color:var(--red);"></i> 증상 기록</div>
-        </div>
-        <div id="sym-empty" class="xl-empty" style="padding:20px;"><i class="ti ti-activity" style="font-size:36px;"></i>증상 기록이 없어요.</div>
-        <div id="sym-cards" style="display:flex;flex-direction:column;gap:9px;"></div>
-      </div>
-    </div>
-
-    <!-- 추적: 케토 추천 -->
-    <div id="pg-rec-health" class="page">
-      <div class="sl"><i class="ti ti-list-check"></i> 케토 맞춤 추천</div>
-      <div class="rlist">
-        <div class="rec"><div class="rec-row"><div><div class="rec-meta"><i class="ti ti-sun"></i> 아침 추천</div><div class="rec-name">아보카도 에그 볼</div><div class="rec-note">탄수화물 2g · 지방 22g · 단백질 13g</div></div><span class="pill pk">케토 적합</span></div></div>
-        <div class="rec"><div class="rec-row"><div><div class="rec-meta"><i class="ti ti-cloud-sun"></i> 점심 추천</div><div class="rec-name">닭가슴살 샐러드</div><div class="rec-note">탄수화물 5g · 지방 18g · 단백질 35g</div></div><span class="pill pk">케토 적합</span></div></div>
-        <div class="rec ex"><div class="rec-row"><div><div class="rec-meta"><i class="ti ti-run"></i> 운동 추천</div><div class="rec-name">저강도 유산소 30분</div><div class="rec-note">케톤 산화 촉진 · 지방 연소 최적화</div></div><span class="pill pe">오늘 미완</span></div></div>
-      </div>
-      <div class="sl"><i class="ti ti-chart-pie"></i> 주간 진행률</div>
+    <div class="scroll-body">
       <div class="card">
-        <div class="pg-bars">
-          <div><div class="pt"><span>탄수화물 유지</span><span style="font-weight:700;color:var(--tld);">91%</span></div><div class="pb"><div class="pf" style="width:91%;"></div></div></div>
-          <div><div class="pt"><span>단백질 목표</span><span style="font-weight:700;color:var(--warn);">78%</span></div><div class="pb"><div class="pf w" style="width:78%;"></div></div></div>
-          <div><div class="pt"><span>운동 달성</span><span style="font-weight:700;color:#854F0B;">55%</span></div><div class="pb"><div class="pf or" style="width:55%;"></div></div></div>
+        <div class="card-hd">
+          <span>👥 사용자 관리</span>
+          <button class="btn-sm teal" onclick="A.goScreen('scr-add-user')"><i class="ti ti-plus"></i> 추가</button>
+        </div>
+        <div id="admin-user-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span>💾 백업 / 복원</span></div>
+        <div class="card-body">
+          <button class="btn-full teal" onclick="A.backup()">📥 데이터 백업</button>
+          <input type="file" id="restore-file" accept=".json" style="display:none" onchange="A.restore(event)">
+          <button class="btn-full navy" onclick="document.getElementById('restore-file').click()">📤 백업 파일로 복원</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span>🔐 비밀번호 변경</span></div>
+        <div class="card-body">
+          <input class="inp-sm" id="new-pw1" type="password" placeholder="새 비밀번호">
+          <input class="inp-sm" id="new-pw2" type="password" placeholder="비밀번호 확인">
+          <button class="btn-full teal" onclick="A.changePw()">변경</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><span>⚠️ 앱 초기화</span></div>
+        <div class="card-body">
+          <button class="btn-full red" onclick="A.fullReset()">전체 초기화</button>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- 추적: PSA -->
-    <div id="pg-rec-cancer" class="page">
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div class="sl"><i class="ti ti-chart-line" style="color:var(--purple);"></i> PSA 추적</div>
-        <button onclick="openPSASheet()" style="background:var(--purple);color:#fff;border:none;border-radius:9px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-plus"></i>기록</button>
+  <!-- ── 사용자 추가 ── -->
+  <div id="scr-add-user" class="screen light">
+    <div class="topbar navy">
+      <button class="back-btn" onclick="A.goScreen('scr-admin')"><i class="ti ti-arrow-left"></i></button>
+      <span class="topbar-title">👤 새 사용자 추가</span>
+    </div>
+    <div class="scroll-body">
+      <div>
+        <label class="lbl">이름</label>
+        <input class="inp-sm" id="new-name" type="text" placeholder="이름 입력" maxlength="20">
       </div>
-
-      <!-- PSA 차트 -->
-      <div class="chart-wrap">
-        <div class="chart-title">PSA 추이 그래프 <span id="psa-chart-range"></span></div>
-        <div id="psa-chart-area"><div class="chart-empty">PSA를 2회 이상 기록하면 그래프가 나타납니다</div></div>
+      <div>
+        <label class="lbl">모드 선택</label>
+        <div id="mode-btns" class="col gap-sm"></div>
       </div>
-
-      <!-- PSA 히스토리 -->
-      <div id="psa-history" style="display:flex;flex-direction:column;gap:7px;">
-        <div class="xl-empty" style="padding:18px;"><i class="ti ti-chart-line" style="font-size:32px;color:rgba(107,63,160,.18);"></i>PSA 기록이 없어요.</div>
+      <div id="ctype-wrap" style="display:none">
+        <label class="lbl">암 종류</label>
+        <div id="ctype-btns" class="col gap-sm"></div>
       </div>
-
-      <!-- 증상 주간 평균 -->
-      <div class="sl"><i class="ti ti-activity" style="color:var(--red);"></i> 이번 주 증상 평균</div>
-      <div class="stat-row">
-        <div class="sc"><div class="slb">통증 평균</div><div class="sv" style="color:var(--red);" id="avg-pain">--</div></div>
-        <div class="sc"><div class="slb">피로 평균</div><div class="sv" style="color:var(--warn);" id="avg-fatigue">--</div></div>
+      <div id="stage-wrap" style="display:none">
+        <label class="lbl">병기</label>
+        <div id="stage-btns" class="grid2 gap-sm"></div>
       </div>
+      <button class="btn-full navy" onclick="A.addUser()"><i class="ti ti-check"></i> 사용자 추가</button>
+    </div>
+  </div>
 
-      <!-- 증상 차트 -->
-      <div class="chart-wrap">
-        <div class="chart-title">증상 추이 (최근 14일)</div>
-        <div id="sym-chart-area"><div class="chart-empty">증상을 기록하면 그래프가 나타납니다</div></div>
+  <!-- ── 메인 앱 ── -->
+  <div id="scr-app" class="screen light">
+    <div class="topbar navy" id="app-topbar">
+      <div>
+        <div class="topbar-title" id="tb-title">스마트 메타케어</div>
+        <div class="topbar-sub" id="tb-sub"></div>
       </div>
-
-      <!-- 진료 리포트 버튼 -->
-      <button onclick="openReport()" style="width:100%;padding:16px;background:linear-gradient(135deg,#4a1d96,#6B3FA0);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px;">
-        <i class="ti ti-clipboard-text" style="font-size:19px;"></i>진료용 리포트 생성
-      </button>
+      <div class="row gap-sm">
+        <span class="badge" id="tb-badge"></span>
+        <button class="tb-btn" onclick="A.goScreen('scr-profile')"><i class="ti ti-logout"></i></button>
+      </div>
     </div>
 
-    <!-- 코치 -->
-    <div id="pg-chat" class="page">
-      <div class="chat-wrap">
-        <div class="chat-scroll" id="chat-scroll">
+    <div class="vbar" id="vbar">
+      <div class="vdot" id="vdot"></div>
+      <span id="vtxt">듣고 있어요...</span>
+    </div>
+
+    <div class="pages" id="pages">
+
+      <!-- 홈 -->
+      <div id="pg-home" class="page active">
+        <div class="row space-between">
           <div>
-            <div class="bub-lbl">AI 코치</div>
-            <div class="bub ai" id="chat-greeting">안녕하세요! 무엇이든 물어보세요.</div>
+            <div class="greeting">안녕하세요, <span class="uname"></span> 님 👋</div>
+            <div class="sub mt4" id="home-mode-sub"></div>
           </div>
-          <div class="qbtns" id="qbtns-wrap"></div>
+          <div class="text-right">
+            <div class="sub" id="home-days-lbl"></div>
+            <div class="days-count" id="home-days"></div>
+          </div>
         </div>
-        <div class="chat-bar">
-          <input id="chat-in" type="text" placeholder="메시지를 입력하세요..." onkeydown="if(event.key==='Enter')sendChat()">
-          <button class="send-btn" onclick="sendChat()"><i class="ti ti-send"></i></button>
+        <div class="goal-card" id="home-goal-card">
+          <div class="sub mb6" id="home-goal-lbl"></div>
+          <div id="home-goal-items"></div>
+        </div>
+        <button class="cam-banner" onclick="A.openSheet('sh-photo')">
+          <div class="cam-icon"><i class="ti ti-camera"></i></div>
+          <div>
+            <div class="banner-ttl">식사 사진 → AI 분석</div>
+            <div class="banner-sub" id="home-banner-sub"></div>
+          </div>
+          <i class="ti ti-chevron-right" style="margin-left:auto;opacity:.5;font-size:22px;"></i>
+        </button>
+        <div class="section-title"><i class="ti ti-photo"></i> 최근 기록 사진</div>
+        <div class="card p12"><div class="photo-grid" id="home-photos"></div></div>
+        <div class="row space-between align-center">
+          <div class="section-title mb0"><i class="ti ti-bulb"></i> <span id="tip-title">오늘의 팁</span></div>
+          <button class="btn-text" onclick="A.refreshTip()"><i class="ti ti-refresh"></i> 새 팁</button>
+        </div>
+        <div class="tip-box"><div class="tip-lbl">AI 코치</div><div id="tip-text">로딩 중...</div></div>
+        <!-- 암환자 전용 홈 섹션 -->
+        <div id="home-cancer-section" style="display:none">
+          <div id="psa-banner-wrap"></div>
+          <div class="section-title"><i class="ti ti-activity" style="color:var(--red)"></i> 오늘의 증상</div>
+          <div class="sym-grid">
+            <button class="sym-btn" onclick="A.openSymSheet('pain')"><i class="ti ti-flame" style="color:var(--red)"></i><div class="sym-lbl">통증</div><div class="sym-val" id="sd-pain">미기록</div></button>
+            <button class="sym-btn" id="sd-urine-btn" onclick="A.openSymSheet('urine')"><i class="ti ti-droplet" style="color:#1976D2"></i><div class="sym-lbl">배뇨</div><div class="sym-val" id="sd-urine">미기록</div></button>
+            <button class="sym-btn" onclick="A.openSymSheet('fatigue')"><i class="ti ti-zzz" style="color:var(--warn)"></i><div class="sym-lbl">피로</div><div class="sym-val" id="sd-fatigue">미기록</div></button>
+          </div>
+          <div class="section-title"><i class="ti ti-pill" style="color:var(--purple)"></i> 오늘의 복약</div>
+          <div id="med-list-home"></div>
+        </div>
+        <div class="vguide">
+          <div class="vg-ttl"><i class="ti ti-microphone"></i> 이렇게 말해보세요</div>
+          <div class="vg-item" id="vg1"><i class="ti ti-camera"></i>"사진 찍어줘"</div>
+          <div class="vg-item" id="vg2"><i class="ti ti-salad"></i>"오늘 뭐 먹을까"</div>
+          <div class="vg-item"><i class="ti ti-table"></i>"기록장 보여줘"</div>
         </div>
       </div>
-    </div>
 
-  </div><!-- /pages -->
+      <!-- 식단 기록 -->
+      <div id="pg-diet" class="page">
+        <div class="section-title"><i class="ti ti-camera"></i> 식사 기록 &amp; AI 분석</div>
+        <button class="cam-banner col-center" onclick="A.openSheet('sh-photo')">
+          <div class="cam-icon"><i class="ti ti-camera"></i></div>
+          <div class="banner-ttl">카메라 / 갤러리</div>
+          <div class="banner-sub">사진을 찍으면 AI가 즉시 분석합니다</div>
+        </button>
+        <div id="preview-wrap" style="display:none" class="preview-area">
+          <img id="preview-img" src="" alt="">
+          <button class="retake-btn" onclick="A.openSheet('sh-photo')"><i class="ti ti-refresh"></i> 다시 선택</button>
+        </div>
+        <div id="ai-result" style="display:none" class="tip-box"></div>
+        <div class="divider">직접 입력</div>
+        <div class="row gap">
+          <button class="tbtn food active" id="tb-food" onclick="A.setDietTab('food')"><i class="ti ti-salad"></i>식사</button>
+          <button class="tbtn ex" id="tb-ex" onclick="A.setDietTab('ex')"><i class="ti ti-run"></i>운동</button>
+        </div>
+        <div id="food-form">
+          <input class="inp-sm" id="food-name" type="text" placeholder="메뉴명 (선택)">
+          <textarea class="inp-sm" id="food-memo" rows="2" placeholder="메모 (선택)" style="resize:none;margin-top:8px;"></textarea>
+          <button class="btn-full navy" onclick="A.analyze()"><i class="ti ti-sparkles"></i> AI 식단 분석</button>
+        </div>
+        <div id="ex-form" style="display:none">
+          <input class="inp-sm" id="ex-type" type="text" placeholder="운동 종류 (예: 빠르게 걷기)">
+          <input class="inp-sm" id="ex-dur"  type="text" placeholder="운동 시간 (예: 30분)" style="margin-top:8px;">
+          <button class="btn-full warn" onclick="A.analyzeEx()"><i class="ti ti-sparkles"></i> AI 운동 분석</button>
+        </div>
+        <!-- 암환자 전용 -->
+        <div id="cancer-record-extra" style="display:none">
+          <div class="divider">증상 · 복약</div>
+          <div class="row gap">
+            <button class="tbtn sym active" id="tb-sym" onclick="A.setCancerTab('sym')"><i class="ti ti-activity"></i>증상</button>
+            <button class="tbtn med" id="tb-med" onclick="A.setCancerTab('med')"><i class="ti ti-pill"></i>복약</button>
+          </div>
+          <div id="sym-form">
+            <div class="nrs-wrap"><div class="nrs-lbl"><i class="ti ti-flame" style="color:var(--red)"></i> 통증 (0~10)</div><div class="nrs-scale" id="nrs-pain"></div></div>
+            <div class="nrs-wrap" id="nrs-urine-wrap"><div class="nrs-lbl"><i class="ti ti-droplet" style="color:#1976D2"></i> 배뇨 불편 (0~10)</div><div class="nrs-scale" id="nrs-urine"></div></div>
+            <div class="nrs-wrap"><div class="nrs-lbl"><i class="ti ti-zzz" style="color:var(--warn)"></i> 피로도 (0~10)</div><div class="nrs-scale" id="nrs-fatigue"></div></div>
+            <textarea class="inp-sm" id="sym-memo" rows="2" placeholder="메모 (선택)" style="resize:none;margin-top:4px;"></textarea>
+            <button class="btn-full red" onclick="A.saveSym()"><i class="ti ti-check"></i> 증상 저장</button>
+          </div>
+          <div id="med-form" style="display:none">
+            <input class="inp-sm" id="med-nm" type="text" placeholder="약 이름">
+            <input class="inp-sm" id="med-dose" type="text" placeholder="용량" style="margin-top:8px;">
+            <input class="inp-sm" id="med-time" type="text" placeholder="복약 시간" style="margin-top:8px;">
+            <button class="btn-full purple" onclick="A.saveMedForm()"><i class="ti ti-pill"></i> 복약 저장</button>
+          </div>
+        </div>
+      </div>
 
-  <button class="vfab" id="vfab" onclick="onMic()"><i class="ti ti-microphone" id="vfab-i"></i></button>
+      <!-- 기록장 -->
+      <div id="pg-log" class="page">
+        <div class="row space-between align-center">
+          <div class="section-title mb0"><i class="ti ti-table"></i> 식단 기록장</div>
+          <div class="autosave" id="autosave"><i class="ti ti-device-floppy"></i> 저장됨</div>
+        </div>
+        <div id="log-empty" class="empty-state"><i class="ti ti-notebook"></i><br>아직 기록이 없어요</div>
+        <div id="log-cards" class="col gap"></div>
+        <div class="row gap">
+          <button class="btn-dashed flex1" onclick="A.addLogDay()"><i class="ti ti-plus"></i> 날짜 추가</button>
+          <button class="btn-full navy" style="flex:0;padding:16px 18px;white-space:nowrap;" onclick="A.exportExcel()"><i class="ti ti-download"></i> 엑셀</button>
+        </div>
+        <!-- 암환자 증상 기록 -->
+        <div id="sym-log-section" style="display:none">
+          <div class="divider-line"></div>
+          <div class="section-title"><i class="ti ti-activity" style="color:var(--red)"></i> 증상 기록</div>
+          <div id="sym-log-empty" class="empty-state" style="padding:20px;"><i class="ti ti-activity"></i><br>증상 기록이 없어요</div>
+          <div id="sym-log-cards" class="col gap-sm"></div>
+        </div>
+      </div>
 
-  <nav class="bnav">
-    <button class="nb active" id="nb-home" onclick="goHome()"><i class="ti ti-home"></i>홈</button>
-    <button class="nb" id="nb-upload" onclick="goPage('upload')"><i class="ti ti-camera"></i>식단</button>
-    <button class="nb" id="nb-excel" onclick="goPage('excel')"><i class="ti ti-table"></i>기록장</button>
-    <button class="nb" id="nb-rec" onclick="goRec()"><i class="ti ti-chart-line"></i>추적</button>
-    <button class="nb" id="nb-chat" onclick="goPage('chat')"><i class="ti ti-message-circle"></i>코치</button>
-  </nav>
-</div><!-- /main-app -->
+      <!-- 추적 (건강관리: 추천 / 암환자: PSA) -->
+      <div id="pg-track" class="page">
+        <!-- 건강관리 추천 -->
+        <div id="track-health">
+          <div class="section-title"><i class="ti ti-list-check"></i> 맞춤 추천</div>
+          <div class="rec-list">
+            <div class="rec"><div class="rec-meta"><i class="ti ti-sun"></i> 아침 추천</div><div class="rec-name">아보카도 에그 볼</div><div class="rec-note">탄수화물 2g · 지방 22g · 단백질 13g</div><span class="pill green">케토 적합</span></div>
+            <div class="rec"><div class="rec-meta"><i class="ti ti-cloud-sun"></i> 점심 추천</div><div class="rec-name">닭가슴살 샐러드</div><div class="rec-note">탄수화물 5g · 지방 18g · 단백질 35g</div><span class="pill green">케토 적합</span></div>
+            <div class="rec ex"><div class="rec-meta"><i class="ti ti-run"></i> 운동 추천</div><div class="rec-name">저강도 유산소 30분</div><div class="rec-note">케톤 산화 촉진 · 지방 연소 최적화</div><span class="pill orange">오늘 미완</span></div>
+          </div>
+          <div class="section-title"><i class="ti ti-chart-pie"></i> 주간 진행률</div>
+          <div class="card">
+            <div class="prog-row"><div class="row space-between mb4"><span>식단 목표</span><span style="color:var(--tld);font-weight:700;">91%</span></div><div class="prog-bg"><div class="prog-bar" style="width:91%;background:var(--teal)"></div></div></div>
+            <div class="prog-row"><div class="row space-between mb4"><span>단백질</span><span style="color:var(--warn);font-weight:700;">78%</span></div><div class="prog-bg"><div class="prog-bar" style="width:78%;background:var(--warn)"></div></div></div>
+            <div class="prog-row"><div class="row space-between mb4"><span>운동</span><span style="color:#854F0B;font-weight:700;">55%</span></div><div class="prog-bg"><div class="prog-bar" style="width:55%;background:#D85A30"></div></div></div>
+          </div>
+        </div>
+        <!-- PSA 추적 -->
+        <div id="track-cancer" style="display:none">
+          <div class="row space-between align-center">
+            <div class="section-title mb0"><i class="ti ti-chart-line" style="color:var(--purple)"></i> PSA 추적</div>
+            <button class="btn-sm purple" onclick="A.openSheet('sh-psa')"><i class="ti ti-plus"></i> 기록</button>
+          </div>
+          <div id="psa-history" class="col gap-sm">
+            <div class="empty-state" style="padding:18px;"><i class="ti ti-chart-line"></i><br>PSA 기록이 없어요</div>
+          </div>
+          <div class="section-title"><i class="ti ti-activity" style="color:var(--red)"></i> 이번 주 증상 평균</div>
+          <div class="stat-row">
+            <div class="stat-card"><div class="stat-lbl">통증 평균</div><div class="stat-val red" id="avg-pain">--</div></div>
+            <div class="stat-card"><div class="stat-lbl">피로 평균</div><div class="stat-val warn" id="avg-fatigue">--</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI 코치 -->
+      <div id="pg-chat" class="page" style="padding:0">
+        <div class="chat-wrap">
+          <div class="chat-scroll" id="chat-scroll">
+            <div class="bub-lbl">AI 코치</div>
+            <div class="bub ai" id="chat-greeting">안녕하세요!</div>
+            <div id="qbtns" class="col gap-sm"></div>
+          </div>
+          <div class="chat-bar">
+            <input id="chat-in" type="text" placeholder="메시지를 입력하세요..." onkeydown="if(event.key==='Enter')A.sendChat()">
+            <button class="send-btn" onclick="A.sendChat()"><i class="ti ti-send"></i></button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /pages -->
+
+    <button class="vfab" id="vfab" onclick="A.onMic()"><i class="ti ti-microphone" id="vfab-i"></i></button>
+
+    <nav class="bnav">
+      <button class="nb active" id="nb-home"  onclick="A.goPage('home')"><i class="ti ti-home"></i><span>홈</span></button>
+      <button class="nb"        id="nb-diet"  onclick="A.goPage('diet')"><i class="ti ti-camera"></i><span>식단</span></button>
+      <button class="nb"        id="nb-log"   onclick="A.goPage('log')"><i class="ti ti-table"></i><span>기록장</span></button>
+      <button class="nb"        id="nb-track" onclick="A.goPage('track')"><i class="ti ti-chart-line"></i><span id="nb-track-lbl">추적</span></button>
+      <button class="nb"        id="nb-chat"  onclick="A.goPage('chat')"><i class="ti ti-message-circle"></i><span>코치</span></button>
+    </nav>
+  </div><!-- /scr-app -->
+
+</div><!-- /app -->
 
 <!-- 바텀시트들 -->
-<div class="overlay" id="up-sheet" onclick="if(event.target.id==='up-sheet')closeSheet('up-sheet')">
-  <div class="sheet"><div class="sh-title">사진 선택</div>
-    <button class="sh-btn" onclick="pickSrc('up','cam')"><i class="ti ti-camera"></i>촬영하기</button>
-    <button class="sh-btn" onclick="pickSrc('up','gal')"><i class="ti ti-photo"></i>폰에서 가져오기</button>
-    <button class="sh-cancel" onclick="closeSheet('up-sheet')">취소</button>
+<div class="overlay" id="sh-photo" onclick="if(event.target.id==='sh-photo')A.closeSheet('sh-photo')">
+  <div class="sheet">
+    <div class="sh-title">사진 선택</div>
+    <button class="sh-btn" onclick="A.pickPhoto('cam')"><i class="ti ti-camera"></i> 촬영하기</button>
+    <button class="sh-btn" onclick="A.pickPhoto('gal')"><i class="ti ti-photo"></i> 폰에서 가져오기</button>
+    <button class="sh-cancel" onclick="A.closeSheet('sh-photo')">취소</button>
   </div>
 </div>
-<div class="overlay" id="meal-sheet" onclick="if(event.target.id==='meal-sheet')closeSheet('meal-sheet')">
-  <div class="sheet"><div class="sh-title" id="meal-sh-title">사진 선택</div>
-    <button class="sh-btn" onclick="pickSrc('meal','cam')"><i class="ti ti-camera"></i>촬영하기</button>
-    <button class="sh-btn" onclick="pickSrc('meal','gal')"><i class="ti ti-photo"></i>폰에서 가져오기</button>
-    <button class="sh-cancel" onclick="closeSheet('meal-sheet')">취소</button>
+<div class="overlay" id="sh-meal" onclick="if(event.target.id==='sh-meal')A.closeSheet('sh-meal')">
+  <div class="sheet">
+    <div class="sh-title" id="sh-meal-title">사진 선택</div>
+    <button class="sh-btn" onclick="A.pickMeal('cam')"><i class="ti ti-camera"></i> 촬영하기</button>
+    <button class="sh-btn" onclick="A.pickMeal('gal')"><i class="ti ti-photo"></i> 폰에서 가져오기</button>
+    <button class="sh-cancel" onclick="A.closeSheet('sh-meal')">취소</button>
   </div>
 </div>
-<div class="overlay" id="psa-sheet" onclick="if(event.target.id==='psa-sheet')closeSheet('psa-sheet')">
-  <div class="sheet"><div class="sh-title">PSA 수치 기록</div>
-    <input class="sh-in" type="number" id="psa-val-in" placeholder="수치 (예: 4.2)" step="0.1" min="0">
-    <input class="sh-in" type="text" id="psa-date-in" placeholder="날짜">
-    <input class="sh-in" type="text" id="psa-note-in" placeholder="메모 (선택)">
-    <button class="sh-save-btn purple" onclick="savePSA()">저장</button>
-    <button class="sh-cancel" onclick="closeSheet('psa-sheet')">취소</button>
+<div class="overlay" id="sh-psa" onclick="if(event.target.id==='sh-psa')A.closeSheet('sh-psa')">
+  <div class="sheet">
+    <div class="sh-title">PSA 수치 기록</div>
+    <input class="inp-sm" id="psa-val" type="number" placeholder="수치 (예: 4.2)" step="0.1" min="0">
+    <input class="inp-sm" id="psa-date" type="text" placeholder="날짜" style="margin-top:8px;">
+    <input class="inp-sm" id="psa-note" type="text" placeholder="메모 (선택)" style="margin-top:8px;">
+    <button class="btn-full purple" onclick="A.savePSA()" style="margin-top:8px;">저장</button>
+    <button class="sh-cancel" onclick="A.closeSheet('sh-psa')">취소</button>
   </div>
 </div>
-<div class="overlay" id="sym-sheet" onclick="if(event.target.id==='sym-sheet')closeSheet('sym-sheet')">
-  <div class="sheet"><div class="sh-title" id="sym-sh-title">증상 기록</div>
-    <div style="font-size:13px;color:var(--mu);margin-bottom:9px;">강도 선택 (0=없음, 10=최고)</div>
-    <div class="nrs-sheet-scale" id="sym-nrs-quick"></div>
-    <button class="sh-save-btn teal" onclick="saveSymQuick()" style="margin-top:4px;">저장</button>
-    <button class="sh-cancel" onclick="closeSheet('sym-sheet')">취소</button>
+<div class="overlay" id="sh-sym" onclick="if(event.target.id==='sh-sym')A.closeSheet('sh-sym')">
+  <div class="sheet">
+    <div class="sh-title" id="sh-sym-title">증상 기록</div>
+    <div class="sub mb8">강도 선택 (0=없음, 10=최고)</div>
+    <div class="nrs-scale" id="sh-nrs-scale"></div>
+    <button class="btn-full teal" onclick="A.saveSymQuick()" style="margin-top:8px;">저장</button>
+    <button class="sh-cancel" onclick="A.closeSheet('sh-sym')">취소</button>
   </div>
 </div>
-<div class="overlay" id="med-add-sheet" onclick="if(event.target.id==='med-add-sheet')closeSheet('med-add-sheet')">
-  <div class="sheet"><div class="sh-title">복약 추가</div>
-    <input class="sh-in" type="text" id="med-add-name" placeholder="약 이름">
-    <input class="sh-in" type="text" id="med-add-time" placeholder="복약 시간">
-    <button class="sh-save-btn purple" onclick="saveMedFromSheet()">추가</button>
-    <button class="sh-cancel" onclick="closeSheet('med-add-sheet')">취소</button>
+<div class="overlay" id="sh-med" onclick="if(event.target.id==='sh-med')A.closeSheet('sh-med')">
+  <div class="sheet">
+    <div class="sh-title">복약 추가</div>
+    <input class="inp-sm" id="sh-med-nm" type="text" placeholder="약 이름">
+    <input class="inp-sm" id="sh-med-time" type="text" placeholder="복약 시간" style="margin-top:8px;">
+    <button class="btn-full purple" onclick="A.saveMedSheet()" style="margin-top:8px;">추가</button>
+    <button class="sh-cancel" onclick="A.closeSheet('sh-med')">취소</button>
   </div>
 </div>
-<div class="viewer" id="photo-viewer">
+
+<!-- 뷰어 -->
+<div class="viewer" id="viewer">
   <div class="viewer-wrap"><img id="viewer-img" src="" alt=""></div>
   <div class="viewer-btns">
-    <button class="vbtn rot" onclick="vRot(-90)"><i class="ti ti-rotate-counterclockwise"></i>왼쪽</button>
-    <button class="vbtn rot" onclick="vRot(90)"><i class="ti ti-rotate-clockwise"></i>오른쪽</button>
-    <button class="vbtn chg" onclick="vChg()"><i class="ti ti-replace"></i>교체</button>
-    <button class="vbtn del" onclick="vDel()"><i class="ti ti-trash"></i>삭제</button>
-    <button class="vbtn cls" onclick="closeViewer()"><i class="ti ti-x"></i>닫기</button>
+    <button class="vbtn" onclick="A.vRot(-90)"><i class="ti ti-rotate-counterclockwise"></i> 왼쪽</button>
+    <button class="vbtn" onclick="A.vRot(90)"><i class="ti ti-rotate-clockwise"></i> 오른쪽</button>
+    <button class="vbtn teal" onclick="A.vChg()"><i class="ti ti-replace"></i> 교체</button>
+    <button class="vbtn red" onclick="A.vDel()"><i class="ti ti-trash"></i> 삭제</button>
+    <button class="vbtn" onclick="A.closeViewer()"><i class="ti ti-x"></i> 닫기</button>
   </div>
 </div>
-<div class="viewer" id="home-viewer" onclick="if(event.target.id==='home-viewer')closeHomeViewer()" style="z-index:510;">
-  <div style="position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:13px 17px;">
-    <span id="hv-lbl" style="color:rgba(255,255,255,.62);font-size:12px;font-weight:600;"></span>
-    <button onclick="closeHomeViewer()" style="background:rgba(255,255,255,.13);border:none;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;"><i class="ti ti-x"></i></button>
-  </div>
+<div class="viewer" id="home-viewer" onclick="if(event.target.id==='home-viewer')A.closeHomeViewer()">
+  <button onclick="A.closeHomeViewer()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,.13);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:18px;z-index:1;"><i class="ti ti-x"></i></button>
   <div class="viewer-wrap"><img id="hv-img" src="" alt=""></div>
 </div>
 
-<input type="file" id="meal-cam" accept="image/*" capture="environment" style="display:none;" onchange="onFile(event,'meal')">
-<input type="file" id="meal-gal" accept="image/*" style="display:none;" onchange="onFile(event,'meal')">
-<input type="file" id="up-cam"   accept="image/*" capture="environment" style="display:none;" onchange="onFile(event,'up')">
-<input type="file" id="up-gal"   accept="image/*" style="display:none;" onchange="onFile(event,'up')">
-<!-- ══ 진료용 리포트 화면 ══ -->
-<div id="report-screen" class="fullscreen off">
-  <div class="report-topbar">
-    <button class="report-back" onclick="closeReport()"><i class="ti ti-arrow-left"></i></button>
-    <div style="color:#fff;font-size:16px;font-weight:700;">📋 진료용 리포트</div>
-    <button class="report-btn" style="width:auto;margin:0;padding:8px 14px;background:var(--teal);font-size:13px;" onclick="shareReport()"><i class="ti ti-share"></i>공유</button>
-  </div>
-  <div class="report-body">
-    <div class="report-page" id="report-content">
-      <!-- JS로 채움 -->
-    </div>
-    <button class="report-btn" style="background:var(--navy);" onclick="shareReport()"><i class="ti ti-share"></i>이미지로 저장 / 공유</button>
-    <div style="font-size:12px;color:var(--mu);text-align:center;margin-top:8px;padding-bottom:20px;">스크린샷을 찍어 진료 시 의사에게 보여주세요</div>
-  </div>
-</div>
-
-<canvas id="cc" style="display:none;"></canvas>
-<div class="toast" id="toast-el"></div>
-
-<script>
-'use strict';
-
-/* ══ 전역 ══ */
-var ANT_KEY = '';
-var EL_KEY  = '';
-var CUR_USER = null; // 현재 로그인한 사용자 객체
-var APP = { mode:'', ctype:'', stage:0, treatments:[] };
-
-/* ══ 스토리지 헬퍼 ══ */
-// 모든 데이터는 사용자 ID 기준으로 분리
-function uKey(k){ return 'mc_u_' + CUR_USER.id + '_' + k; }
-function gGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
-function gSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){ showToast('저장 오류'); } }
-function uGet(k){ return gGet(uKey(k)); }
-function uSet(k,v){ gSet(uKey(k),v); }
-function uGetJ(k,def){ try{ return JSON.parse(uGet(k)||'null')||def; }catch(e){ return def; } }
-function uSetJ(k,v){ uSet(k,JSON.stringify(v)); }
-
-/* ══ 사용자 관리 ══ */
-function getUsers(){ try{ return JSON.parse(gGet('mc_users')||'[]'); }catch(e){ return []; } }
-function setUsers(u){ gSet('mc_users', JSON.stringify(u)); }
-function getAdminPw(){ return gGet('mc_admin_pw')||''; }
-
-/* ══ 초기 진입 ══ */
-(function(){
-  var fab=document.getElementById('vfab');if(fab)fab.style.display='none';
-  var pw = gGet('mc_admin_pw');
-  if (!pw) {
-    // 최초 설정
-    show('onboarding');
-  } else {
-    show('profile-screen');
-    renderProfileList();
-  }
-})();
-
-function show(id){
-  // fullscreen 요소들 처리
-  ['profile-screen','onboarding','view-user-screen','report-screen'].forEach(function(s){
-    var el=document.getElementById(s);
-    if(el) el.classList.toggle('off', s!==id);
-  });
-  // admin-screen은 별도 처리
-  var adminEl=document.getElementById('admin-screen');
-  if(adminEl) adminEl.style.display=(id==='admin-screen'?'flex':'none');
-  // main-app
-  var app=document.getElementById('main-app');
-  if(app) app.style.display='none';
-  // FAB 완전 숨김
-  var fab=document.getElementById('vfab');
-  if(fab){fab.style.display='none';fab.style.visibility='hidden';fab.style.pointerEvents='none';}
-}
-function showApp(){
-  ['profile-screen','onboarding','view-user-screen','report-screen'].forEach(function(s){
-    var el=document.getElementById(s); if(el) el.classList.add('off');
-  });
-  var adminEl=document.getElementById('admin-screen');
-  if(adminEl) adminEl.style.display='none';
-  document.getElementById('main-app').style.display='flex';
-  var fab=document.getElementById('vfab');
-  if(fab){fab.style.display='flex';fab.style.visibility='visible';fab.style.pointerEvents='auto';}
-}
-function closeReport(){
-  document.getElementById('report-screen').classList.add('off');
-  document.getElementById('main-app').style.display='flex';
-  var fab=document.getElementById('vfab');
-  if(fab){fab.style.display='flex';fab.style.visibility='visible';fab.style.pointerEvents='auto';}
-}
-function enterAdmin(){
-  // 모든 화면 숨김
-  ['profile-screen','onboarding','view-user-screen','report-screen'].forEach(function(s){
-    var el=document.getElementById(s); if(el) el.classList.add('off');
-  });
-  document.getElementById('main-app').style.display='none';
-  var fab=document.getElementById('vfab');
-  if(fab){fab.style.display='none';fab.style.visibility='hidden';fab.style.pointerEvents='none';}
-  // Admin 화면 표시
-  var adminEl=document.getElementById('admin-screen');
-  if(adminEl) adminEl.style.display='flex';
-  renderAdminUserList();
-}
-
-/* ══ 최초 설정 ══ */
-function finishInit(){
-  var ant=document.getElementById('init-ant').value.trim();
-  var el=document.getElementById('init-el').value.trim();
-  var pw=document.getElementById('init-pw').value.trim();
-  if(!ant){ alert('Anthropic API 키를 입력해 주세요.'); return; }
-  if(!pw){ alert('Admin 비밀번호를 설정해 주세요.'); return; }
-  gSet('mc_admin_pw', pw);
-  gSet('mc_ant_key', ant);
-  if(el) gSet('mc_el_key', el);
-  ANT_KEY = ant; EL_KEY = el;
-  show('profile-screen');
-  renderProfileList();
-  showToast('설정 완료!');
-}
-
-/* ══ 프로필 화면 ══ */
-function renderProfileList(){
-  var users = getUsers();
-  var list = document.getElementById('profile-list');
-  if(!list) return;
-  list.innerHTML='';
-  if(!users.length){
-    list.innerHTML='<div class="ps-empty"><i class="ti ti-users"></i>등록된 사용자가 없습니다.<br>Admin으로 로그인하여 사용자를 추가하세요.</div>';
-    return;
-  }
-  users.forEach(function(u){
-    var isCancer=u.mode==='cancer';
-    var modeLabels={cancer:u.ctype==='prostate'?u.stage+'기 전립선암':'암환자',keto:'케토제닉',lchf:'저탄고지',diet:'다이어트 건강식'};
-    var modeIcons={cancer:'🔬',keto:'🥑',lchf:'🥩',diet:'🥗'};
-    var modeLabel=modeLabels[u.mode]||u.mode;
-    var icon=modeIcons[u.mode]||'👤';
-    var btn = document.createElement('button');
-    btn.className = 'profile-card';
-    btn.innerHTML = '<div class="profile-avatar '+(isCancer?'cancer':'health')+'">'+icon+'</div>'
-      +'<div class="profile-info">'
-      +'<div class="profile-name">'+esc(u.name)+'</div>'
-      +'<span class="profile-mode '+(isCancer?'cancer':'health')+'">'+esc(modeLabel)+'</span>'
-      +'</div>'
-      +'<i class="ti ti-chevron-right profile-arr"></i>';
-    btn.onclick = function(){ loginUser(u); };
-    list.appendChild(btn);
-  });
-}
-
-/* ══ 사용자 로그인 ══ */
-function loginUser(u){
-  CUR_USER = u;
-  APP.mode = u.mode;
-  APP.ctype = u.ctype||'';
-  APP.stage = u.stage||0;
-  APP.treatments = u.treatments||[];
-  ANT_KEY = gGet('mc_ant_key')||'';
-  EL_KEY  = gGet('mc_el_key')||'';
-  if(!ANT_KEY){ showToast('API 키가 없습니다. Admin에서 설정해주세요.'); return; }
-  showApp();
-  initApp();
-}
-
-function logoutUser(){
-  CUR_USER = null;
-  show('profile-screen');
-  renderProfileList();
-}
-
-/* ══ Admin 로그인 ══ */
-function openAdminLogin(){
-  document.getElementById('admin-pw-in').value='';
-  document.getElementById('admin-login-modal').classList.remove('off');
-  setTimeout(function(){ document.getElementById('admin-pw-in').focus(); },200);
-}
-function closeAdminLogin(){
-  document.getElementById('admin-login-modal').classList.add('off');
-}
-function checkAdminPw(){
-  var pw = document.getElementById('admin-pw-in').value;
-  if(pw === getAdminPw()){
-    closeAdminLogin();
-    enterAdmin();
-  } else {
-    showToast('비밀번호가 틀렸습니다');
-    document.getElementById('admin-pw-in').value='';
-  }
-}
-
-/* ══ Admin 대시보드 ══ */
-function exitAdmin2_unused(){}
-function saveApiKeys(){
-  var ant = document.getElementById('admin-ant-in').value.trim();
-  var el  = document.getElementById('admin-el-in').value.trim();
-  if(!ant){ showToast('API 키를 입력하세요'); return; }
-  gSet('mc_ant_key', ant);
-  if(el) gSet('mc_el_key', el);
-  showToast('API 키 저장됐어요 ✓');
-}
-function changeAdminPw(){
-  var pw1 = document.getElementById('new-pw-in').value;
-  var pw2 = document.getElementById('new-pw-confirm').value;
-  if(!pw1){ showToast('새 비밀번호를 입력하세요'); return; }
-  if(pw1!==pw2){ showToast('비밀번호가 일치하지 않아요'); return; }
-  gSet('mc_admin_pw', pw1);
-  document.getElementById('new-pw-in').value='';
-  document.getElementById('new-pw-confirm').value='';
-  showToast('비밀번호가 변경됐어요 ✓');
-}
-function renderAdminUserList(){
-  var users = getUsers();
-  var list = document.getElementById('admin-user-list');
-  if(!list) return;
-  list.innerHTML='';
-  if(!users.length){
-    list.innerHTML='<div style="padding:18px;text-align:center;color:var(--mu);font-size:13px;">등록된 사용자가 없습니다</div>';
-    return;
-  }
-  users.forEach(function(u){
-    var isCancer=u.mode==='cancer';
-    var modeLabels={cancer:u.ctype==='prostate'?u.stage+'기 전립선암':'기타 암환자',keto:'케토제닉',lchf:'저탄고지',diet:'다이어트 건강식'};
-    var modeIcons={cancer:'🔬',keto:'🥑',lchf:'🥩',diet:'🥗'};
-    var modeStr=modeLabels[u.mode]||u.mode;
-    var icon=modeIcons[u.mode]||'👤';
-    var row=document.createElement('div');row.className='admin-user-row';
-    row.innerHTML='<div class="admin-user-avatar '+(isCancer?'cancer':'health')+'">'+icon+'</div>'
-      +'<div class="admin-user-info">'
-      +'<div class="admin-user-name">'+esc(u.name)+'</div>'
-      +'<div class="admin-user-detail">'+esc(modeStr)+'</div>'
-      +'</div>'
-      +'<div class="admin-user-actions">'
-      +'<button class="admin-action-btn view" onclick="viewUserData(\''+u.id+'\')"><i class="ti ti-eye"></i>열람</button>'
-      +'<button class="admin-action-btn del" onclick="deleteUser(\''+u.id+'\')"><i class="ti ti-trash"></i>삭제</button>'
-      +'</div>';
-    list.appendChild(row);
-  });
-}
-function deleteUser(id){
-  if(!confirm('이 사용자를 삭제할까요?')) return;
-  var users=getUsers().filter(function(u){return u.id!==id;});
-  setUsers(users);
-  renderAdminUserList();
-  showToast('삭제됐어요');
-}
-
-/* ══ 사용자 추가 ══ */
-var _newMode='health', _newCtype='', _newStage=0;
-function openAddUser(){
-  _newMode='health'; _newCtype=''; _newStage=0;
-  document.getElementById('new-user-name').value='';
-  document.getElementById('new-ctype-wrap').style.display='none';
-  document.getElementById('new-stage-wrap').style.display='none';
-  document.querySelectorAll('.mode-tog').forEach(function(b){b.classList.remove('sel');});
-  document.getElementById('new-mode-health').classList.add('sel');
-  document.getElementById('add-user-modal').classList.remove('off');
-}
-function closeAddUser(){
-  document.getElementById('add-user-modal').classList.add('off');
-}
-function selectNewMode(m){
-  _newMode=m; _newCtype=''; _newStage=0;
-  document.querySelectorAll('[id^="new-mode-"]').forEach(function(b){b.classList.remove('sel');});
-  document.getElementById('new-mode-'+m).classList.add('sel');
-  document.getElementById('new-ctype-wrap').style.display=m==='cancer'?'':'none';
-  document.getElementById('new-stage-wrap').style.display='none';
-  document.querySelectorAll('[id^="new-ctype-"]').forEach(function(b){b.classList.remove('sel');});
-}
-function selectNewCtype(t){
-  _newCtype=t; _newStage=0;
-  document.getElementById('new-ctype-prostate').classList.toggle('sel',t==='prostate');
-  document.getElementById('new-ctype-other').classList.toggle('sel',t==='other');
-  document.getElementById('new-stage-wrap').style.display=t==='prostate'?'':'none';
-  document.querySelectorAll('[id^="ns"]').forEach(function(b){b.classList.remove('sel');});
-}
-function selectNewStage(n){
-  _newStage=n;
-  for(var i=1;i<=4;i++){var el=document.getElementById('ns'+i);if(el)el.classList.toggle('sel',i===n);}
-}
-function confirmAddUser(){
-  var name=document.getElementById('new-user-name').value.trim();
-  if(!name){ showToast('이름을 입력하세요'); return; }
-  if(_newMode==='cancer'&&!_newCtype){ showToast('암 종류를 선택하세요'); return; }
-  if(_newCtype==='prostate'&&!_newStage){ showToast('병기를 선택하세요'); return; }
-  var users=getUsers();
-  var newUser={
-    id: 'u_'+Date.now(),
-    name: name,
-    mode: _newMode,
-    ctype: _newCtype,
-    stage: _newStage,
-    treatments: [],
-    createdAt: Date.now()
-  };
-  users.push(newUser);
-  setUsers(users);
-  closeAddUser();
-  renderAdminUserList();
-  renderProfileList();
-  showToast(name+' 님이 추가됐어요 ✓');
-}
-
-/* ══ 사용자 데이터 열람 ══ */
-function viewUserData(uid){
-  var users=getUsers(), u=users.find(function(x){return x.id===uid;});
-  if(!u) return;
-  // 임시로 해당 사용자 컨텍스트 설정
-  var prevUser=CUR_USER; CUR_USER=u;
-  var title=document.getElementById('view-user-title');
-  if(title) title.textContent=u.name+' 님의 데이터';
-  var body=document.getElementById('view-user-body');
-  if(!body){ CUR_USER=prevUser; return; }
-  body.innerHTML='';
-
-  // 기본 정보
-  var infoCard=document.createElement('div');infoCard.className='data-card';
-  var isHealth=u.mode==='health';
-  var modeStr=isHealth?'건강관리(케토)':(u.ctype==='prostate'?u.stage+'기 전립선암':'기타 암환자');
-  infoCard.innerHTML='<div class="data-card-title"><i class="ti ti-user" style="color:var(--teal);"></i> 기본 정보</div>'
-    +'<div class="data-row"><span class="data-key">이름</span><span class="data-val">'+esc(u.name)+'</span></div>'
-    +'<div class="data-row"><span class="data-key">모드</span><span class="data-val">'+esc(modeStr)+'</span></div>'
-    +'<div class="data-row"><span class="data-key">등록일</span><span class="data-val">'+new Date(u.createdAt).toLocaleDateString('ko-KR')+'</span></div>';
-  body.appendChild(infoCard);
-
-  // PSA 데이터 (전립선암)
-  if(u.ctype==='prostate'){
-    var psaData=uGetJ('psa',[]);
-    var psaCard=document.createElement('div');psaCard.className='data-card';
-    psaCard.innerHTML='<div class="data-card-title"><i class="ti ti-chart-line" style="color:var(--purple);"></i> PSA 기록 ('+psaData.length+'건)</div>';
-    if(psaData.length){
-      var last=psaData[psaData.length-1];
-      psaCard.innerHTML+='<div class="data-row"><span class="data-key">최근 수치</span><span class="data-val">'+last.v.toFixed(1)+' ng/mL</span></div>'
-        +'<div class="data-row"><span class="data-key">측정일</span><span class="data-val">'+esc(last.date)+'</span></div>';
-    } else {
-      psaCard.innerHTML+='<div style="color:var(--mu);font-size:13px;padding:8px 0;">PSA 기록이 없습니다</div>';
-    }
-    body.appendChild(psaCard);
-  }
-
-  // 증상 데이터
-  if(!isHealth){
-    var symData=uGetJ('sym',{});
-    var symKeys=Object.keys(symData);
-    var symCard=document.createElement('div');symCard.className='data-card';
-    symCard.innerHTML='<div class="data-card-title"><i class="ti ti-activity" style="color:var(--red);"></i> 증상 기록 ('+symKeys.length+'일)</div>';
-    if(symKeys.length){
-      var lastKey=symKeys.sort().reverse()[0];
-      var ld=symData[lastKey];
-      symCard.innerHTML+='<div class="data-row"><span class="data-key">마지막 기록</span><span class="data-val">'+esc(lastKey)+'</span></div>'
-        +(ld.pain!==undefined?'<div class="data-row"><span class="data-key">통증</span><span class="data-val">'+ld.pain+'점</span></div>':'')
-        +(ld.fatigue!==undefined?'<div class="data-row"><span class="data-key">피로</span><span class="data-val">'+ld.fatigue+'점</span></div>':'');
-    } else {
-      symCard.innerHTML+='<div style="color:var(--mu);font-size:13px;padding:8px 0;">증상 기록이 없습니다</div>';
-    }
-    body.appendChild(symCard);
-  }
-
-  // 식단 기록
-  var records=uGetJ('records',[]);
-  var recCard=document.createElement('div');recCard.className='data-card';
-  recCard.innerHTML='<div class="data-card-title"><i class="ti ti-salad" style="color:var(--teal);"></i> 식단 기록 ('+records.length+'일)</div>'
-    +'<div class="data-row"><span class="data-key">총 기록일</span><span class="data-val">'+records.length+'일</span></div>';
-  body.appendChild(recCard);
-
-  CUR_USER=prevUser;
-  show('view-user-screen');
-}
-function exitViewUser(){
-  show('admin-screen');
-}
-
-/* ══ 앱 초기화 ══ */
-function initApp(){
-  var u=CUR_USER;
-  var isCancer=u.mode==='cancer';
-  var isHealth=!isCancer;
-  var isProstate=isCancer&&u.ctype==='prostate';
-  var modeLabels={cancer:'암환자',keto:'케토제닉',lchf:'저탄고지',diet:'다이어트 건강식'};
-  var modeIcons={cancer:'🔬',keto:'🥑',lchf:'🥩',diet:'🥗'};
-
-  // 헤더
-  var badge=document.getElementById('tb-badge'),sub=document.getElementById('tb-sub');
-  if(isCancer){badge.textContent=isProstate?u.stage+'기 전립선암':'암환자 관리';badge.className='tb-badge cancer';}
-  else{badge.textContent=modeLabels[u.mode]||'건강관리';badge.className='tb-badge health';}
-  if(sub)sub.textContent=u.name+' 님';
-
-  // 이름 표시
-  document.querySelectorAll('.uname').forEach(function(el){el.textContent=u.name;});
-
-  // 홈 활성화
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
-  document.getElementById(isHealth?'pg-home-health':'pg-home-cancer').classList.add('active');
-  document.querySelectorAll('.nb').forEach(function(e){e.classList.remove('active');});
-  document.getElementById('nb-home').classList.add('active');
-
-  // 건강관리 모드별 홈 UI 초기화
-  if(isHealth) initHealthHome(u.mode);
-
-  // 모드별 UI
-  if(isHealth){
-    document.getElementById('cancer-upload-extra').style.display='none';
-    document.getElementById('sym-log-section').style.display='none';
-    document.getElementById('pg-rec-health').style.display='';
-    document.getElementById('pg-rec-cancer').style.display='none';
-  } else {
-    document.getElementById('cancer-upload-extra').style.display='';
-    document.getElementById('sym-log-section').style.display='';
-    document.getElementById('pg-rec-health').style.display='none';
-    document.getElementById('pg-rec-cancer').style.display='';
-    if(!isProstate){
-      var ps=document.getElementById('psa-section');if(ps)ps.style.display='none';
-      var ub=document.getElementById('sym-urine-btn');if(ub)ub.style.display='none';
-      var nuw=document.getElementById('nrs-urine-wrap');if(nuw)nuw.style.display='none';
-    } else {
-      var ps2=document.getElementById('psa-section');if(ps2)ps2.style.display='';
-    }
-    var stageLabels={1:'1기 국소 저위험',2:'2기 국소 중·고위험',3:'3기 국소 진행성',4:'4기 전이성'};
-    var lbl=document.getElementById('cancer-stage-lbl');
-    if(lbl) lbl.textContent=isProstate?(stageLabels[u.stage]||'전립선암')+' 관리 중':'암 치유 통합 관리 중';
-  }
-
-  // 내비 추적 아이콘
-  var nbRec=document.getElementById('nb-rec');
-  if(nbRec) nbRec.innerHTML=isHealth?'<i class="ti ti-list-check"></i>추천':'<i class="ti ti-chart-line"></i>PSA추적';
-
-  // NRS
-  buildNRS('nrs-pain','pain');buildNRS('nrs-urine','urine');buildNRS('nrs-fatigue','fatigue');
-  buildNRSQuick();
-
-  // 코치 버튼
-  buildQbtns();
-
-  // 데이터
-  xlLoad();
-  if(isHealth){ refreshHomeGrid(); refreshHomeStats(); refreshDietTip(); }
-  else { refreshMedHome(); refreshTodaySym(); refreshPSABanner(); }
-
-  // 날짜
-  var pdi=document.getElementById('psa-date-in');if(pdi)pdi.value=todayStr();
-  updateDays();
-  tts('안녕하세요 '+u.name+' 님!');
-}
-
-function updateDays(){
-  var isHealth=CUR_USER&&CUR_USER.mode==='health';
-  var elId=isHealth?'keto-days':'cancer-days';
-  var el=document.getElementById(elId);if(!el)return;
-  var startKey='start';
-  var start=uGet(startKey);
-  if(!start){uSet(startKey,Date.now());start=Date.now();}
-  el.textContent=Math.floor((Date.now()-parseInt(start))/86400000)+1+'일';
-}
-
-/* ══ 내비 ══ */
-function goHome(){
-  var isHealth=CUR_USER&&CUR_USER.mode==='health';
-  activatePage(isHealth?'pg-home-health':'pg-home-cancer','nb-home');
-  if(isHealth) refreshHomeGrid();
-  else{refreshMedHome();refreshTodaySym();}
-}
-function goPage(p){
-  activatePage('pg-'+p,'nb-'+p);
-  if(p==='excel'&&CUR_USER&&CUR_USER.mode!=='health') loadSymCards();
-  if(p==='rec'&&CUR_USER&&CUR_USER.mode!=='health'){loadPSAHistory();loadSymAvg();}
-  if(p==='chat'){setTimeout(function(){var cs=document.getElementById('chat-scroll');if(cs)cs.scrollTop=cs.scrollHeight;},100);}
-}
-function goRec(){
-  var isHealth=CUR_USER&&CUR_USER.mode==='health';
-  activatePage(isHealth?'pg-rec-health':'pg-rec-cancer','nb-rec');
-  if(!isHealth){loadPSAHistory();loadSymAvg();}
-}
-function activatePage(pid,nbid){
-  document.querySelectorAll('.page').forEach(function(e){e.classList.remove('active');});
-  document.querySelectorAll('.nb').forEach(function(e){e.classList.remove('active');});
-  var pg=document.getElementById(pid);if(pg)pg.classList.add('active');
-  var nb=document.getElementById(nbid);if(nb)nb.classList.add('active');
-  document.getElementById('pages').scrollTop=0;
-}
-
-/* ══ 음성 ══ */
-var VS='idle',VQ=[],VR=null,VBusy=false;
-function setVS(s){
-  VS=s;
-  var fab=document.getElementById('vfab'),icon=document.getElementById('vfab-i');
-  var bar=document.getElementById('vbar'),dot=document.getElementById('vdot'),txt=document.getElementById('vtxt');
-  fab.className='vfab'+(s!=='idle'?' '+s:'');
-  if(s==='idle'){bar.classList.remove('on');icon.className='ti ti-microphone';}
-  else if(s==='listening'){bar.classList.add('on');dot.className='vdot L';txt.textContent='듣고 있어요...';icon.className='ti ti-microphone-off';}
-  else if(s==='thinking'){bar.classList.add('on');dot.className='vdot T';txt.textContent='처리 중...';icon.className='ti ti-loader';}
-  else if(s==='speaking'){bar.classList.add('on');dot.className='vdot S';txt.textContent='답변 중...';icon.className='ti ti-volume';}
-}
-function onMic(){
-  if(VS==='listening')stopRec();
-  else if(VS==='speaking'){window.speechSynthesis&&window.speechSynthesis.cancel();setVS('idle');setTimeout(startRec,200);}
-  else startRec();
-}
-function startRec(){
-  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){showToast('음성 인식을 지원하지 않는 브라우저예요');return;}
-  VR=new SR();VR.lang='ko-KR';VR.continuous=false;VR.interimResults=false;
-  VR.onresult=function(e){var cmd=e.results[0][0].transcript.trim();document.getElementById('vtxt').textContent='"'+cmd+'"';stopRec();VQ.push(cmd);runQ();};
-  VR.onerror=function(e){stopRec();if(e.error==='no-speech')tts('소리가 들리지 않았어요.');else if(e.error==='not-allowed')showToast('마이크 권한이 필요합니다');};
-  VR.onend=function(){if(VS==='listening')stopRec();};
-  try{VR.start();setVS('listening');}catch(e){setVS('idle');}
-}
-function stopRec(){try{VR&&VR.stop();}catch(e){}VR=null;if(VS==='listening')setVS('idle');}
-function runQ(){
-  if(VBusy||!VQ.length)return;
-  VBusy=true;var cmd=VQ.shift();setVS('thinking');
-  interpret(cmd).then(function(){VBusy=false;setVS('idle');if(VQ.length)runQ();});
-}
-function interpret(cmd){
-  if(!ANT_KEY){tts('API 키가 없어요.');return Promise.resolve();}
-  var sys='당신은 한국어 음성 명령 분류기입니다. 반드시 JSON만 출력하세요. 설명 금지.\n'
-    +'출력 형식: {"action":"페이지이동|AI코치|PSA기록|증상기록|없음","page":"home|upload|excel|rec|chat","say":"짧은안내말","query":"코치에게전달할질문","psa":"숫자","sym":"pain|urine|fatigue","nrs":"숫자"}\n'
-    +'분류 규칙:\n'
-    +'- 기록장/일지/달력/식단일지 → 페이지이동, excel\n'
-    +'- 홈/처음/메인 → 페이지이동, home\n'
-    +'- 사진/카메라/촬영/식단기록 → 페이지이동, upload\n'
-    +'- 추적/PSA추적/차트 → 페이지이동, rec\n'
-    +'- PSA 숫자 → PSA기록, psa에 숫자값\n'
-    +'- 통증/아파 숫자 → 증상기록, sym=pain, nrs에 숫자\n'
-    +'- 배뇨/소변 숫자 → 증상기록, sym=urine, nrs에 숫자\n'
-    +'- 피로/힘들어 숫자 → 증상기록, sym=fatigue, nrs에 숫자\n'
-    +'- 나머지(식단추천/뭐먹/운동추천/부작용/코치/질문/궁금) → AI코치, chat, query에 원문 그대로';
-  return fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':ANT_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:150,system:sys,messages:[{role:'user',content:cmd}]})
-  })
-  .then(function(r){return r.json();})
-  .then(function(d){
-    var txt=(d.content&&d.content[0]&&d.content[0].text)||'';
-    // JSON 파싱 — 마크다운 펜스 제거
-    txt=txt.replace(/```json|```/g,'').trim();
-    var res;try{res=JSON.parse(txt);}catch(e){res={action:'AI코치',page:'chat',say:'',query:cmd};}
-    return execCmd(res,cmd);
-  })
-  .catch(function(){return ttsP('오류가 생겼어요.');});
-}
-function execCmd(r,originalCmd){
-  var a=r.action||'없음',p=r.page||'',say=r.say||'',q=r.query||originalCmd||'';
-  if(a==='페이지이동'){
-    if(p==='home') goHome();
-    else if(p) goPage(p);
-    return ttsP(say||pageName(p)+'로 이동했어요.');
-  }
-  if(a==='AI코치'){
-    goPage('chat');
-    return ttsP(say).then(function(){
-      if(q){document.getElementById('chat-in').value=q;return sendChatP();}
-    });
-  }
-  if(a==='PSA기록'){
-    var v=parseFloat(r.psa);
-    if(!isNaN(v)){quickSavePSA(v);return ttsP('PSA '+v+'를 기록했어요.');}
-    openPSASheet();return ttsP('PSA 수치를 입력해 주세요.');
-  }
-  if(a==='증상기록'){
-    var nrs=parseInt(r.nrs||0),sym=r.sym||'pain';
-    if(nrs>=0&&nrs<=10){quickSaveSym(sym,nrs);return ttsP(symLabel(sym)+' '+nrs+'점 기록됐어요.');}
-    openSymSheet(sym);return ttsP(symLabel(sym)+' 강도를 선택해 주세요.');
-  }
-  // 분류 실패 시 AI코치로 fallback
-  goPage('chat');
-  return ttsP('').then(function(){
-    document.getElementById('chat-in').value=q||originalCmd;return sendChatP();
-  });
-}
-function pageName(p){return{home:'홈',upload:'식단',excel:'기록장',rec:'추적',chat:'코치'}[p]||p;}
-function symLabel(s){return{pain:'통증',urine:'배뇨 불편',fatigue:'피로'}[s]||s;}
-
-/* ══ TTS ══ */
-function tts(t){ttsP(t);}
-function ttsP(text){
-  return new Promise(function(resolve){
-    if(!text||!('speechSynthesis' in window)){resolve();return;}
-    window.speechSynthesis.cancel();setVS('speaking');
-    var u=new SpeechSynthesisUtterance(text);u.lang='ko-KR';u.rate=0.88;
-    var done=function(){setVS('idle');resolve();};
-    u.onend=done;u.onerror=done;
-    window.speechSynthesis.speak(u);setTimeout(done,15000);
-  });
-}
-
-/* ══ AI 코치 ══ */
-var chatBusy=false;
-function buildQbtns(){
-  var wrap=document.getElementById('qbtns-wrap');if(!wrap)return;wrap.innerHTML='';
-  var u=CUR_USER;if(!u)return;
-  var isHealth=u.mode==='health',isProstate=u.mode==='cancer'&&u.ctype==='prostate';
-  var qs;
-  if(u.mode==='keto') qs=[{i:'ti-camera',q:'방금 찍은 식사 사진 케토로 분석해줘'},{i:'ti-salad',q:'오늘 케토 식단 추천해줘'},{i:'ti-heart-rate-monitor',q:'케톤 수치가 낮아요, 이유가 뭔가요?'},{i:'ti-run',q:'케토 중 운동 어떻게 해야 하나요?'}];
-  else if(u.mode==='lchf') qs=[{i:'ti-camera',q:'이 음식 저탄고지로 분석해줘'},{i:'ti-salad',q:'저탄고지 식단 오늘 메뉴 추천해줘'},{i:'ti-chart-bar',q:'저탄고지와 케토의 차이가 뭔가요?'},{i:'ti-run',q:'저탄고지 중 운동 방법 알려줘'}];
-  else if(u.mode==='diet') qs=[{i:'ti-camera',q:'이 음식 다이어트 관점으로 분석해줘'},{i:'ti-salad',q:'오늘 건강하고 살 빠지는 식단 추천해줘'},{i:'ti-heart',q:'지중해식 식단이 뭔가요?'},{i:'ti-run',q:'체중 감량에 효과적인 운동 알려줘'}];
-  else if(u.mode==='cancer'&&u.ctype==='prostate') qs=[{i:'ti-camera',q:'식사 사진 암 환자 식단으로 분석해줘'},{i:'ti-chart-line',q:'PSA 수치가 올랐어요, 어떻게 해야 하나요?'},{i:'ti-flame',q:'뼈 통증 관리 방법 알려주세요'},{i:'ti-pill',q:'호르몬 치료 부작용 줄이는 방법은?'}];
-  else qs=[{i:'ti-camera',q:'식사 사진 암 환자 식단으로 분석해줘'},{i:'ti-flame',q:'항암 치료 중 통증 관리 방법은?'},{i:'ti-salad',q:'암 환자에게 좋은 항산화 식단 알려줘'},{i:'ti-zzz',q:'극심한 피로 어떻게 극복하나요?'}];
-  qs.forEach(function(q){
-    var btn=document.createElement('button');btn.className='qbtn';
-    btn.innerHTML='<i class="ti '+q.i+'"></i>'+q.q;
-    btn.onclick=function(){askQ(q.q);};wrap.appendChild(btn);
-  });
-  var g=document.getElementById('chat-greeting');
-  if(g){
-    if(isHealth)g.textContent='안녕하세요, '+u.name+' 님! 케토제닉 전문 AI 코치입니다.';
-    else if(isProstate)g.textContent='안녕하세요, '+u.name+' 님! 전립선암 '+u.stage+'기 AI 코치입니다.';
-    else g.textContent='안녕하세요, '+u.name+' 님! 암 치유 통합 AI 코치입니다.';
-  }
-}
-function buildChatSys(){
-  var u=CUR_USER;if(!u)return'당신은 건강 코치입니다.';
-  var isCancer=u.mode==='cancer';
-  var isProstate=isCancer&&u.ctype==='prostate';
-  if(u.mode==='keto') return '당신은 케토제닉 식단 전문 건강 코치입니다. 핵심 원칙: 탄수화물 20g 이하, 지방 70~75%, 단백질 20~25%. 케톤 생성, 인슐린 억제, 체지방 연소를 중심으로 조언하세요. 친절하고 쉽게 한국어 3~5문장으로 답변하세요.';
-  if(u.mode==='lchf') return '당신은 저탄고지(LCHF) 식단 전문 건강 코치입니다. 핵심 원칙: 탄수화물 50~100g, 고지방·적정 단백질. 케토보다 완화된 방식으로 혈당 안정과 체중 관리를 돕습니다. 정제당·가공식품 배제, 자연식 지방 강조. 한국어 3~5문장으로 답변하세요.';
-  if(u.mode==='diet') return '당신은 다이어트 건강식 전문 코치입니다. 지중해식·DASH 식단 기반: 칼로리 제한, 균형 영양, 채소·과일·통곡물·올리브오일·등푸른생선 강조. 가공식품·포화지방·나트륨 최소화. 지속 가능한 건강한 체중 감량을 목표로 합니다. 한국어 3~5문장으로 답변하세요.';
-  if(isCancer){
-    var cancerDiet='현재 알려진 최적 암환자 식단 원칙: ① 케토제닉 또는 저탄고지로 암세포 포도당 공급 차단 ② 항산화 식품(십자화과 채소, 베리류, 토마토 리코펜) ③ 오메가3 풍부한 등푸른생선 ④ 강황·생강 등 항염 식품 ⑤ 정제당·가공식품·알코올 배제 ⑥ 충분한 단백질로 근육 유지.';
-    if(isProstate){
-      var si={1:'국소 저위험',2:'국소 중·고위험',3:'국소 진행성',4:'전이성'};
-      return '당신은 전립선암 환자를 위한 AI 건강 코치입니다. 환자: '+u.stage+'기('+si[u.stage]+'), 치료:'+(u.treatments.join(',')||'미기재')+'. '+cancerDiet+' 전립선암 특화: 리코펜(토마토), 십자화과 채소(브로콜리), 녹차 폴리페놀, 셀레늄 강조. 식단, 증상, 복약, PSA에 대해 전문적으로 안내하세요. 한국어 3~5문장, 필요시 의사 상담 권유.';
-    }
-    return '당신은 암 환자를 위한 통합 치유 AI 코치입니다. '+cancerDiet+' 표준 의학+자연치유 통합 조언. 한국어 3~5문장.';
-  }
-  return '당신은 건강 코치입니다. 한국어 3~5문장으로 답변하세요.';
-}
-function askQ(q){document.getElementById('chat-in').value=q;sendChat();}
-function sendChat(){sendChatP();}
-function sendChatP(){
-  if(chatBusy||!ANT_KEY){if(!ANT_KEY)showToast('API 키가 없습니다');return Promise.resolve();}
-  var inp=document.getElementById('chat-in'),msg=inp.value.trim();if(!msg)return Promise.resolve();
-  inp.value='';
-  var cs=document.getElementById('chat-scroll');
-  function scrollDown(){ setTimeout(function(){ cs.scrollTop=cs.scrollHeight; },80); }
-  var uw=document.createElement('div');uw.className='bub-wu';
-  uw.innerHTML='<div class="bub user">'+esc(msg)+'</div>';cs.appendChild(uw);
-  var ld=document.createElement('div');
-  ld.innerHTML='<div class="bub-lbl">AI 코치</div><div class="bub ai"><div class="dots"><span></span><span></span><span></span></div></div>';
-  cs.appendChild(ld);scrollDown();chatBusy=true;
-  return fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':ANT_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:500,system:buildChatSys(),messages:[{role:'user',content:msg}]})
-  })
-  .then(function(r){return r.json();})
-  .then(function(d){
-    var reply=(d.content&&d.content[0]&&d.content[0].text)||'답변을 가져오지 못했어요.';
-    ld.querySelector('.bub.ai').textContent=reply;scrollDown();chatBusy=false;tts(reply);
-  })
-  .catch(function(){ld.querySelector('.bub.ai').textContent='오류가 발생했어요.';scrollDown();chatBusy=false;});
-}
-
-/* ══ AI 사진 분석 ══ */
-function doAnalyze(){
-  if(!ANT_KEY){showToast('API 키가 없습니다');return;}
-  var name=document.getElementById('up-name').value.trim();
-  var memo=document.getElementById('up-memo').value.trim();
-  var pre=document.getElementById('preview-img');
-  var hasPic=pre.src&&document.getElementById('preview-area').style.display!=='none';
-  if(!hasPic&&!name){showToast('사진 또는 메뉴명을 입력하세요');return;}
-  var fb=document.getElementById('fb-box');fb.style.display='block';
-  fb.innerHTML='<div class="dots"><span></span><span></span><span></span></div>';
-  var u=CUR_USER,isCancer=u&&u.mode==='cancer';
-  var perspectives={
-    keto:'케토제닉 식단 관점에서 (탄수화물·지방·단백질 비율, 케토 적합도 0~10점, 혈당 영향) 분석해 주세요. 케토 적합도 점수를 명시하고, 개선 방법도 알려주세요. 3~4문장으로.',
-    lchf:'저탄고지(LCHF) 식단 관점에서 (탄수화물 함량, 혈당 지수, 포만감) 분석해 주세요. 저탄고지 적합도와 주의사항을 알려주세요. 3~4문장으로.',
-    diet:'균형 건강식·다이어트 관점에서 (칼로리 추정, 영양 균형, 지중해식 적합도) 분석해 주세요. 체중 관리에 도움이 되는지 평가해 주세요. 3~4문장으로.',
-    cancer:'암 환자 식단 관점에서 분석해 주세요. ① 항산화 성분 ② 혈당 지수(저당 여부) ③ 항염 효과 ④ 케토 적합도를 평가하고, 전립선암이면 리코펜·십자화과도 언급해 주세요. 3~4문장으로.'
-  };
-  var perspective=perspectives[u.mode]||perspectives.cancer;
-  var msgs;
-  if(hasPic){
-    var b64=pre.src.split(',')[1],mt=pre.src.startsWith('data:image/png')?'image/png':'image/jpeg';
-    var p='이 사진의 음식을 '+perspective;if(name)p+=' 음식 이름: '+name;if(memo)p+=' 메모: '+memo;
-    msgs=[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:p}]}];
-  } else {
-    msgs=[{role:'user',content:'"'+name+'"을 '+perspective}];
-  }
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':ANT_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:450,messages:msgs})
-  })
-  .then(function(r){return r.json();})
-  .then(function(d){var reply=(d.content&&d.content[0]&&d.content[0].text)||'분석 결과를 가져오지 못했어요.';fb.textContent=reply;tts(reply);})
-  .catch(function(){fb.textContent='분석 오류가 발생했어요.';});
-}
-
-/* ══ PSA 차트 ══ */
-function drawPSAChart(){
-  var area=document.getElementById('psa-chart-area');if(!area)return;
-  var data=getPSA();
-  if(data.length<2){area.innerHTML='<div class="chart-empty">PSA를 2회 이상 기록하면 그래프가 나타납니다</div>';return;}
-  var recent=data.slice(-8); // 최근 8개
-  var vals=recent.map(function(d){return d.v;});
-  var maxV=Math.max.apply(null,vals), minV=Math.min.apply(null,vals);
-  var range=maxV-minV||1;
-  var W=320,H=120,padL=40,padR=10,padT=10,padB=28;
-  var gW=W-padL-padR, gH=H-padT-padB;
-  var xStep=gW/(recent.length-1);
-  function xPos(i){return padL+i*xStep;}
-  function yPos(v){return padT+gH-(((v-minV)/range)*gH);}
-
-  var points=recent.map(function(d,i){return xPos(i)+','+yPos(d.v);}).join(' ');
-
-  // Y축 눈금 (3개)
-  var yTicks='';
-  [minV, (minV+maxV)/2, maxV].forEach(function(v,i){
-    var y=yPos(v);
-    yTicks+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="#e5e7eb" stroke-width="1"/>';
-    yTicks+='<text x="'+(padL-4)+'" y="'+(y+4)+'" text-anchor="end" font-size="9" fill="#9ca3af">'+v.toFixed(1)+'</text>';
-  });
-
-  // X축 날짜
-  var xLabels='';
-  recent.forEach(function(d,i){
-    var x=xPos(i);
-    var lbl=d.date.slice(0,8); // "26년 05월"
-    if(i===0||i===recent.length-1||recent.length<=4){
-      xLabels+='<text x="'+x+'" y="'+(H-2)+'" text-anchor="middle" font-size="8" fill="#9ca3af">'+lbl+'</text>';
-    }
-  });
-
-  // 포인트와 값 레이블
-  var circles='',labels='';
-  recent.forEach(function(d,i){
-    var x=xPos(i),y=yPos(d.v);
-    var isLast=i===recent.length-1;
-    circles+='<circle cx="'+x+'" cy="'+y+'" r="'+(isLast?5:3.5)+'" fill="'+(isLast?'#6B3FA0':'#9B72CF')+'" stroke="#fff" stroke-width="1.5"/>';
-    if(isLast||recent.length<=4){
-      labels+='<text x="'+x+'" y="'+(y-8)+'" text-anchor="middle" font-size="9" font-weight="700" fill="#4a1d96">'+d.v.toFixed(1)+'</text>';
-    }
-  });
-
-  var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;">'
-    +yTicks
-    +'<polyline points="'+points+'" fill="none" stroke="#9B72CF" stroke-width="2" stroke-linejoin="round"/>'
-    +circles+labels+xLabels
-    +'</svg>';
-  area.innerHTML=svg;
-
-  var rangeEl=document.getElementById('psa-chart-range');
-  if(rangeEl)rangeEl.textContent=recent[0].date.slice(0,8)+' ~ '+recent[recent.length-1].date.slice(0,8);
-}
-
-/* ══ 증상 차트 ══ */
-function drawSymChart(){
-  var area=document.getElementById('sym-chart-area');if(!area)return;
-  var data=getSym();
-  var keys=Object.keys(data).sort().slice(-14);
-  if(keys.length<2){area.innerHTML='<div class="chart-empty">증상을 기록하면 그래프가 나타납니다</div>';return;}
-
-  var W=320,H=110,padL=30,padR=10,padT=10,padB=24;
-  var gW=W-padL-padR, gH=H-padT-padB;
-  var xStep=gW/(keys.length-1);
-  function xPos(i){return padL+i*xStep;}
-  function yPos(v){return padT+gH-((v/10)*gH);}
-
-  // Y축 눈금
-  var yTicks='';
-  [0,5,10].forEach(function(v){
-    var y=yPos(v);
-    yTicks+='<line x1="'+padL+'" y1="'+y+'" x2="'+(W-padR)+'" y2="'+y+'" stroke="#e5e7eb" stroke-width="1"/>';
-    yTicks+='<text x="'+(padL-4)+'" y="'+(y+4)+'" text-anchor="end" font-size="9" fill="#9ca3af">'+v+'</text>';
-  });
-
-  // 선 그리기
-  function makeLine(type,color){
-    var pts=keys.map(function(k,i){
-      var v=data[k]&&data[k][type]!==undefined?data[k][type]:null;
-      return v!==null?xPos(i)+','+yPos(v):null;
-    }).filter(Boolean);
-    if(pts.length<2)return'';
-    return'<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+color+'" stroke-width="1.8" stroke-linejoin="round" opacity="0.85"/>';
-  }
-
-  var xLabels='';
-  if(keys.length<=4){
-    keys.forEach(function(k,i){xLabels+='<text x="'+xPos(i)+'" y="'+(H-2)+'" text-anchor="middle" font-size="8" fill="#9ca3af">'+k.slice(5,10)+'</text>';});
-  } else {
-    [0,Math.floor(keys.length/2),keys.length-1].forEach(function(i){xLabels+='<text x="'+xPos(i)+'" y="'+(H-2)+'" text-anchor="middle" font-size="8" fill="#9ca3af">'+keys[i].slice(5,10)+'</text>';});
-  }
-
-  // 범례
-  var legend='<text x="'+padL+'" y="8" font-size="9" fill="#C0392B">■통증</text>'
-    +'<text x="'+(padL+36)+'" y="8" font-size="9" fill="#BA7517">■피로</text>';
-  if(document.getElementById('sym-urine-btn')&&document.getElementById('sym-urine-btn').style.display!=='none'){
-    legend+='<text x="'+(padL+70)+'" y="8" font-size="9" fill="#1976D2">■배뇨</text>';
-  }
-
-  var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;">'
-    +yTicks
-    +makeLine('pain','#C0392B')
-    +makeLine('fatigue','#BA7517')
-    +makeLine('urine','#1976D2')
-    +xLabels+legend
-    +'</svg>';
-  area.innerHTML=svg;
-}
-
-/* ══ 진료용 리포트 ══ */
-function openReport(){
-  var u=CUR_USER;if(!u)return;
-  var psaData=getPSA();
-  var symData=getSym();
-  var medData=getMeds();
-  var records=getRecords();
-  var today=todayStr();
-
-  // PSA 통계
-  var lastPSA=psaData.length?psaData[psaData.length-1]:null;
-  var prevPSA=psaData.length>=2?psaData[psaData.length-2]:null;
-  var psaDiff=lastPSA&&prevPSA?(lastPSA.v-prevPSA.v).toFixed(2):null;
-  var psaTrend=psaDiff===null?'기록 없음':parseFloat(psaDiff)>0?'▲ '+psaDiff+' 증가':parseFloat(psaDiff)<0?'▼ '+Math.abs(psaDiff)+' 감소':'→ 변화없음';
-
-  // 증상 최근 7일 평균
-  var now=Date.now(),week=7*86400000,pain=[],fatigue=[],urine=[];
-  Object.values(symData).forEach(function(d){
-    if(d.ts&&now-d.ts<week){
-      if(d.pain!==undefined)pain.push(d.pain);
-      if(d.fatigue!==undefined)fatigue.push(d.fatigue);
-      if(d.urine!==undefined)urine.push(d.urine);
-    }
-  });
-  var avg=function(arr){return arr.length?(arr.reduce(function(a,b){return a+b;},0)/arr.length).toFixed(1):'-';};
-  var stageLabels={1:'1기 국소 저위험',2:'2기 국소 중·고위험',3:'3기 국소 진행성',4:'4기 전이성'};
-
-  // 식단 기록 수
-  var totalMeals=0;
-  records.forEach(function(d){if(d.photos)['morning','lunch','dinner'].forEach(function(m){if(d.photos[m])totalMeals++;});});
-
-  // AI 요약 생성
-  var reportEl=document.getElementById('report-content');
-  reportEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--mu);">리포트 생성 중...<br><div class="dots" style="justify-content:center;margin-top:12px;"><span></span><span></span><span></span></div></div>';
-  show('report-screen');
-
-  var summaryPrompt='전립선암 '+u.stage+'기 환자의 최근 데이터를 요약해주세요.\n'
-    +'- 최근 PSA: '+(lastPSA?lastPSA.v+' ng/mL ('+psaTrend+')':'기록없음')+'\n'
-    +'- 최근 7일 통증 평균: '+avg(pain)+'점\n'
-    +'- 최근 7일 피로 평균: '+avg(fatigue)+'점\n'
-    +'- 식단 기록 횟수: '+totalMeals+'끼\n'
-    +'- 복약 중인 약: '+(medData.map(function(m){return m.name;}).join(', ')||'없음')+'\n'
-    +'의사에게 전달할 1~2문장 임상 요약을 작성해주세요. 주요 변화와 주의사항 위주로.';
-
-  var aiSummary='AI 요약을 가져오지 못했습니다.';
-
-  function buildReportHTML(summary){
-    var psaRows=psaData.slice(-5).reverse().map(function(p,i,arr){
-      var prev=arr[i+1];var arrow=prev?(p.v>prev.v?'▲':p.v<prev.v?'▼':'→'):'';
-      return'<tr><td>'+p.date+'</td><td style="font-weight:700;">'+(arrow?'<span style="color:'+(p.v>=(prev?prev.v:p.v)?'#C0392B':'#0F6E56')+';">'+arrow+'</span> ':'')+p.v.toFixed(1)+' ng/mL</td><td>'+(p.note||'-')+'</td></tr>';
-    }).join('');
-    var symKeys=Object.keys(symData).sort().slice(-5).reverse();
-    var symRows=symKeys.map(function(k){var d=symData[k];return'<tr><td>'+k+'</td><td>'+(d.pain!==undefined?d.pain+'점':'-')+'</td><td>'+(d.fatigue!==undefined?d.fatigue+'점':'-')+'</td><td>'+(d.urine!==undefined?d.urine+'점':'-')+'</td></tr>';}).join('');
-    var medRows=medData.map(function(m){return'<tr><td>'+esc(m.name)+'</td><td>'+(m.dose||'-')+'</td><td>'+(m.time||'-')+'</td></tr>';}).join('');
-
-    return'<div class="report-hd">'
-      +'<div><div class="report-logo">🧬 스마트 메타케어</div><div class="report-logo-sub">AI 기반 전립선암 관리 플랫폼</div></div>'
-      +'<div><div class="report-patient-name">'+esc(u.name)+' 님</div><div class="report-patient-info">'+(stageLabels[u.stage]||'전립선암')+'<br>생성일: '+today+'</div></div>'
-      +'</div>'
-
-      +'<div class="report-sec"><div class="report-sec-title">📊 PSA 핵심 지표</div>'
-      +'<div class="report-grid">'
-      +'<div class="report-stat"><div class="report-stat-val" style="color:#6B3FA0;">'+(lastPSA?lastPSA.v.toFixed(1):'-')+'</div><div class="report-stat-lbl">최근 PSA (ng/mL)</div></div>'
-      +'<div class="report-stat"><div class="report-stat-val" style="font-size:14px;color:'+(psaDiff&&parseFloat(psaDiff)>0?'#C0392B':'#0F6E56')+';">'+(psaTrend)+'</div><div class="report-stat-lbl">이전 대비</div></div>'
-      +'<div class="report-stat"><div class="report-stat-val">'+psaData.length+'</div><div class="report-stat-lbl">총 측정 횟수</div></div>'
-      +'</div>'
-      +(psaRows?'<table class="report-tbl"><thead><tr><th>날짜</th><th>수치</th><th>메모</th></tr></thead><tbody>'+psaRows+'</tbody></table>':'<div style="font-size:12px;color:var(--mu);">PSA 기록이 없습니다</div>')
-      +'</div>'
-
-      +'<div class="report-sec"><div class="report-sec-title">🩺 증상 추이 (최근 7일 평균)</div>'
-      +'<div class="report-grid">'
-      +'<div class="report-stat"><div class="report-stat-val" style="color:#C0392B;">'+avg(pain)+'</div><div class="report-stat-lbl">통증 (NRS)</div></div>'
-      +'<div class="report-stat"><div class="report-stat-val" style="color:#BA7517;">'+avg(fatigue)+'</div><div class="report-stat-lbl">피로도 (NRS)</div></div>'
-      +'<div class="report-stat"><div class="report-stat-val" style="color:#1976D2;">'+avg(urine)+'</div><div class="report-stat-lbl">배뇨 불편 (NRS)</div></div>'
-      +'</div>'
-      +(symRows?'<table class="report-tbl"><thead><tr><th>날짜</th><th>통증</th><th>피로</th><th>배뇨</th></tr></thead><tbody>'+symRows+'</tbody></table>':'')
-      +'</div>'
-
-      +(medData.length?'<div class="report-sec"><div class="report-sec-title">💊 현재 복약 목록</div>'
-      +'<table class="report-tbl"><thead><tr><th>약 이름</th><th>용량</th><th>복약 시간</th></tr></thead><tbody>'+medRows+'</tbody></table></div>':'')
-
-      +'<div class="report-sec"><div class="report-sec-title">📋 식단 & 생활 기록</div>'
-      +'<div class="report-grid">'
-      +'<div class="report-stat"><div class="report-stat-val">'+records.length+'</div><div class="report-stat-lbl">기록 일수</div></div>'
-      +'<div class="report-stat"><div class="report-stat-val">'+totalMeals+'</div><div class="report-stat-lbl">식사 기록</div></div>'
-      +'<div class="report-stat"><div class="report-stat-val">'+Object.keys(symData).length+'</div><div class="report-stat-lbl">증상 기록일</div></div>'
-      +'</div></div>'
-
-      +'<div class="report-ai"><div class="report-ai-lbl">🤖 AI 임상 요약</div>'+esc(summary)+'</div>'
-
-      +'<div class="report-footer">본 리포트는 스마트 메타케어 앱(AI 기반)에서 자동 생성되었습니다.<br>의사의 진단을 대체하지 않으며 참고 자료로만 활용하세요.<br>생성일시: '+today+'</div>';
-  }
-
-  if(ANT_KEY){
-    fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':ANT_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:200,messages:[{role:'user',content:summaryPrompt}]})
-    })
-    .then(function(r){return r.json();})
-    .then(function(d){
-      aiSummary=(d.content&&d.content[0]&&d.content[0].text)||aiSummary;
-      reportEl.innerHTML=buildReportHTML(aiSummary);
-    })
-    .catch(function(){reportEl.innerHTML=buildReportHTML(aiSummary);});
-  } else {
-    reportEl.innerHTML=buildReportHTML(aiSummary);
-  }
-}
-
-function closeReport(){
-  document.getElementById('report-screen').classList.add('off');
-  show('report-screen'); // 실제로는 앱으로 돌아가야 함
-  // 앱 화면으로 복귀
-  document.getElementById('report-screen').classList.add('off');
-  document.getElementById('main-app').style.display='flex';
-}
-
-function shareReport(){
-  if(navigator.share){
-    navigator.share({title:'진료용 리포트 - '+CUR_USER.name,text:'스마트 메타케어 진료용 리포트입니다.'})
-    .catch(function(){showToast('스크린샷을 찍어 공유해주세요');});
-  } else {
-    showToast('스크린샷을 찍어 의사에게 보여주세요');
-  }
-}
-function getPSA(){return uGetJ('psa',[]);}
-function setPSA(d){uSetJ('psa',d);}
-function openPSASheet(){
-  document.getElementById('psa-val-in').value='';
-  document.getElementById('psa-date-in').value=todayStr();
-  document.getElementById('psa-note-in').value='';
-  openSheet('psa-sheet');
-}
-function savePSA(){
-  var v=parseFloat(document.getElementById('psa-val-in').value);
-  if(isNaN(v)||v<0){showToast('유효한 수치를 입력하세요');return;}
-  var data=getPSA();data.push({v:v,date:document.getElementById('psa-date-in').value||todayStr(),note:document.getElementById('psa-note-in').value,ts:Date.now()});
-  setPSA(data);closeSheet('psa-sheet');refreshPSABanner();loadPSAHistory();showToast('PSA '+v+' ng/mL 저장됐어요');
-}
-function quickSavePSA(v){var data=getPSA();data.push({v:v,date:todayStr(),note:'',ts:Date.now()});setPSA(data);refreshPSABanner();loadPSAHistory();}
-function refreshPSABanner(){
-  var data=getPSA(),disp=document.getElementById('psa-display'),badge=document.getElementById('psa-badge'),dlbl=document.getElementById('psa-date-lbl');
-  if(!disp)return;
-  if(!data.length){disp.textContent='--';return;}
-  var last=data[data.length-1];disp.textContent=last.v.toFixed(1);
-  if(dlbl)dlbl.textContent=last.date;
-  var cls='warn',txt='첫 기록';
-  if(data.length>=2){var diff=last.v-data[data.length-2].v;if(diff<-0.5){cls='good';txt='▼ 감소';}else if(diff>0.5){cls='danger';txt='▲ 증가 — 의사 상담';}else{cls='warn';txt='→ 안정적';}}
-  if(badge){badge.className='psa-badge '+cls;badge.textContent=txt;}
-}
-function loadPSAHistory(){
-  var list=document.getElementById('psa-history');if(!list)return;
-  var data=getPSA();
-  if(!data.length){list.innerHTML='<div class="xl-empty" style="padding:18px;"><i class="ti ti-chart-line" style="font-size:32px;color:rgba(107,63,160,.18);"></i>PSA 기록이 없어요.</div>';return;}
-  list.innerHTML='';
-  [].concat(data).reverse().forEach(function(item,i,arr){
-    var prev=arr[i+1],ac='eq',at='→';
-    if(prev){if(item.v>prev.v){ac='up';at='▲';}else if(item.v<prev.v){ac='dn';at='▼';}}
-    var row=document.createElement('div');row.className='psa-row';
-    row.innerHTML='<div><div class="psa-row-date">'+item.date+'</div>'+(item.note?'<div style="font-size:11px;color:var(--mu);">'+esc(item.note)+'</div>':'')+'</div>'
-      +'<div style="display:flex;align-items:center;gap:7px;"><span class="psa-arrow '+ac+'">'+at+'</span><span class="psa-row-val">'+item.v.toFixed(1)+'<span style="font-size:11px;font-weight:400;color:var(--mu);margin-left:2px;">ng/mL</span></span></div>';
-    list.appendChild(row);
-  });
-  drawPSAChart();
-}
-
-/* ══ 증상 ══ */
-var symNRS={pain:0,urine:0,fatigue:0},curSym='pain',quickNRS=0;
-function buildNRS(cid,type){var c=document.getElementById(cid);if(!c)return;c.innerHTML='';for(var i=0;i<=10;i++){(function(n){var dot=document.createElement('div');dot.className='nrs-dot';dot.textContent=n;dot.onclick=function(){c.querySelectorAll('.nrs-dot').forEach(function(d){d.classList.remove('sel','low','mid','high');});dot.classList.add('sel',n<=3?'low':n<=6?'mid':'high');symNRS[type]=n;};c.appendChild(dot);})(i);}}
-function buildNRSQuick(){var c=document.getElementById('sym-nrs-quick');if(!c)return;c.innerHTML='';for(var i=0;i<=10;i++){(function(n){var dot=document.createElement('div');dot.className='nrs-sd';dot.textContent=n;dot.onclick=function(){c.querySelectorAll('.nrs-sd').forEach(function(d){d.classList.remove('sel','low','mid','high');});dot.classList.add('sel',n<=3?'low':n<=6?'mid':'high');quickNRS=n;};c.appendChild(dot);})(i);}}
-function openSymSheet(type){curSym=type;quickNRS=0;buildNRSQuick();var lbls={pain:'통증',urine:'배뇨 불편',fatigue:'피로도'};document.getElementById('sym-sh-title').textContent=(lbls[type]||type)+' 기록';openSheet('sym-sheet');}
-function saveSymQuick(){var today=todayStr(),data=getSym();if(!data[today])data[today]={};data[today][curSym]=quickNRS;data[today].ts=Date.now();setSym(data);closeSheet('sym-sheet');refreshTodaySym();showToast(symLabel(curSym)+' '+quickNRS+'점 저장됐어요');}
-function getSym(){return uGetJ('sym',{});}
-function setSym(d){uSetJ('sym',d);}
-function quickSaveSym(type,nrs){var today=todayStr(),data=getSym();if(!data[today])data[today]={};data[today][type]=nrs;data[today].ts=Date.now();setSym(data);refreshTodaySym();}
-function refreshTodaySym(){var today=todayStr(),d=(getSym()[today])||{};var map={pain:'sym-pain-disp',urine:'sym-urine-disp',fatigue:'sym-fatigue-disp'};Object.keys(map).forEach(function(k){var el=document.getElementById(map[k]);if(el)el.textContent=d[k]!==undefined?d[k]+'점':'미기록';});}
-function saveSym(){var today=todayStr(),data=getSym();if(!data[today])data[today]={};data[today].pain=symNRS.pain;data[today].urine=symNRS.urine;data[today].fatigue=symNRS.fatigue;data[today].memo=document.getElementById('sym-memo').value;data[today].ts=Date.now();setSym(data);refreshTodaySym();showToast('증상 저장됐어요');showAutoSave('autosave-badge');document.getElementById('sym-memo').value='';}
-function setCancerTab(t){document.getElementById('tb-sym').className='tbtn sym'+(t==='sym'?' active':'');document.getElementById('tb-med').className='tbtn med'+(t==='med'?' active':'');document.getElementById('sym-form').style.display=t==='sym'?'':'none';document.getElementById('med-form').style.display=t==='med'?'':'none';}
-function loadSymCards(){var sc=document.getElementById('sym-cards'),se=document.getElementById('sym-empty');if(!sc)return;sc.innerHTML='';var data=getSym(),keys=Object.keys(data).sort().reverse();if(se)se.style.display=keys.length?'none':'block';keys.forEach(function(date){var d=data[date];var card=document.createElement('div');card.className='pr-log-card';var hd=document.createElement('div');hd.className='pr-log-hd';var del=document.createElement('button');del.className='pr-log-del';del.innerHTML='<i class="ti ti-trash"></i>';del.onclick=function(){var sd=getSym();delete sd[date];setSym(sd);loadSymCards();};hd.innerHTML='<div class="pr-log-date">'+esc(date)+'</div>';hd.appendChild(del);card.appendChild(hd);var body=document.createElement('div');body.className='pr-log-body';[{key:'pain',label:'통증',icon:'ti-flame',cls:'pain',unit:'점'},{key:'urine',label:'배뇨',icon:'ti-droplet',cls:'urine',unit:'점'},{key:'fatigue',label:'피로',icon:'ti-zzz',cls:'fatigue',unit:'점'}].forEach(function(r){if(d[r.key]===undefined)return;var row=document.createElement('div');row.className='pr-log-row';row.innerHTML='<div class="pr-log-icon '+r.cls+'"><i class="ti '+r.icon+'"></i></div><div class="pr-log-key">'+r.label+'</div><div class="pr-log-val">'+d[r.key]+r.unit+'</div>';body.appendChild(row);});if(d.memo){var m=document.createElement('div');m.style.cssText='font-size:12px;color:var(--mu);padding-top:3px;';m.textContent=d.memo;body.appendChild(m);}card.appendChild(body);sc.appendChild(card);});}
-function loadSymAvg(){var data=getSym(),now=Date.now(),week=7*86400000,pain=[],fatigue=[];Object.values(data).forEach(function(d){if(d.ts&&now-d.ts<week){if(d.pain!==undefined)pain.push(d.pain);if(d.fatigue!==undefined)fatigue.push(d.fatigue);}});var avg=function(arr){return arr.length?(arr.reduce(function(a,b){return a+b;},0)/arr.length).toFixed(1):'-';};var ep=document.getElementById('avg-pain'),ef=document.getElementById('avg-fatigue');if(ep)ep.textContent=avg(pain);if(ef)ef.textContent=avg(fatigue);drawSymChart();}
-
-/* ══ 복약 ══ */
-function getMeds(){return uGetJ('meds',[]);}
-function setMeds(d){uSetJ('meds',d);}
-function getMedDone(){return uGetJ('med_done',{});}
-function setMedDone(d){uSetJ('med_done',d);}
-function saveMedFromForm(){var name=document.getElementById('med-name-in').value.trim();if(!name){showToast('약 이름을 입력하세요');return;}var meds=getMeds();meds.push({id:Date.now(),name:name,dose:document.getElementById('med-dose-in').value.trim(),time:document.getElementById('med-time-in').value.trim()});setMeds(meds);refreshMedHome();document.getElementById('med-name-in').value='';document.getElementById('med-dose-in').value='';document.getElementById('med-time-in').value='';showToast(name+' 추가됐어요');}
-function saveMedFromSheet(){var name=document.getElementById('med-add-name').value.trim();if(!name){showToast('약 이름을 입력하세요');return;}var meds=getMeds();meds.push({id:Date.now(),name:name,dose:'',time:document.getElementById('med-add-time').value.trim()});setMeds(meds);closeSheet('med-add-sheet');refreshMedHome();showToast(name+' 추가됐어요');}
-function toggleMed(id){var done=getMedDone(),today=todayStr();if(!done[today])done[today]={};done[today][id]=!done[today][id];setMedDone(done);refreshMedHome();if(done[today][id])showToast('복약 완료 ✓');}
-function deleteMed(id){setMeds(getMeds().filter(function(m){return m.id!==id;}));refreshMedHome();}
-function refreshMedHome(){var list=document.getElementById('med-list-home');if(!list)return;var meds=getMeds(),done=getMedDone(),today=todayStr();list.innerHTML='';meds.forEach(function(med){var isDone=done[today]&&done[today][med.id];var item=document.createElement('div');item.className='med-item';item.innerHTML='<div class="med-check'+(isDone?' done':'')+'" onclick="toggleMed('+med.id+')">'+(isDone?'<i class="ti ti-check"></i>':'')+'</div><div class="med-info"><div class="med-name">'+esc(med.name)+(med.dose?' <span style="font-size:11px;color:var(--mu);">'+esc(med.dose)+'</span>':'')+'</div>'+(med.time?'<div class="med-time"><i class="ti ti-clock"></i>'+esc(med.time)+'</div>':'')+'</div><button style="background:none;border:none;color:var(--mu);font-size:16px;cursor:pointer;padding:3px;" onclick="deleteMed('+med.id+')"><i class="ti ti-x"></i></button>';list.appendChild(item);});var addBtn=document.createElement('button');addBtn.className='med-add-btn';addBtn.innerHTML='<i class="ti ti-plus"></i> 복약 추가';addBtn.onclick=function(){document.getElementById('med-add-name').value='';document.getElementById('med-add-time').value='';openSheet('med-add-sheet');};list.appendChild(addBtn);}
-
-/* ══ 이미지 ══ */
-function compress(dataUrl,cb){var img=new Image();img.onload=function(){var c=document.getElementById('cc'),MAX=700,w=img.width,h=img.height;if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);cb(c.toDataURL('image/jpeg',0.72));};img.src=dataUrl;}
-
-var pendSlot=null;
-function openSheet(id){document.getElementById(id).classList.add('on');}
-function closeSheet(id){document.getElementById(id).classList.remove('on');}
-function pickSrc(type,src){closeSheet(type==='meal'?'meal-sheet':'up-sheet');document.getElementById(type+'-'+src).value='';document.getElementById(type+'-'+src).click();}
-function openMealSheet(cardId,meal){pendSlot={cardId:cardId,meal:meal};var lbls={morning:'아침',lunch:'점심',dinner:'저녁'};document.getElementById('meal-sh-title').textContent=(lbls[meal]||meal)+' 사진 선택';openSheet('meal-sheet');}
-function onFile(e,type){var f=e.target.files[0];e.target.value='';if(!f)return;var r=new FileReader();r.onload=function(ev){compress(ev.target.result,function(small){if(type==='up'){document.getElementById('preview-img').src=small;document.getElementById('preview-area').style.display='block';goPage('upload');}else if(type==='meal'&&pendSlot){var s=pendSlot;pendSlot=null;var card=document.getElementById(s.cardId);if(!card)return;var slot=card.querySelector('.meal-slot[data-meal="'+s.meal+'"]');if(!slot)return;saveRot(s.cardId,s.meal,0);renderFilled(slot,small,0);schedSave();refreshHomeGrid();showToast('사진이 저장됐어요 ✓');}});};r.readAsDataURL(f);}
-
-/* ══ 식단 기록장 ══ */
-var cardSeq=0,saveTimer=null;
-function getRecords(){return uGetJ('records',[]);}
-function setRecords(d){uSetJ('records',d);}
-function makeCard(d){cardSeq++;var id='card-'+cardSeq;var card=document.createElement('div');card.className='day-card';card.id=id;var hd=document.createElement('div');hd.className='day-hd';var di=document.createElement('input');di.className='day-date';di.type='text';di.value=d.date||'';di.placeholder='26년 05월 25일';di.addEventListener('input',schedSave);var del=document.createElement('button');del.className='day-del';del.innerHTML='<i class="ti ti-trash"></i>';del.addEventListener('click',function(){delCard(card);});hd.appendChild(di);hd.appendChild(del);card.appendChild(hd);var grid=document.createElement('div');grid.className='meal-grid';['morning','lunch','dinner'].forEach(function(meal){var slot=document.createElement('div');slot.className='meal-slot';slot.setAttribute('data-meal',meal);grid.appendChild(slot);});card.appendChild(grid);var sr=document.createElement('div');sr.className='steps-row';var sl=document.createElement('span');sl.className='steps-lbl';sl.innerHTML='<i class="ti ti-walk"></i>만보';var si=document.createElement('input');si.className='steps-in';si.type='text';si.value=d.steps||'';si.placeholder='오늘 걸음 수';si.addEventListener('input',schedSave);sr.appendChild(sl);sr.appendChild(si);card.appendChild(sr);card.querySelectorAll('.meal-slot').forEach(function(slot){var meal=slot.getAttribute('data-meal'),photo=d.photos?d.photos[meal]:null;if(photo)renderFilled(slot,photo,loadRot(id,meal));else renderEmpty(slot);});return card;}
-function renderEmpty(slot){var meal=slot.getAttribute('data-meal'),cid=slot.closest('.day-card').id,lbls={morning:'아침',lunch:'점심',dinner:'저녁'},cls=meal==='morning'?'am':meal==='lunch'?'pm':'ev';slot.innerHTML='<span class="meal-lbl '+cls+'">'+lbls[meal]+'</span><div class="meal-photo-empty" onclick="openMealSheet(\''+cid+'\',\''+meal+'\')"><i class="ti ti-camera-plus"></i><span>탭하여 선택</span></div>';slot.removeAttribute('data-photo');}
-function renderFilled(slot,url,rot){var meal=slot.getAttribute('data-meal'),cid=slot.closest('.day-card').id,lbls={morning:'아침',lunch:'점심',dinner:'저녁'},cls=meal==='morning'?'am':meal==='lunch'?'pm':'ev';slot.setAttribute('data-photo',url);slot.innerHTML='<span class="meal-lbl '+cls+'">'+lbls[meal]+'</span><div class="meal-photo-filled" onclick="openViewer(\''+cid+'\',\''+meal+'\')" ><img src="'+url+'" alt="'+lbls[meal]+'" style="transform:rotate('+(rot||0)+'deg)"><div class="meal-photo-overlay"><i class="ti ti-eye"></i><span>보기/수정</span></div></div>';}
-function xlAddDay(){var card=makeCard({date:todayStr(),photos:{},steps:''});document.getElementById('xl-cards').appendChild(card);document.getElementById('xl-empty').style.display='none';card.scrollIntoView({behavior:'smooth',block:'nearest'});schedSave();}
-function delCard(card){card.remove();if(!document.getElementById('xl-cards').children.length)document.getElementById('xl-empty').style.display='block';schedSave();refreshHomeGrid();}
-function schedSave(){if(saveTimer)clearTimeout(saveTimer);saveTimer=setTimeout(doSave,800);}
-function collectCards(){var days=[];document.querySelectorAll('#xl-cards .day-card').forEach(function(card){var photos={};card.querySelectorAll('.meal-slot').forEach(function(slot){var p=slot.getAttribute('data-photo');if(p)photos[slot.getAttribute('data-meal')]=p;});var di=card.querySelector('.day-date'),si=card.querySelector('.steps-in');days.push({date:di?di.value:'',steps:si?si.value:'',photos:photos});});return days;}
-function doSave(){setRecords(collectCards());showAutoSave('autosave-badge');refreshHomeGrid();refreshHomeStats();}
-function xlLoad(){var days=getRecords();var c=document.getElementById('xl-cards');c.innerHTML='';cardSeq=0;document.getElementById('xl-empty').style.display=days.length?'none':'block';days.forEach(function(d){c.appendChild(makeCard(d));});}
-function xlExport(){var days=collectCards();if(!days.length){showToast('기록이 없습니다');return;}var u=CUR_USER,isHealth=u&&u.mode==='health';var aoa=[[isHealth?'케토 식단 일지':'암환자 식단 일지'],[],['날짜','아침','점심','저녁','만보']];days.forEach(function(d){aoa.push([d.date,d.photos&&d.photos.morning?'✓':'',d.photos&&d.photos.lunch?'✓':'',d.photos&&d.photos.dinner?'✓':'',d.steps]);});if(!isHealth){var symData=getSym(),psaData=getPSA(),medData=getMeds();aoa.push([]);aoa.push(['=== 증상 기록 ===']);aoa.push(['날짜','통증','배뇨','피로','메모']);Object.keys(symData).sort().forEach(function(date){var d=symData[date];aoa.push([date,d.pain!==undefined?d.pain:'',d.urine!==undefined?d.urine:'',d.fatigue!==undefined?d.fatigue:'',d.memo||'']);});if(psaData.length){aoa.push([]);aoa.push(['=== PSA 기록 ===']);aoa.push(['날짜','수치(ng/mL)','메모']);psaData.forEach(function(p){aoa.push([p.date,p.v,p.note||'']);});}}var ws=XLSX.utils.aoa_to_sheet(aoa);ws['!cols']=[{wch:16},{wch:10},{wch:10},{wch:10},{wch:12}];var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'메타케어기록');XLSX.writeFile(wb,'메타케어_'+todayStr().replace(/[년월일\s]/g,'')+'.xlsx');showToast('엑셀 저장 완료!');}
-
-/* ══ 홈 그리드 ══ */
-function refreshHomeGrid(){var grid=document.getElementById('home-photo-grid');if(!grid)return;var days=getRecords(),meals=['morning','lunch','dinner'],lbls={morning:'아침',lunch:'점심',dinner:'저녁'},photos=[];for(var i=days.length-1;i>=0&&photos.length<4;i--){if(!days[i].photos)continue;for(var m=0;m<meals.length&&photos.length<4;m++){var p=days[i].photos[meals[m]];if(p)photos.push({url:p,label:lbls[meals[m]]});}}grid.innerHTML='';photos.forEach(function(ph){var item=document.createElement('div');item.className='pg-item';item.onclick=(function(u,l){return function(){openHomeViewer(u,l);};})(ph.url,ph.label);var img=document.createElement('img');img.src=ph.url;img.alt=ph.label;var tag=document.createElement('span');tag.className='ph-tag';tag.textContent=ph.label;item.appendChild(img);item.appendChild(tag);grid.appendChild(item);});for(var k=photos.length;k<4;k++){var empty=document.createElement('div');empty.className='pg-empty';empty.innerHTML='<i class="ti ti-camera-plus"></i><span>기록장에서<br>추가</span>';empty.addEventListener('click',function(){goPage('excel');});grid.appendChild(empty);}}
-
-/* ══ 뷰어 ══ */
-var vCtx=null,vRot0=0;
-function openViewer(cid,meal){var card=document.getElementById(cid);if(!card)return;var slot=card.querySelector('.meal-slot[data-meal="'+meal+'"]');if(!slot)return;var photo=slot.getAttribute('data-photo');if(!photo)return;vCtx={cid:cid,meal:meal};vRot0=loadRot(cid,meal);document.getElementById('viewer-img').src=photo;document.getElementById('viewer-img').style.transform='rotate('+vRot0+'deg)';document.getElementById('photo-viewer').classList.add('on');}
-function closeViewer(){document.getElementById('photo-viewer').classList.remove('on');vCtx=null;}
-function vRot(deg){if(!vCtx)return;vRot0=(vRot0+deg+360)%360;document.getElementById('viewer-img').style.transform='rotate('+vRot0+'deg)';saveRot(vCtx.cid,vCtx.meal,vRot0);var card=document.getElementById(vCtx.cid);if(card){var si=card.querySelector('.meal-slot[data-meal="'+vCtx.meal+'"] img');if(si)si.style.transform='rotate('+vRot0+'deg)';}}
-function vChg(){if(!vCtx)return;pendSlot={cardId:vCtx.cid,meal:vCtx.meal};closeViewer();var lbls={morning:'아침',lunch:'점심',dinner:'저녁'};document.getElementById('meal-sh-title').textContent=(lbls[pendSlot.meal]||pendSlot.meal)+' 사진 교체';openSheet('meal-sheet');}
-function vDel(){if(!vCtx)return;if(!confirm('이 사진을 삭제할까요?'))return;var card=document.getElementById(vCtx.cid);if(card){var slot=card.querySelector('.meal-slot[data-meal="'+vCtx.meal+'"]');if(slot)renderEmpty(slot);}delRot(vCtx.cid,vCtx.meal);closeViewer();schedSave();showToast('사진이 삭제됐어요');}
-function openHomeViewer(url,lbl){document.getElementById('hv-img').src=url;document.getElementById('hv-lbl').textContent=lbl||'';document.getElementById('home-viewer').classList.add('on');}
-function closeHomeViewer(){document.getElementById('home-viewer').classList.remove('on');}
-
-/* ══ 회전값 (사용자별) ══ */
-function allRot(){return uGetJ('rot',{});}
-function loadRot(c,m){var a=allRot();return(a[c]&&a[c][m])||0;}
-function saveRot(c,m,d){var a=allRot();if(!a[c])a[c]={};a[c][m]=d;uSetJ('rot',a);}
-function delRot(c,m){var a=allRot();if(a[c]){delete a[c][m];uSetJ('rot',a);}}
-
-/* ══ 기록 탭 ══ */
-function setType(t){
-  document.getElementById('tb-food').className='tbtn food'+(t==='food'?' active':'');
-  document.getElementById('tb-ex').className='tbtn ex'+(t==='ex'?' active':'');
-  document.getElementById('food-form').style.display=t==='food'?'':'none';
-  document.getElementById('ex-form').style.display=t==='ex'?'':'none';
-  // 사진 미리보기와 분석결과 초기화
-  document.getElementById('preview-area').style.display='none';
-  document.getElementById('fb-box').style.display='none';
-}
-
-/* ══ 운동 AI 분석 ══ */
-function doAnalyzeEx(){
-  if(!ANT_KEY){showToast('API 키가 없습니다');return;}
-  var type=document.getElementById('ex-type').value.trim();
-  var duration=document.getElementById('ex-duration').value.trim();
-  var intensity=document.getElementById('ex-intensity').value.trim();
-  var memo=document.getElementById('ex-memo').value.trim();
-  if(!type){showToast('운동 종류를 입력하세요');return;}
-  var fb=document.getElementById('fb-box');fb.style.display='block';
-  fb.innerHTML='<div class="dots"><span></span><span></span><span></span></div>';
-  var u=CUR_USER,isHealth=u&&u.mode==='health';
-  var prompt='"'+type+'" 운동';
-  if(duration) prompt+=' '+duration;
-  if(intensity) prompt+=' ('+intensity+')';
-  if(isHealth) prompt+='을 케토제닉 식단 관점에서 분석해 주세요. 지방 연소 효과, 케톤 생성에 미치는 영향, 운동 후 식사 주의사항을 포함해 3~4문장으로.';
-  else prompt+='을 암 환자 관점에서 분석해 주세요. 면역 기능, 체력 유지, 피로 관리에 미치는 영향을 포함해 3~4문장으로.';
-  if(memo) prompt+=' 메모: '+memo;
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':ANT_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:400,messages:[{role:'user',content:prompt}]})
-  })
-  .then(function(r){return r.json();})
-  .then(function(d){var reply=(d.content&&d.content[0]&&d.content[0].text)||'분석 결과를 가져오지 못했어요.';fb.textContent=reply;tts(reply);})
-  .catch(function(){fb.textContent='분석 오류가 발생했어요.';});
-}
-
-/* ══ 홈 통계 업데이트 ══ */
-function refreshHomeStats(){
-  var days=getRecords(),today=todayStr();
-  // 총 기록일
-  var dEl=document.getElementById('stat-days');if(dEl)dEl.textContent=days.length+'일';
-  // 최근 기록
-  var lEl=document.getElementById('stat-last');
-  if(lEl)lEl.textContent=days.length?days[days.length-1].date.slice(0,8):'없음';
-  // 오늘 식사 기록
-  var todayData=days.find(function(d){return d.date===today;});
-  var mealCount=0;
-  if(todayData&&todayData.photos){['morning','lunch','dinner'].forEach(function(m){if(todayData.photos[m])mealCount++;});}
-  var mEl=document.getElementById('stat-meals');if(mEl)mEl.textContent=mealCount+'끼';
-  // 오늘 만보
-  var sEl=document.getElementById('stat-steps');
-  if(sEl)sEl.textContent=todayData&&todayData.steps?Number(todayData.steps.replace(/[^0-9]/g,'')).toLocaleString()+'보':'-';
-}
-
-/* ══ 건강관리 홈 모드별 초기화 ══ */
-var DIET_TIPS = {
-  keto: [
-    '전해질 보충이 중요합니다. 나트륨·칼륨·마그네슘을 충분히 섭취하면 케토 독감 증상을 예방할 수 있습니다.',
-    '케토 식단에서 수분 섭취를 늘리세요. 하루 2~3L의 물은 케톤 배출을 돕고 피로를 줄입니다.',
-    '저강도 유산소 운동(걷기, 자전거)은 케톤 산화를 촉진하여 체지방 연소를 극대화합니다.',
-    '아보카도는 케토의 완벽한 음식입니다. 건강한 지방, 칼륨, 섬유질이 풍부합니다.',
-    '버터 커피(방탄 커피)는 아침 공복에 섭취하면 포만감을 유지하며 케토시스를 강화합니다.'
-  ],
-  lchf: [
-    '정제 탄수화물(흰쌀, 흰밀가루, 설탕)을 피하고 통곡물이나 채소로 대체하면 혈당이 안정됩니다.',
-    '올리브오일, 아보카도, 견과류의 건강한 지방은 포만감을 높이고 혈당 급등을 막습니다.',
-    '식사 순서를 채소 → 단백질 → 탄수화물 순으로 하면 혈당 상승을 크게 줄일 수 있습니다.',
-    '저탄고지는 케토보다 유연합니다. 고구마, 현미, 콩류는 적당량 허용됩니다.',
-    '식사 후 10~15분 가볍게 걸으면 혈당 스파이크를 효과적으로 낮출 수 있습니다.'
-  ],
-  diet: [
-    '지중해식 식단의 핵심은 올리브오일, 채소, 생선, 견과류입니다. 매 식사 채소를 절반 이상 채우세요.',
-    '물을 식사 30분 전에 마시면 포만감이 높아져 자연스럽게 칼로리 섭취를 줄일 수 있습니다.',
-    '천천히 씹어 먹는 것만으로도 포만감이 20% 향상됩니다. 한 입에 20번 씹는 습관을 만드세요.',
-    '가공식품 대신 자연식품을 선택하세요. 성분표에 항목이 5개 이하인 것이 좋습니다.',
-    '등푸른생선(고등어, 연어, 삼치)을 주 2~3회 섭취하면 오메가3로 체지방 대사가 활성화됩니다.'
-  ]
-};
-
-function initHealthHome(mode){
-  var configs = {
-    keto: {
-      sub: '인슐린 통제 대사 모드',
-      daysLabel: '연속 케토',
-      goalLabel: '케토 목표 (탄수화물 20g 이하)',
-      goalItems: '<div style="display:flex;gap:20px;flex-wrap:wrap;">'
-        +'<div><div style="font-size:22px;font-weight:700;">20g</div><div style="font-size:11px;opacity:.7;">탄수화물 목표</div></div>'
-        +'<div><div style="font-size:22px;font-weight:700;">75%</div><div style="font-size:11px;opacity:.7;">지방 비율</div></div>'
-        +'<div><div style="font-size:22px;font-weight:700;">20%</div><div style="font-size:11px;opacity:.7;">단백질 비율</div></div>'
-        +'</div>',
-      bannerSub: '케토 적합도와 영양 분석을 즉시 알려드려요',
-      tipTitle: '오늘의 케토 팁',
-      voiceGuide: '"오늘 뭐 먹을까" — 케토 식단 추천',
-      gradientBg: 'linear-gradient(135deg,#2A7B7B,#1A5C5C)'
-    },
-    lchf: {
-      sub: '저탄고지 혈당 안정 모드',
-      daysLabel: '저탄고지',
-      goalLabel: '저탄고지 목표 (탄수화물 50~100g)',
-      goalItems: '<div style="display:flex;gap:20px;flex-wrap:wrap;">'
-        +'<div><div style="font-size:22px;font-weight:700;">100g</div><div style="font-size:11px;opacity:.7;">탄수화물 목표</div></div>'
-        +'<div><div style="font-size:22px;font-weight:700;">50%</div><div style="font-size:11px;opacity:.7;">지방 비율</div></div>'
-        +'<div><div style="font-size:22px;font-weight:700;">25%</div><div style="font-size:11px;opacity:.7;">단백질 비율</div></div>'
-        +'</div>',
-      bannerSub: '저탄고지 적합도와 혈당 영향을 분석해 드려요',
-      tipTitle: '오늘의 저탄고지 팁',
-      voiceGuide: '"오늘 뭐 먹을까" — 저탄고지 식단 추천',
-      gradientBg: 'linear-gradient(135deg,#1a6b4a,#0d4f35)'
-    },
-    diet: {
-      sub: '균형 건강식 다이어트 모드',
-      daysLabel: '다이어트',
-      goalLabel: '오늘의 건강식 목표',
-      goalItems: '<div style="display:flex;gap:20px;flex-wrap:wrap;">'
-        +'<div><div style="font-size:22px;font-weight:700;">1,600</div><div style="font-size:11px;opacity:.7;">칼로리 목표</div></div>'
-        +'<div><div style="font-size:22px;font-weight:700;">½</div><div style="font-size:11px;opacity:.7;">채소 비율</div></div>'
-        +'<div><div style="font-size:22px;font-weight:700;">30%</div><div style="font-size:11px;opacity:.7;">단백질 비율</div></div>'
-        +'</div>',
-      bannerSub: '칼로리와 영양 균형을 즉시 분석해 드려요',
-      tipTitle: '오늘의 건강식 팁',
-      voiceGuide: '"오늘 뭐 먹을까" — 건강 식단 추천',
-      gradientBg: 'linear-gradient(135deg,#1565C0,#0D47A1)'
-    }
-  };
-  var c = configs[mode] || configs.keto;
-  var el = function(id){ return document.getElementById(id); };
-  if(el('health-mode-sub')) el('health-mode-sub').textContent = c.sub;
-  if(el('health-days-label')) el('health-days-label').textContent = c.daysLabel;
-  if(el('health-goal-label')) el('health-goal-label').textContent = c.goalLabel;
-  if(el('health-goal-items')) el('health-goal-items').innerHTML = c.goalItems;
-  if(el('health-goal-card')) el('health-goal-card').style.background = c.gradientBg;
-  if(el('health-banner-sub')) el('health-banner-sub').textContent = c.bannerSub;
-  if(el('tip-title')) el('tip-title').textContent = c.tipTitle;
-  if(el('voice-guide-1')) el('voice-guide-1').innerHTML = '<i class="ti ti-salad"></i>"'+c.voiceGuide+'"';
-}
-
-/* ══ 식단 팁 (모드별) ══ */
-var lastTipIdx=-1;
-function getDietTip(mode){
-  var tips = DIET_TIPS[mode] || DIET_TIPS.keto;
-  var idx; do{ idx=Math.floor(Math.random()*tips.length); }while(idx===lastTipIdx&&tips.length>1);
-  lastTipIdx=idx; return tips[idx];
-}
-
-function refreshDietTip(){
-  var el=document.getElementById('keto-tip-text'); if(!el) return;
-  var mode = CUR_USER ? CUR_USER.mode : 'keto';
-  var modePrompts = {
-    keto: '케토제닉 식단 실천자를 위한 오늘의 팁을 1~2문장으로. 구체적이고 실용적으로.',
-    lchf: '저탄고지(LCHF) 식단 실천자를 위한 오늘의 혈당 관리 팁을 1~2문장으로. 구체적이고 실용적으로.',
-    diet: '건강 다이어트 실천자를 위한 오늘의 식단 팁을 1~2문장으로. 지중해식 또는 DASH 식단 기반으로.'
-  };
-  if(ANT_KEY){
-    el.innerHTML='<div class="dots"><span></span><span></span><span></span></div>';
-    fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':ANT_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:120,messages:[{role:'user',content:modePrompts[mode]||modePrompts.keto}]})
-    })
-    .then(function(r){return r.json();})
-    .then(function(d){var t=(d.content&&d.content[0]&&d.content[0].text)||getDietTip(mode);el.textContent=t;})
-    .catch(function(){el.textContent=getDietTip(mode);});
-  } else {
-    el.textContent=getDietTip(mode);
-  }
-}
-
-// 기존 refreshKetoTip을 새 함수로 연결
-function refreshKetoTip(){ refreshDietTip(); }
-
-/* ══ 데이터 백업 / 복원 ══ */
-function backupData(){
-  var backup = {};
-  // 모든 localStorage 키 수집
-  for(var i=0;i<localStorage.length;i++){
-    var k=localStorage.key(i);
-    backup[k]=localStorage.getItem(k);
-  }
-  backup['_backup_date'] = new Date().toLocaleString('ko-KR');
-  backup['_backup_version'] = '1.0';
-
-  var json=JSON.stringify(backup,null,2);
-  var blob=new Blob([json],{type:'application/json'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;
-  a.download='metacare_backup_'+new Date().toISOString().slice(0,10)+'.json';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('백업 파일이 다운로드됐어요 ✓');
-}
-
-function restoreData(e){
-  var file=e.target.files[0];
-  if(!file){return;}
-  var reader=new FileReader();
-  reader.onload=function(ev){
-    try{
-      var data=JSON.parse(ev.target.result);
-      if(!data['mc_admin_pw']){showToast('올바른 백업 파일이 아닙니다');return;}
-      if(!confirm('현재 데이터를 백업 파일로 덮어쓸까요?\n백업일시: '+(data['_backup_date']||'알 수 없음'))){return;}
-      // 기존 데이터 삭제 후 복원
-      localStorage.clear();
-      Object.keys(data).forEach(function(k){
-        if(!k.startsWith('_backup_')){
-          localStorage.setItem(k,data[k]);
-        }
-      });
-      showToast('복원 완료! 앱을 새로고침합니다');
-      setTimeout(function(){location.reload();},1500);
-    }catch(err){
-      showToast('파일을 읽을 수 없습니다');
-    }
-  };
-  reader.readAsText(file);
-  e.target.value='';
-}
-
-/* ══ 재설정 (Admin 전용) ══ */
-function doFullReset(){
-  if(!confirm('정말 전체 초기화할까요?\nAPI 키, 사용자, 모든 데이터가 삭제됩니다.')) return;
-  if(!confirm('마지막 확인입니다. 정말 삭제하시겠습니까?')) return;
-  localStorage.clear();
-  location.reload();
-}
-
-/* ══ 유틸 ══ */
-function todayStr(){var d=new Date();return String(d.getFullYear()).slice(2)+'년 '+pad(d.getMonth()+1)+'월 '+pad(d.getDate())+'일';}
-function pad(n){return n<10?'0'+n:String(n);}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function showToast(msg){var t=document.getElementById('toast-el');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2500);}
-function showAutoSave(id){var b=document.getElementById(id);if(!b)return;b.classList.add('show');setTimeout(function(){b.classList.remove('show');},1800);}
-</script>
+<!-- 파일 인풋 -->
+<input type="file" id="f-cam" accept="image/*" capture="environment" style="display:none" onchange="A.onFile(event,'cam')">
+<input type="file" id="f-gal" accept="image/*" style="display:none" onchange="A.onFile(event,'gal')">
+<input type="file" id="f-meal-cam" accept="image/*" capture="environment" style="display:none" onchange="A.onMealFile(event,'cam')">
+<input type="file" id="f-meal-gal" accept="image/*" style="display:none" onchange="A.onMealFile(event,'gal')">
+<canvas id="cc" style="display:none"></canvas>
+<div class="toast" id="toast"></div>
+
+<script src="js/app.js"></script>
 </body>
 </html>
