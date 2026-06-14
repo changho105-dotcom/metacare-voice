@@ -637,30 +637,41 @@ textarea.fi{resize:none;}
   <!-- 페이지 -->
   <div class="pages" id="pages">
 
-    <!-- 홈: 건강관리 -->
+    <!-- 홈: 건강관리 (케토/저탄고지/다이어트 공통) -->
     <div id="pg-home-health" class="page active">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;">
         <div>
           <div style="font-size:22px;font-weight:700;color:var(--navy);">안녕하세요, <span class="uname">사용자</span> 님 👋</div>
-          <div style="font-size:13px;color:var(--mu);margin-top:4px;">인슐린 통제 대사 모드</div>
+          <div style="font-size:13px;color:var(--mu);margin-top:4px;" id="health-mode-sub">건강 관리 중</div>
         </div>
         <div style="text-align:right;">
-          <div style="font-size:12px;color:var(--mu);">연속 케토</div>
+          <div style="font-size:12px;color:var(--mu);" id="health-days-label">연속</div>
           <div style="font-size:26px;font-weight:700;color:var(--tld);" id="keto-days">0일</div>
         </div>
       </div>
+
+      <!-- 목표 현황 카드 (모드별 다름) -->
+      <div id="health-goal-card" style="background:linear-gradient(135deg,#2A7B7B,#1A5C5C);border-radius:var(--r);padding:18px 20px;color:#fff;">
+        <div style="font-size:12px;opacity:.7;margin-bottom:8px;" id="health-goal-label">오늘의 목표</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+          <div id="health-goal-items"></div>
+        </div>
+      </div>
+
       <button class="teal-banner" onclick="openSheet('up-sheet')">
         <div class="banner-icon"><i class="ti ti-camera"></i></div>
         <div class="banner-txt">
           <div class="banner-ttl">식사 사진 → AI 분석</div>
-          <div class="banner-sub">케토 적합도와 영양 분석을 즉시 알려드려요</div>
+          <div class="banner-sub" id="health-banner-sub">촬영하면 식단 분석을 즉시 알려드려요</div>
         </div>
         <i class="ti ti-chevron-right banner-arr"></i>
       </button>
+
       <div class="sl"><i class="ti ti-photo"></i> 최근 기록 사진</div>
       <div class="card" style="padding:12px;">
         <div class="photo-grid" id="home-photo-grid"></div>
       </div>
+
       <div class="sl"><i class="ti ti-chart-bar"></i> 오늘의 식단 현황</div>
       <div class="stat-row">
         <div class="sc"><div class="slb">오늘 식사 기록</div><div class="sv g" id="stat-meals">0끼</div><div style="font-size:11px;color:var(--tld);margin-top:3px;">아침·점심·저녁</div></div>
@@ -670,15 +681,17 @@ textarea.fi{resize:none;}
         <div class="sc"><div class="slb">총 기록일</div><div class="sv" id="stat-days">0일</div></div>
         <div class="sc"><div class="slb">최근 기록</div><div class="sv" id="stat-last" style="font-size:16px;">없음</div></div>
       </div>
+
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div class="sl"><i class="ti ti-bulb"></i> 오늘의 케토 팁</div>
-        <button onclick="refreshKetoTip()" style="background:none;border:none;color:var(--teal);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;font-family:inherit;padding:4px;"><i class="ti ti-refresh"></i>새 팁</button>
+        <div class="sl"><i class="ti ti-bulb"></i> <span id="tip-title">오늘의 팁</span></div>
+        <button onclick="refreshDietTip()" style="background:none;border:none;color:var(--teal);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:4px;font-family:inherit;padding:4px;"><i class="ti ti-refresh"></i>새 팁</button>
       </div>
-      <div class="tip-box"><div class="tip-lbl">AI 코치의 조언</div><div id="keto-tip-text">전해질 보충이 중요합니다. 나트륨·칼륨·마그네슘을 충분히 섭취하면 케토 독감 증상을 예방할 수 있습니다.</div></div>
+      <div class="tip-box"><div class="tip-lbl" id="tip-label">AI 코치의 조언</div><div id="keto-tip-text">로딩 중...</div></div>
+
       <div class="vguide">
         <div class="vg-ttl"><i class="ti ti-microphone"></i> 이렇게 말해보세요</div>
         <div class="vg-item"><i class="ti ti-camera"></i>"사진 찍어줘" — 식단 AI 분석</div>
-        <div class="vg-item"><i class="ti ti-salad"></i>"오늘 뭐 먹을까" — 케토 식단 추천</div>
+        <div class="vg-item" id="voice-guide-1"><i class="ti ti-salad"></i>"오늘 뭐 먹을까" — 식단 추천</div>
         <div class="vg-item"><i class="ti ti-table"></i>"기록장 보여줘"</div>
       </div>
     </div>
@@ -1356,6 +1369,9 @@ function initApp(){
   document.querySelectorAll('.nb').forEach(function(e){e.classList.remove('active');});
   document.getElementById('nb-home').classList.add('active');
 
+  // 건강관리 모드별 홈 UI 초기화
+  if(isHealth) initHealthHome(u.mode);
+
   // 모드별 UI
   if(isHealth){
     document.getElementById('cancer-upload-extra').style.display='none';
@@ -1392,7 +1408,7 @@ function initApp(){
 
   // 데이터
   xlLoad();
-  if(isHealth){ refreshHomeGrid(); refreshHomeStats(); refreshKetoTip(); }
+  if(isHealth){ refreshHomeGrid(); refreshHomeStats(); refreshDietTip(); }
   else { refreshMedHome(); refreshTodaySym(); refreshPSABanner(); }
 
   // 날짜
@@ -2051,45 +2067,121 @@ function refreshHomeStats(){
   if(sEl)sEl.textContent=todayData&&todayData.steps?Number(todayData.steps.replace(/[^0-9]/g,'')).toLocaleString()+'보':'-';
 }
 
-/* ══ 케토 팁 ══ */
-var KETO_TIPS=[
-  '전해질 보충이 중요합니다. 나트륨·칼륨·마그네슘을 충분히 섭취하면 케토 독감 증상을 예방할 수 있습니다.',
-  '케토 식단에서 수분 섭취를 늘리세요. 하루 2~3L의 물은 케톤 배출을 돕고 피로를 줄입니다.',
-  '운동 전 MCT 오일 한 스푼은 즉각적인 에너지를 제공하고 케토시스를 유지하는 데 도움이 됩니다.',
-  '탄수화물 20g 이하를 유지하려면 채소 라벨을 꼭 확인하세요. 양파·당근은 의외로 당 함량이 높습니다.',
-  '저강도 유산소 운동(걷기, 자전거)은 케톤 산화를 촉진하여 체지방 연소를 극대화합니다.',
-  '단백질을 과도하게 섭취하면 포도당신생합성(gluconeogenesis)으로 케토시스가 방해받을 수 있습니다.',
-  '아보카도는 케토의 완벽한 음식입니다. 건강한 지방, 칼륨, 섬유질이 풍부합니다.',
-  '케토 식단 초기에는 수면의 질이 일시적으로 떨어질 수 있습니다. 마그네슘 보충이 도움이 됩니다.',
-  '버터 커피(방탄 커피)는 아침 공복에 섭취하면 포만감을 유지하며 케토시스를 강화합니다.',
-  '케토에서 식이섬유 섭취를 소홀히 하지 마세요. 브로콜리, 아스파라거스, 시금치를 충분히 드세요.',
-  '외식 시 샐러드에 올리브오일 드레싱, 고기류, 치즈를 선택하면 케토를 유지할 수 있습니다.',
-  '케토에서 간헐적 단식(16:8)을 병행하면 인슐린 민감성이 더욱 개선됩니다.',
-  '피로감이 심하다면 나트륨 부족일 수 있습니다. 소금을 조금 더 섭취해보세요.',
-  '치즈, 계란, 견과류는 케토 최고의 간식입니다. 항상 가방에 구비해두세요.'
-];
-var lastTipIdx=-1;
-function getKetoTip(){
-  var idx;do{idx=Math.floor(Math.random()*KETO_TIPS.length);}while(idx===lastTipIdx&&KETO_TIPS.length>1);
-  lastTipIdx=idx;return KETO_TIPS[idx];
+/* ══ 건강관리 홈 모드별 초기화 ══ */
+var DIET_TIPS = {
+  keto: [
+    '전해질 보충이 중요합니다. 나트륨·칼륨·마그네슘을 충분히 섭취하면 케토 독감 증상을 예방할 수 있습니다.',
+    '케토 식단에서 수분 섭취를 늘리세요. 하루 2~3L의 물은 케톤 배출을 돕고 피로를 줄입니다.',
+    '저강도 유산소 운동(걷기, 자전거)은 케톤 산화를 촉진하여 체지방 연소를 극대화합니다.',
+    '아보카도는 케토의 완벽한 음식입니다. 건강한 지방, 칼륨, 섬유질이 풍부합니다.',
+    '버터 커피(방탄 커피)는 아침 공복에 섭취하면 포만감을 유지하며 케토시스를 강화합니다.'
+  ],
+  lchf: [
+    '정제 탄수화물(흰쌀, 흰밀가루, 설탕)을 피하고 통곡물이나 채소로 대체하면 혈당이 안정됩니다.',
+    '올리브오일, 아보카도, 견과류의 건강한 지방은 포만감을 높이고 혈당 급등을 막습니다.',
+    '식사 순서를 채소 → 단백질 → 탄수화물 순으로 하면 혈당 상승을 크게 줄일 수 있습니다.',
+    '저탄고지는 케토보다 유연합니다. 고구마, 현미, 콩류는 적당량 허용됩니다.',
+    '식사 후 10~15분 가볍게 걸으면 혈당 스파이크를 효과적으로 낮출 수 있습니다.'
+  ],
+  diet: [
+    '지중해식 식단의 핵심은 올리브오일, 채소, 생선, 견과류입니다. 매 식사 채소를 절반 이상 채우세요.',
+    '물을 식사 30분 전에 마시면 포만감이 높아져 자연스럽게 칼로리 섭취를 줄일 수 있습니다.',
+    '천천히 씹어 먹는 것만으로도 포만감이 20% 향상됩니다. 한 입에 20번 씹는 습관을 만드세요.',
+    '가공식품 대신 자연식품을 선택하세요. 성분표에 항목이 5개 이하인 것이 좋습니다.',
+    '등푸른생선(고등어, 연어, 삼치)을 주 2~3회 섭취하면 오메가3로 체지방 대사가 활성화됩니다.'
+  ]
+};
+
+function initHealthHome(mode){
+  var configs = {
+    keto: {
+      sub: '인슐린 통제 대사 모드',
+      daysLabel: '연속 케토',
+      goalLabel: '케토 목표 (탄수화물 20g 이하)',
+      goalItems: '<div style="display:flex;gap:20px;flex-wrap:wrap;">'
+        +'<div><div style="font-size:22px;font-weight:700;">20g</div><div style="font-size:11px;opacity:.7;">탄수화물 목표</div></div>'
+        +'<div><div style="font-size:22px;font-weight:700;">75%</div><div style="font-size:11px;opacity:.7;">지방 비율</div></div>'
+        +'<div><div style="font-size:22px;font-weight:700;">20%</div><div style="font-size:11px;opacity:.7;">단백질 비율</div></div>'
+        +'</div>',
+      bannerSub: '케토 적합도와 영양 분석을 즉시 알려드려요',
+      tipTitle: '오늘의 케토 팁',
+      voiceGuide: '"오늘 뭐 먹을까" — 케토 식단 추천',
+      gradientBg: 'linear-gradient(135deg,#2A7B7B,#1A5C5C)'
+    },
+    lchf: {
+      sub: '저탄고지 혈당 안정 모드',
+      daysLabel: '저탄고지',
+      goalLabel: '저탄고지 목표 (탄수화물 50~100g)',
+      goalItems: '<div style="display:flex;gap:20px;flex-wrap:wrap;">'
+        +'<div><div style="font-size:22px;font-weight:700;">100g</div><div style="font-size:11px;opacity:.7;">탄수화물 목표</div></div>'
+        +'<div><div style="font-size:22px;font-weight:700;">50%</div><div style="font-size:11px;opacity:.7;">지방 비율</div></div>'
+        +'<div><div style="font-size:22px;font-weight:700;">25%</div><div style="font-size:11px;opacity:.7;">단백질 비율</div></div>'
+        +'</div>',
+      bannerSub: '저탄고지 적합도와 혈당 영향을 분석해 드려요',
+      tipTitle: '오늘의 저탄고지 팁',
+      voiceGuide: '"오늘 뭐 먹을까" — 저탄고지 식단 추천',
+      gradientBg: 'linear-gradient(135deg,#1a6b4a,#0d4f35)'
+    },
+    diet: {
+      sub: '균형 건강식 다이어트 모드',
+      daysLabel: '다이어트',
+      goalLabel: '오늘의 건강식 목표',
+      goalItems: '<div style="display:flex;gap:20px;flex-wrap:wrap;">'
+        +'<div><div style="font-size:22px;font-weight:700;">1,600</div><div style="font-size:11px;opacity:.7;">칼로리 목표</div></div>'
+        +'<div><div style="font-size:22px;font-weight:700;">½</div><div style="font-size:11px;opacity:.7;">채소 비율</div></div>'
+        +'<div><div style="font-size:22px;font-weight:700;">30%</div><div style="font-size:11px;opacity:.7;">단백질 비율</div></div>'
+        +'</div>',
+      bannerSub: '칼로리와 영양 균형을 즉시 분석해 드려요',
+      tipTitle: '오늘의 건강식 팁',
+      voiceGuide: '"오늘 뭐 먹을까" — 건강 식단 추천',
+      gradientBg: 'linear-gradient(135deg,#1565C0,#0D47A1)'
+    }
+  };
+  var c = configs[mode] || configs.keto;
+  var el = function(id){ return document.getElementById(id); };
+  if(el('health-mode-sub')) el('health-mode-sub').textContent = c.sub;
+  if(el('health-days-label')) el('health-days-label').textContent = c.daysLabel;
+  if(el('health-goal-label')) el('health-goal-label').textContent = c.goalLabel;
+  if(el('health-goal-items')) el('health-goal-items').innerHTML = c.goalItems;
+  if(el('health-goal-card')) el('health-goal-card').style.background = c.gradientBg;
+  if(el('health-banner-sub')) el('health-banner-sub').textContent = c.bannerSub;
+  if(el('tip-title')) el('tip-title').textContent = c.tipTitle;
+  if(el('voice-guide-1')) el('voice-guide-1').innerHTML = '<i class="ti ti-salad"></i>"'+c.voiceGuide+'"';
 }
-function refreshKetoTip(){
-  var el=document.getElementById('keto-tip-text');
-  if(!el)return;
+
+/* ══ 식단 팁 (모드별) ══ */
+var lastTipIdx=-1;
+function getDietTip(mode){
+  var tips = DIET_TIPS[mode] || DIET_TIPS.keto;
+  var idx; do{ idx=Math.floor(Math.random()*tips.length); }while(idx===lastTipIdx&&tips.length>1);
+  lastTipIdx=idx; return tips[idx];
+}
+
+function refreshDietTip(){
+  var el=document.getElementById('keto-tip-text'); if(!el) return;
+  var mode = CUR_USER ? CUR_USER.mode : 'keto';
+  var modePrompts = {
+    keto: '케토제닉 식단 실천자를 위한 오늘의 팁을 1~2문장으로. 구체적이고 실용적으로.',
+    lchf: '저탄고지(LCHF) 식단 실천자를 위한 오늘의 혈당 관리 팁을 1~2문장으로. 구체적이고 실용적으로.',
+    diet: '건강 다이어트 실천자를 위한 오늘의 식단 팁을 1~2문장으로. 지중해식 또는 DASH 식단 기반으로.'
+  };
   if(ANT_KEY){
     el.innerHTML='<div class="dots"><span></span><span></span><span></span></div>';
     fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':ANT_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:120,messages:[{role:'user',content:'케토제닉 식단 실천자를 위한 오늘의 팁을 1~2문장으로 알려주세요. 구체적이고 실용적으로.'}]})
+      body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:120,messages:[{role:'user',content:modePrompts[mode]||modePrompts.keto}]})
     })
     .then(function(r){return r.json();})
-    .then(function(d){var t=(d.content&&d.content[0]&&d.content[0].text)||getKetoTip();el.textContent=t;})
-    .catch(function(){el.textContent=getKetoTip();});
+    .then(function(d){var t=(d.content&&d.content[0]&&d.content[0].text)||getDietTip(mode);el.textContent=t;})
+    .catch(function(){el.textContent=getDietTip(mode);});
   } else {
-    el.textContent=getKetoTip();
+    el.textContent=getDietTip(mode);
   }
 }
+
+// 기존 refreshKetoTip을 새 함수로 연결
+function refreshKetoTip(){ refreshDietTip(); }
 
 /* ══ 데이터 백업 / 복원 ══ */
 function backupData(){
