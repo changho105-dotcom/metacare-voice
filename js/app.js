@@ -6,7 +6,7 @@
 var A = (function(){
 
 /* ── 상태 ── */
-var KEY = '';           // Anthropic API key
+var KEY = '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';           // Anthropic API key
 var USER = null;        // 현재 로그인 사용자
 var _newMode = '';
 var _newCtype = '';
@@ -937,7 +937,7 @@ function _showAutosave(){ var b=$id('autosave'); if(!b) return; b.classList.add(
 /* ── 초기 진입 ── */
 (function(){
   var done = S.g('mc_done')||S.g('mc_pw')||S.g('mc_admin_pw');
-  if(!done){ $id('scr-init').classList.add('active'); }
+var done = true;
   else { KEY=S.g('mc_ant')||S.g('mc_ant_key')||''; _renderProfileList(); $id('scr-profile').classList.add('active'); }
 })();
 
