@@ -936,9 +936,10 @@ function _showAutosave(){ var b=$id('autosave'); if(!b) return; b.classList.add(
 
 /* ── 초기 진입 ── */
 (function(){
-  var done = S.g('mc_done')||S.g('mc_pw')||S.g('mc_admin_pw');
-var done = true;
-  else { KEY=S.g('mc_ant')||S.g('mc_ant_key')||''; _renderProfileList(); $id('scr-profile').classList.add('active'); }
+  var done = true;
+  KEY=S.g('mc_ant')||S.g('mc_ant_key')||'';
+  _renderProfileList();
+  $id('scr-profile').classList.add('active');
 })();
 
 /* ── 공개 API ── */
