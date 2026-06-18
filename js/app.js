@@ -157,8 +157,8 @@ function _renderAdminList(){
     el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--mu);font-size:13px;">'+(q?'검색 결과가 없습니다':'등록된 사용자가 없습니다')+'</div>';
     return;
   }
-  var ml = {cancer:'암환자', keto:'케토제닉', lchf:'저탄고지', diet:'다이어트 건강식'};
-  var mi = {cancer:'🔬', keto:'🥑', lchf:'🥩', diet:'🥗'};
+  var ml = {cancer:'암환자', keto:'케토제닉', carnivore:'카니보어', lchf:'저탄고지', diet:'다이어트 건강식'};
+  var mi = {cancer:'🔬', keto:'🥑', carnivore:'🥩', lchf:'🍖', diet:'🥗'};
   el.innerHTML = users.map(function(u){
     var ic = u.mode==='cancer';
     var ms = (ic&&u.ctype==='prostate') ? u.stage+'기 전립선암' : (ml[u.mode]||u.mode);
@@ -253,7 +253,8 @@ function fullReset(){
 var _MODES = [
   {id:'cancer', icon:'🔬', name:'암환자', desc:'PSA 추적 · 증상 기록 · 복약 · 식단 분석'},
   {id:'keto',   icon:'🥑', name:'케토제닉', desc:'탄수화물 20g 이하 · 인슐린 억제 · 케톤 생성'},
-  {id:'lchf',   icon:'🥩', name:'저탄고지', desc:'탄수화물 50~100g · 혈당 안정 · 체중 관리'},
+  {id:'carnivore', icon:'🥩', name:'카니보어', desc:'동물성 식품만 · 식물성 식품 배제 · 극단적 저탄수'},
+  {id:'lchf',   icon:'🍖', name:'저탄고지', desc:'탄수화물 50~100g · 혈당 안정 · 체중 관리'},
   {id:'diet',   icon:'🥗', name:'다이어트 건강식', desc:'지중해식 · 칼로리 제한 · 균형 영양'}
 ];
 var _CTYPES = [
@@ -341,8 +342,8 @@ function _renderProfileList(){
   if(!el) return;
   var q = ($id('profile-search')&&$id('profile-search').value||'').trim().toLowerCase();
   if(q) users = users.filter(function(u){ return u.name.toLowerCase().indexOf(q)>=0; });
-  var ml = {cancer:'암환자', keto:'케토제닉', lchf:'저탄고지', diet:'다이어트 건강식'};
-  var mi = {cancer:'🔬', keto:'🥑', lchf:'🥩', diet:'🥗'};
+  var ml = {cancer:'암환자', keto:'케토제닉', carnivore:'카니보어', lchf:'저탄고지', diet:'다이어트 건강식'};
+  var mi = {cancer:'🔬', keto:'🥑', carnivore:'🥩', lchf:'🍖', diet:'🥗'};
   if(!users.length){
     el.innerHTML = '<div class="profile-empty"><i class="ti ti-users"></i><br>'+(q?'검색 결과가 없어요':'등록된 사용자가 없습니다')+'</div>';
     return;
@@ -376,7 +377,7 @@ function _initApp(){
   var u = USER;
   var ic = u.mode==='cancer';
   var ip = ic && u.ctype==='prostate';
-  var ml = {cancer:'암환자', keto:'케토제닉', lchf:'저탄고지', diet:'다이어트 건강식'};
+  var ml = {cancer:'암환자', keto:'케토제닉', carnivore:'카니보어', lchf:'저탄고지', diet:'다이어트 건강식'};
 
   // 헤더
   var badge=$id('tb-badge'), sub=$id('tb-sub');
@@ -448,12 +449,14 @@ function _initApp(){
 /* ── 건강관리 홈 ── */
 var _TIPS = {
   keto:['전해질 보충이 중요합니다. 나트륨·칼륨·마그네슘을 충분히 섭취하면 케토 독감 증상을 예방할 수 있습니다.','아보카도는 케토의 완벽한 음식입니다. 건강한 지방, 칼륨, 섬유질이 풍부합니다.','저강도 유산소 운동은 케톤 산화를 촉진하여 체지방 연소를 극대화합니다.','버터 커피는 아침 공복에 섭취하면 포만감을 유지하며 케토시스를 강화합니다.'],
+  carnivore:['붉은 고기, 생선, 달걀, 일부 유제품만 섭취합니다. 식물성 식품(채소, 과일, 곡물)은 완전히 배제합니다.','내장육(간, 심장)은 영양 밀도가 매우 높아 비타민과 미네랄 보충에 좋습니다.','뼈 국물(본브로스)은 관절 건강과 소화에 도움이 됩니다.','적응 기간(2~4주) 동안 피로감이 있을 수 있으니 충분한 염분과 수분을 섭취하세요.'],
   lchf:['정제 탄수화물(흰쌀, 설탕)을 피하고 채소로 대체하면 혈당이 안정됩니다.','식사 순서를 채소 → 단백질 → 탄수화물 순으로 하면 혈당 상승을 크게 줄일 수 있습니다.','식사 후 10~15분 가볍게 걸으면 혈당 스파이크를 효과적으로 낮출 수 있습니다.'],
   diet:['지중해식 식단의 핵심은 올리브오일, 채소, 생선, 견과류입니다. 매 식사 채소를 절반 이상 채우세요.','물을 식사 30분 전에 마시면 포만감이 높아져 칼로리 섭취를 줄일 수 있습니다.','천천히 씹어 먹는 것만으로도 포만감이 향상됩니다.']
 };
 
 var _HEALTH_CFG = {
   keto:{sub:'인슐린 통제 대사 모드',daysLbl:'연속 케토',goalBg:'linear-gradient(135deg,#2A7B7B,#1A5C5C)',goalLbl:'케토 목표',goalHtml:'<div class="goal-vals"><div class="goal-val-item"><div class="val">20g</div><div class="lbl-s">탄수화물</div></div><div class="goal-val-item"><div class="val">75%</div><div class="lbl-s">지방</div></div><div class="goal-val-item"><div class="val">20%</div><div class="lbl-s">단백질</div></div></div>',bannerSub:'케토 적합도와 영양 분석을 즉시 알려드려요',tipTitle:'오늘의 케토 팁',vg2:'"오늘 뭐 먹을까" — 케토 식단 추천'},
+  carnivore:{sub:'동물성 식품 전용 극단적 저탄수 모드',daysLbl:'연속 카니보어',goalBg:'linear-gradient(135deg,#7A2E2E,#4A1818)',goalLbl:'카니보어 목표',goalHtml:'<div class="goal-vals"><div class="goal-val-item"><div class="val">0g</div><div class="lbl-s">탄수화물</div></div><div class="goal-val-item"><div class="val">동물성</div><div class="lbl-s">식품만</div></div><div class="goal-val-item"><div class="val">고단백</div><div class="lbl-s">고지방</div></div></div>',bannerSub:'동물성 식품 적합도를 즉시 분석해 드려요',tipTitle:'오늘의 카니보어 팁',vg2:'"오늘 뭐 먹을까" — 카니보어 식단 추천'},
   lchf:{sub:'저탄고지 혈당 안정 모드',daysLbl:'저탄고지',goalBg:'linear-gradient(135deg,#1a6b4a,#0d4f35)',goalLbl:'저탄고지 목표',goalHtml:'<div class="goal-vals"><div class="goal-val-item"><div class="val">100g</div><div class="lbl-s">탄수화물</div></div><div class="goal-val-item"><div class="val">50%</div><div class="lbl-s">지방</div></div><div class="goal-val-item"><div class="val">25%</div><div class="lbl-s">단백질</div></div></div>',bannerSub:'저탄고지 적합도와 혈당 영향을 분석해 드려요',tipTitle:'오늘의 저탄고지 팁',vg2:'"오늘 뭐 먹을까" — 저탄고지 식단 추천'},
   diet:{sub:'균형 건강식 다이어트 모드',daysLbl:'다이어트',goalBg:'linear-gradient(135deg,#1565C0,#0D47A1)',goalLbl:'건강식 목표',goalHtml:'<div class="goal-vals"><div class="goal-val-item"><div class="val">1,600</div><div class="lbl-s">칼로리 목표</div></div><div class="goal-val-item"><div class="val">½</div><div class="lbl-s">채소 비율</div></div><div class="goal-val-item"><div class="val">30%</div><div class="lbl-s">단백질</div></div></div>',bannerSub:'칼로리와 영양 균형을 즉시 분석해 드려요',tipTitle:'오늘의 건강식 팁',vg2:'"오늘 뭐 먹을까" — 건강 식단 추천'}
 };
@@ -493,7 +496,7 @@ function refreshTip(){
   var tips=_TIPS[mode]||_TIPS.keto;
   var idx; do{ idx=Math.floor(Math.random()*tips.length); }while(idx===_lastTipIdx&&tips.length>1);
   _lastTipIdx=idx;
-  var prompts={keto:'케토제닉 식단 실천자를 위한 오늘의 팁을 1~2문장으로.',lchf:'저탄고지 식단 실천자를 위한 혈당 관리 팁을 1~2문장으로.',diet:'건강 다이어트 실천자를 위한 오늘의 식단 팁을 1~2문장으로.'};
+  var prompts={keto:'케토제닉 식단 실천자를 위한 오늘의 팁을 1~2문장으로.',carnivore:'카니보어(육식) 식단 실천자를 위한 오늘의 팁을 1~2문장으로.',lchf:'저탄고지 식단 실천자를 위한 혈당 관리 팁을 1~2문장으로.',diet:'건강 다이어트 실천자를 위한 오늘의 식단 팁을 1~2문장으로.'};
   if(KEY){
     el.innerHTML='<div class="dots"><span></span><span></span><span></span></div>';
     _api({max_tokens:120, messages:[{role:'user',content:prompts[mode]||prompts.keto}]}, function(reply){ el.textContent=reply||tips[idx]; });
@@ -611,13 +614,14 @@ function _buildQbtns(){
   var ic=u.mode==='cancer', ip=ic&&u.ctype==='prostate';
   var qs;
   if(u.mode==='keto')   qs=[{i:'ti-camera',q:'방금 찍은 식사 사진 케토로 분석해줘'},{i:'ti-salad',q:'오늘 케토 식단 추천해줘'},{i:'ti-heart-rate-monitor',q:'케톤 수치가 낮아요 이유가 뭔가요?'}];
+  else if(u.mode==='carnivore') qs=[{i:'ti-camera',q:'이 음식 카니보어로 분석해줘'},{i:'ti-flame',q:'오늘 카니보어 식단 추천해줘'},{i:'ti-heart-rate-monitor',q:'카니보어 적응 기간 증상이 뭔가요?'}];
   else if(u.mode==='lchf') qs=[{i:'ti-camera',q:'이 음식 저탄고지로 분석해줘'},{i:'ti-salad',q:'저탄고지 식단 오늘 메뉴 추천해줘'},{i:'ti-chart-bar',q:'저탄고지와 케토의 차이가 뭔가요?'}];
   else if(u.mode==='diet') qs=[{i:'ti-camera',q:'이 음식 다이어트 관점으로 분석해줘'},{i:'ti-salad',q:'오늘 건강하고 살 빠지는 식단 추천해줘'},{i:'ti-heart',q:'지중해식 식단이 뭔가요?'}];
   else if(ip)           qs=[{i:'ti-camera',q:'식사 사진 암 환자 식단으로 분석해줘'},{i:'ti-chart-line',q:'PSA 수치가 올랐어요 어떻게 해야 하나요?'},{i:'ti-flame',q:'뼈 통증 관리 방법 알려주세요'}];
   else                  qs=[{i:'ti-camera',q:'식사 사진 암 환자 식단으로 분석해줘'},{i:'ti-flame',q:'항암 치료 중 통증 관리 방법은?'},{i:'ti-salad',q:'암 환자에게 좋은 항산화 식단 알려줘'}];
   wrap.innerHTML=qs.map(function(q){ return '<button class="qbtn" onclick="A.askQ(\''+esc(q.q)+'\')"><i class="ti '+q.i+'"></i>'+esc(q.q)+'</button>'; }).join('');
   var g=$id('chat-greeting');
-  var mn={keto:'케토제닉',lchf:'저탄고지',diet:'다이어트 건강식'};
+  var mn={keto:'케토제닉',carnivore:'카니보어',lchf:'저탄고지',diet:'다이어트 건강식'};
   if(g) g.textContent='안녕하세요, '+u.name+' 님! '+(ip?u.stage+'기 전립선암':(mn[u.mode]||'암 치유'))+' AI 코치입니다.';
 }
 
@@ -625,6 +629,7 @@ function _buildSys(){
   var u=USER; if(!u) return'건강 코치입니다.';
   var ic=u.mode==='cancer', ip=ic&&u.ctype==='prostate';
   if(u.mode==='keto') return '케토제닉 식단 전문 건강 코치. 탄수화물 20g 이하, 지방 70~75%, 단백질 20~25%. 한국어 3~5문장.';
+  if(u.mode==='carnivore') return '카니보어(육식) 식단 전문 건강 코치. 동물성 식품(고기, 생선, 달걀, 일부 유제품)만 섭취, 식물성 식품 완전 배제. 영양 균형, 적응 증상 관리, 내장육 활용법 안내. 한국어 3~5문장.';
   if(u.mode==='lchf') return '저탄고지(LCHF) 식단 전문 건강 코치. 탄수화물 50~100g, 혈당 안정, 자연식 지방 강조. 한국어 3~5문장.';
   if(u.mode==='diet') return '다이어트 건강식 전문 코치. 지중해식·DASH 기반, 칼로리 제한, 균형 영양. 한국어 3~5문장.';
   var cd='최적 암환자 식단: ①케토/저탄고지로 암세포 포도당 차단 ②항산화(십자화과,베리,토마토) ③오메가3 ④강황·생강 항염 ⑤정제당·가공식품 배제.';
@@ -657,7 +662,7 @@ function analyze(){
   if(!hasPic&&!name){ toast('사진 또는 메뉴명을 입력하세요'); return; }
   var ar=$id('ai-result'); ar.style.display='block'; ar.innerHTML='<div class="dots"><span></span><span></span><span></span></div>';
   var u=USER;
-  var ps={cancer:'암 환자 식단 관점에서(항산화,저당,항염,케토 적합도) 분석해 주세요. 전립선암이면 리코펜·십자화과도 언급. 3~4문장.',keto:'케토제닉 관점에서(탄단지 비율, 케토 적합도 0~10점, 혈당 영향) 분석해 주세요. 3~4문장.',lchf:'저탄고지 관점에서(탄수화물 함량, 혈당 지수, 포만감) 분석해 주세요. 3~4문장.',diet:'균형 건강식 관점에서(칼로리 추정, 영양 균형, 지중해식 적합도) 분석해 주세요. 3~4문장.'};
+  var ps={cancer:'암 환자 식단 관점에서(항산화,저당,항염,케토 적합도) 분석해 주세요. 전립선암이면 리코펜·십자화과도 언급. 3~4문장.',keto:'케토제닉 관점에서(탄단지 비율, 케토 적합도 0~10점, 혈당 영향) 분석해 주세요. 3~4문장.',carnivore:'카니보어(육식) 관점에서(동물성 식품 비율, 카니보어 적합도 0~10점, 식물성 성분 포함 여부) 분석해 주세요. 3~4문장.',lchf:'저탄고지 관점에서(탄수화물 함량, 혈당 지수, 포만감) 분석해 주세요. 3~4문장.',diet:'균형 건강식 관점에서(칼로리 추정, 영양 균형, 지중해식 적합도) 분석해 주세요. 3~4문장.'};
   var p=(ps[u?u.mode:'keto']||ps.keto);
   var msgs;
   if(hasPic){ var b64=pre.src.split(',')[1],mt=pre.src.startsWith('data:image/png')?'image/png':'image/jpeg'; var txt=p; if(name)txt+=' 음식:'+name; if(memo)txt+=' 메모:'+memo; msgs=[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:txt}]}]; }
