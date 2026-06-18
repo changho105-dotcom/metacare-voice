@@ -162,6 +162,30 @@ function backup(){
   toast('백업 완료 ✓');
 }
 
+function backupText(){
+  var bk = {};
+  for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); bk[k]=localStorage.getItem(k); }
+  bk['_date'] = new Date().toLocaleString('ko-KR');
+  var json = JSON.stringify(bk);
+  var ta = $id('backup-text-area');
+  if(ta){ ta.value = json; ta.style.display=''; }
+  var btn = $id('backup-copy-btn');
+  if(btn) btn.style.display='';
+}
+
+function copyBackupText(){
+  var ta = $id('backup-text-area');
+  if(!ta) return;
+  ta.select();
+  ta.setSelectionRange(0, 999999);
+  try{
+    document.execCommand('copy');
+    toast('복사됐어요! 카카오톡에 붙여넣기 하세요');
+  }catch(e){
+    navigator.clipboard&&navigator.clipboard.writeText(ta.value).then(function(){ toast('복사됐어요! 카카오톡에 붙여넣기 하세요'); });
+  }
+}
+
 function restore(e){
   var file = e.target.files[0]; if(!file) return;
   var r = new FileReader();
@@ -981,7 +1005,7 @@ return {
   // 설정
   checkPw:checkPw,
   // Admin
-  delUser:delUser, changePw:changePw, backup:backup, restore:restore, fullReset:fullReset, filterAdminUsers:filterAdminUsers,
+  delUser:delUser, changePw:changePw, backup:backup, restore:restore, fullReset:fullReset, filterAdminUsers:filterAdminUsers, backupText:backupText, copyBackupText:copyBackupText,
   // 사용자 추가
   _selMode:_selMode, _selCtype:_selCtype, _selStage:_selStage, addUser:addUser,
   // 앱

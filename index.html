@@ -92,9 +92,17 @@
       <div class="card">
         <div class="card-body">
           <p class="sub dark-text mb8">코드 업데이트 전 항상 백업하세요. 백업 파일은 모든 사용자 데이터를 포함합니다.</p>
-          <button class="btn-full teal" onclick="A.backup()">📥 데이터 백업</button>
+          <button class="btn-full teal" onclick="A.backup()">📥 파일로 백업 (다운로드)</button>
           <input type="file" id="restore-file" accept=".json" style="display:none" onchange="A.restore(event)">
           <button class="btn-full navy" onclick="document.getElementById('restore-file').click()">📤 백업 파일로 복원</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <p class="sub dark-text mb8">다운로드 파일을 찾기 어려우면 텍스트로 백업해서 카카오톡으로 보내세요.</p>
+          <button class="btn-full purple" onclick="A.backupText()">📋 텍스트로 백업</button>
+          <textarea id="backup-text-area" class="inp-sm" readonly style="display:none;height:120px;font-size:10px;margin-top:8px;resize:none;" onclick="this.select()"></textarea>
+          <button id="backup-copy-btn" class="btn-full teal" style="display:none;margin-top:8px;" onclick="A.copyBackupText()">📋 복사하기</button>
         </div>
       </div>
     </div>
