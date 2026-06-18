@@ -55,32 +55,87 @@
       <span class="topbar-title">🛡️ Admin</span>
     </div>
     <div class="scroll-body">
-      <div class="card">
-        <div class="card-hd">
-          <span>👥 사용자 관리</span>
-          <button class="btn-sm teal" onclick="A.goScreen('scr-add-user')"><i class="ti ti-plus"></i> 추가</button>
-        </div>
-        <div id="admin-user-list"></div>
+      <div class="admin-grid">
+        <button class="admin-tile" onclick="A.goScreen('scr-admin-users')">
+          <div class="admin-tile-icon teal">👥</div>
+          <div class="admin-tile-name">사용자 관리</div>
+        </button>
+        <button class="admin-tile" onclick="A.goScreen('scr-admin-backup')">
+          <div class="admin-tile-icon navy">💾</div>
+          <div class="admin-tile-name">백업 / 복원</div>
+        </button>
+        <button class="admin-tile" onclick="A.goScreen('scr-admin-password')">
+          <div class="admin-tile-icon purple">🔐</div>
+          <div class="admin-tile-name">비밀번호 변경</div>
+        </button>
+        <button class="admin-tile" onclick="A.goScreen('scr-admin-reset')">
+          <div class="admin-tile-icon red">⚠️</div>
+          <div class="admin-tile-name">앱 초기화</div>
+        </button>
       </div>
+    </div>
+  </div>
+
+  <!-- ── Admin: 사용자 관리 ── -->
+  <div id="scr-admin-users" class="screen light">
+    <div class="topbar navy">
+      <button class="back-btn" onclick="A.goScreen('scr-admin')"><i class="ti ti-arrow-left"></i></button>
+      <span class="topbar-title">👥 사용자 관리</span>
+    </div>
+    <div class="scroll-body">
+      <div class="row gap">
+        <input id="admin-user-search" class="inp" type="text" placeholder="🔍 이름으로 검색" oninput="A.filterAdminUsers()" style="flex:1;">
+        <button class="btn-sm teal" onclick="A.goScreen('scr-add-user')" style="flex-shrink:0;"><i class="ti ti-plus"></i> 추가</button>
+      </div>
+      <div id="admin-user-list" style="margin-top:4px;"></div>
+    </div>
+  </div>
+
+  <!-- ── Admin: 백업/복원 ── -->
+  <div id="scr-admin-backup" class="screen light">
+    <div class="topbar navy">
+      <button class="back-btn" onclick="A.goScreen('scr-admin')"><i class="ti ti-arrow-left"></i></button>
+      <span class="topbar-title">💾 백업 / 복원</span>
+    </div>
+    <div class="scroll-body">
       <div class="card">
-        <div class="card-hd"><span>💾 백업 / 복원</span></div>
         <div class="card-body">
+          <p class="sub dark-text mb8">코드 업데이트 전 항상 백업하세요. 백업 파일은 모든 사용자 데이터를 포함합니다.</p>
           <button class="btn-full teal" onclick="A.backup()">📥 데이터 백업</button>
           <input type="file" id="restore-file" accept=".json" style="display:none" onchange="A.restore(event)">
           <button class="btn-full navy" onclick="document.getElementById('restore-file').click()">📤 백업 파일로 복원</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ── Admin: 비밀번호 변경 ── -->
+  <div id="scr-admin-password" class="screen light">
+    <div class="topbar navy">
+      <button class="back-btn" onclick="A.goScreen('scr-admin')"><i class="ti ti-arrow-left"></i></button>
+      <span class="topbar-title">🔐 비밀번호 변경</span>
+    </div>
+    <div class="scroll-body">
       <div class="card">
-        <div class="card-hd"><span>🔐 비밀번호 변경</span></div>
         <div class="card-body">
           <input class="inp-sm" id="new-pw1" type="password" placeholder="새 비밀번호">
           <input class="inp-sm" id="new-pw2" type="password" placeholder="비밀번호 확인">
           <button class="btn-full teal" onclick="A.changePw()">변경</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ── Admin: 앱 초기화 ── -->
+  <div id="scr-admin-reset" class="screen light">
+    <div class="topbar navy">
+      <button class="back-btn" onclick="A.goScreen('scr-admin')"><i class="ti ti-arrow-left"></i></button>
+      <span class="topbar-title">⚠️ 앱 초기화</span>
+    </div>
+    <div class="scroll-body">
       <div class="card">
-        <div class="card-hd"><span>⚠️ 앱 초기화</span></div>
         <div class="card-body">
+          <p class="sub dark-text mb8">모든 사용자, 기록, 설정이 영구적으로 삭제됩니다. 되돌릴 수 없습니다.</p>
           <button class="btn-full red" onclick="A.fullReset()">전체 초기화</button>
         </div>
       </div>
@@ -90,7 +145,7 @@
   <!-- ── 사용자 추가 ── -->
   <div id="scr-add-user" class="screen light">
     <div class="topbar navy">
-      <button class="back-btn" onclick="A.goScreen('scr-admin')"><i class="ti ti-arrow-left"></i></button>
+      <button class="back-btn" onclick="A.goScreen('scr-admin-users')"><i class="ti ti-arrow-left"></i></button>
       <span class="topbar-title">👤 새 사용자 추가</span>
     </div>
     <div class="scroll-body">

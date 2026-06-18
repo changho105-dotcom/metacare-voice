@@ -54,7 +54,7 @@ function goScreen(id, opts){
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   var el = $id(id);
   if(el) el.classList.add('active');
-  if(id==='scr-admin') _renderAdminList();
+  if(id==='scr-admin-users') _renderAdminList();
   if(id==='scr-profile') _renderProfileList();
   if(id==='scr-add-user') _resetAddForm();
   if(!_suppressPush){
@@ -121,10 +121,12 @@ function _setUsers(u){ S.sj('mc_users', u); }
 
 function _renderAdminList(){
   var users = _getUsers();
+  var q = ($id('admin-user-search')&&$id('admin-user-search').value||'').trim().toLowerCase();
+  if(q) users = users.filter(function(u){ return u.name.toLowerCase().indexOf(q)>=0; });
   var el = $id('admin-user-list');
   if(!el) return;
   if(!users.length){
-    el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--mu);font-size:13px;">등록된 사용자가 없습니다</div>';
+    el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--mu);font-size:13px;">'+(q?'검색 결과가 없습니다':'등록된 사용자가 없습니다')+'</div>';
     return;
   }
   var ml = {cancer:'암환자', keto:'케토제닉', lchf:'저탄고지', diet:'다이어트 건강식'};
@@ -132,13 +134,14 @@ function _renderAdminList(){
   el.innerHTML = users.map(function(u){
     var ic = u.mode==='cancer';
     var ms = (ic&&u.ctype==='prostate') ? u.stage+'기 전립선암' : (ml[u.mode]||u.mode);
-    return '<div class="admin-user-row">'
+    return '<div class="admin-user-card">'
       +'<div class="admin-user-av '+(ic?'cancer':'health')+'">'+(mi[u.mode]||'👤')+'</div>'
       +'<div style="flex:1"><div class="admin-user-name">'+esc(u.name)+'</div><div class="admin-user-detail">'+esc(ms)+'</div></div>'
       +'<button class="admin-act del" onclick="A.delUser(\''+u.id+'\')"><i class="ti ti-trash"></i> 삭제</button>'
       +'</div>';
   }).join('');
 }
+function filterAdminUsers(){ _renderAdminList(); }
 
 function delUser(id){
   if(!confirm('이 사용자를 삭제할까요?')) return;
@@ -274,7 +277,7 @@ function addUser(){
   _setUsers(users);
   _renderProfileList();
   toast(name+' 님이 추가됐어요 ✓');
-  goScreen('scr-admin');
+  goScreen('scr-admin-users');
 }
 
 /* ── 프로필 화면 ── */
@@ -988,7 +991,7 @@ return {
   // 설정
   init:init, checkPw:checkPw,
   // Admin
-  delUser:delUser, changePw:changePw, backup:backup, restore:restore, fullReset:fullReset,
+  delUser:delUser, changePw:changePw, backup:backup, restore:restore, fullReset:fullReset, filterAdminUsers:filterAdminUsers,
   // 사용자 추가
   _selMode:_selMode, _selCtype:_selCtype, _selStage:_selStage, addUser:addUser,
   // 앱
