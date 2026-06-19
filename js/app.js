@@ -161,7 +161,8 @@ function _renderAdminList(){
   var cn = {thyroid:'갑상선암',colorectal:'대장암',lung:'폐암',stomach:'위암',breast:'유방암',liver:'간암',pancreas:'췌장암',bile:'담낭·담도암',kidney:'신장암',cervical:'자궁경부암',prostate:'전립선암',other:'기타 암'};
   el.innerHTML = users.map(function(u){
     var ic = u.mode==='cancer';
-    var ms = ic ? ((u.stage) ? u.stage+'기 '+(cn[u.ctype]||'암') : (cn[u.ctype]||'암환자')) : (ml[u.mode]||u.mode);
+    var ctypeName = (u.ctype==='other'&&u.otherCancerName) ? u.otherCancerName : (cn[u.ctype]||'암환자');
+    var ms = ic ? ((u.stage) ? u.stage+'기 '+ctypeName : ctypeName) : (ml[u.mode]||u.mode);
     var by = u.birthYear ? ' · '+u.birthYear+'년생' : '';
     return '<div class="admin-user-card">'
       +'<div class="admin-user-av '+(ic?'cancer':'health')+'">'+(mi[u.mode]||'👤')+'</div>'
@@ -282,6 +283,8 @@ function _resetAddForm(){
   _newMode=''; _newCtype=''; _newStage=0;
   $id('new-name').value='';
   $id('new-year').value='';
+  var oc=$id('other-cancer-name'); if(oc) oc.value='';
+  var ow=$id('other-cancer-wrap'); if(ow) ow.style.display='none';
   // 모드 버튼 생성
   $id('mode-btns').innerHTML = _MODES.map(function(m){
     return '<button class="mode-btn" id="mb-'+m.id+'" onclick="A._selMode(\''+m.id+'\')">'
@@ -322,7 +325,9 @@ function _selCtype(t){
   _newCtype=t; _newStage=0;
   document.querySelectorAll('[id^="cb-"]').forEach(function(b){ b.classList.remove('sel','health','cancer'); });
   var el=$id('cb-'+t); if(el){ el.classList.add('sel','cancer'); }
-  $id('stage-wrap').style.display=''; // 모든 암종에서 병기 선택 표시
+  $id('stage-wrap').style.display='';
+  $id('other-cancer-wrap').style.display = t==='other'?'':'none';
+  if(t!=='other') { var oc=$id('other-cancer-name'); if(oc) oc.value=''; }
   document.querySelectorAll('[id^="sb"]').forEach(function(b){ b.classList.remove('sel'); });
 }
 
@@ -339,12 +344,17 @@ function addUser(){
   if(!year||year.length!==4||isNaN(parseInt(year))){ toast('출생년도 4자리를 입력하세요'); return; }
   if(!_newMode){ toast('모드를 선택하세요'); return; }
   if(_newMode==='cancer'&&!_newCtype){ toast('암 종류를 선택하세요'); return; }
+  if(_newMode==='cancer'&&_newCtype==='other'){
+    var otherNm = ($id('other-cancer-name')&&$id('other-cancer-name').value.trim())||'';
+    if(!otherNm){ toast('암 종류를 직접 입력해 주세요'); return; }
+  }
   if(_newMode==='cancer'&&!_newStage){ toast('병기를 선택하세요'); return; }
+  var otherCancerName = (_newCtype==='other'&&$id('other-cancer-name')) ? $id('other-cancer-name').value.trim() : '';
   var users = _getUsers();
   if(users.some(function(u){ return u.name===name && String(u.birthYear)===String(year); })){
     toast('이미 같은 이름과 출생년도로 등록된 사용자가 있어요'); return;
   }
-  users.push({id:'u'+Date.now(), name:name, birthYear:year, mode:_newMode, ctype:_newCtype, stage:_newStage, treatments:[], createdAt:Date.now()});
+  users.push({id:'u'+Date.now(), name:name, birthYear:year, mode:_newMode, ctype:_newCtype, otherCancerName:otherCancerName, stage:_newStage, treatments:[], createdAt:Date.now()});
   _setUsers(users);
   toast(name+' 님이 추가됐어요 ✓');
   goScreen('scr-admin-users');
