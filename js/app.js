@@ -554,6 +554,66 @@ function _updateDays(){
   el.style.color = ic?'var(--purple)':'var(--tld)';
 }
 
+/* ── 도움말 ── */
+function goHelp(){
+  var u = USER;
+  var ic = u && u.mode==='cancer';
+  var modeNames = {keto:'케토제닉', carnivore:'카니보어', lchf:'저탄고지', diet:'다이어트 건강식', cancer:'암환자'};
+  var modeName = ic ? (u.ctype==='prostate' ? u.stage+'기 전립선암' : '암환자') : (modeNames[u.mode]||'건강관리');
+
+  var commonHelp = [
+    {icon:'ti-camera', title:'식사 사진 찍기', desc:'화면 가운데 초록색 배너를 누르면 사진을 찍을 수 있어요.\nAI가 사진을 보고 바로 분석해 드립니다.'},
+    {icon:'ti-table', title:'기록장', desc:'아래 메뉴에서 "기록장"을 누르면 날짜별로 식사 사진과 만보를 기록할 수 있어요.\n"엑셀" 버튼을 누르면 파일로 저장됩니다.'},
+    {icon:'ti-message-circle', title:'AI 코치', desc:'아래 메뉴에서 "코치"를 누르면 AI에게 무엇이든 물어볼 수 있어요.\n식단 추천, 운동 방법, 건강 궁금증 모두 물어보세요.'},
+    {icon:'ti-microphone', title:'음성 명령', desc:'화면 오른쪽 아래 초록 동그라미 버튼을 누르고 말하면 됩니다.\n"사진 찍어줘", "기록장 보여줘" 이렇게 말해보세요.'},
+  ];
+
+  var modeHelp = {
+    keto:[
+      {icon:'ti-salad', title:'케토제닉이란?', desc:'탄수화물을 하루 20g 이하로 줄이는 식단이에요.\n밥, 빵, 면, 과자를 피하고 고기, 계란, 아보카도, 견과류를 드세요.'},
+      {icon:'ti-chart-bar', title:'목표', desc:'탄수화물 20g 이하, 지방 75%, 단백질 20%\n이 비율을 맞추면 몸이 지방을 태우기 시작합니다.'},
+    ],
+    carnivore:[
+      {icon:'ti-flame', title:'카니보어란?', desc:'고기, 생선, 달걀, 유제품만 드시는 식단이에요.\n채소, 과일, 곡물은 드시지 않습니다.'},
+      {icon:'ti-heart-rate-monitor', title:'적응 기간', desc:'처음 2~4주는 피로감이 있을 수 있어요.\n물을 충분히 드시고 소금을 적당히 섭취하세요.'},
+    ],
+    lchf:[
+      {icon:'ti-salad', title:'저탄고지란?', desc:'탄수화물을 하루 50~100g으로 줄이는 식단이에요.\n케토제닉보다 유연해서 현미, 고구마는 조금 드실 수 있어요.'},
+      {icon:'ti-clock', title:'식사 순서', desc:'채소 먼저 → 고기/생선 → 밥/면 순서로 드세요.\n혈당이 천천히 올라서 몸에 좋습니다.'},
+    ],
+    diet:[
+      {icon:'ti-salad', title:'건강식이란?', desc:'하루 1,600칼로리를 목표로 채소를 절반 이상 드세요.\n올리브오일, 생선, 견과류가 중심인 지중해식 식단입니다.'},
+      {icon:'ti-droplet', title:'물 마시기', desc:'식사 30분 전에 물 한 잔을 마시면 덜 드시게 됩니다.\n하루 1.5~2리터를 목표로 하세요.'},
+    ],
+    cancer:[
+      {icon:'ti-activity', title:'증상 기록', desc:'홈 화면에서 통증, 배뇨, 피로를 매일 기록하세요.\n0점(없음)부터 10점(매우 심함)으로 표시합니다.'},
+      {icon:'ti-pill', title:'복약 체크', desc:'홈 화면에서 오늘 드신 약에 체크 표시를 하세요.\n약을 빠뜨리지 않도록 도와드립니다.'},
+      {icon:'ti-chart-line', title:'PSA 기록', desc:'"추적" 메뉴에서 PSA 수치를 날짜별로 기록하세요.\n검사 후 바로 입력해두면 변화를 쉽게 확인할 수 있어요.'},
+    ],
+  };
+
+  var items = (modeHelp[u?u.mode:'keto']||[]).concat(commonHelp);
+
+  var el = $id('help-body');
+  if(!el) return;
+  el.innerHTML = '<div style="background:var(--navy);border-radius:var(--r);padding:16px 18px;margin-bottom:4px;">'
+    +'<div style="color:rgba(255,255,255,.6);font-size:13px;margin-bottom:4px;">'+esc(modeName)+' 모드</div>'
+    +'<div style="color:#fff;font-size:18px;font-weight:700;">'+esc(u?u.name:'')+'님을 위한 사용 방법</div>'
+    +'</div>'
+    + items.map(function(item){
+      return '<div style="background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:18px;margin-bottom:10px;">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+        +'<div style="width:40px;height:40px;border-radius:50%;background:var(--tl);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+        +'<i class="ti '+item.icon+'" style="font-size:20px;color:var(--teal);"></i></div>'
+        +'<div style="font-size:17px;font-weight:700;color:var(--navy);">'+esc(item.title)+'</div>'
+        +'</div>'
+        +'<div style="font-size:15px;color:#374151;line-height:1.9;white-space:pre-line;">'+esc(item.desc)+'</div>'
+        +'</div>';
+    }).join('');
+
+  goScreen('scr-help');
+}
+
 /* ── 내비게이션 ── */
 function goPage(p){
   document.querySelectorAll('.page').forEach(function(e){ e.classList.remove('active'); });
@@ -1075,7 +1135,7 @@ _loadCloudData(function(){
 /* ── 공개 API ── */
 return {
   // 화면
-  goScreen:goScreen, logoTap:logoTap, enterByName:enterByName,
+  goScreen:goScreen, logoTap:logoTap, enterByName:enterByName, goHelp:goHelp,
   // 설정
   checkPw:checkPw,
   // Admin

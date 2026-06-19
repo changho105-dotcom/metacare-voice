@@ -188,6 +188,15 @@
     </div>
   </div>
 
+  <!-- ── 도움말 화면 ── -->
+  <div id="scr-help" class="screen light">
+    <div class="topbar navy">
+      <button class="back-btn" onclick="A.goScreen('scr-app')"><i class="ti ti-arrow-left"></i></button>
+      <span class="topbar-title">📖 사용 방법</span>
+    </div>
+    <div class="scroll-body" id="help-body"></div>
+  </div>
+
   <!-- ── 메인 앱 ── -->
   <div id="scr-app" class="screen light">
     <div class="topbar navy" id="app-topbar">
@@ -257,6 +266,9 @@
           <div class="vg-item" id="vg2"><i class="ti ti-salad"></i>"오늘 뭐 먹을까"</div>
           <div class="vg-item"><i class="ti ti-table"></i>"기록장 보여줘"</div>
         </div>
+        <button onclick="A.goHelp()" style="width:100%;padding:18px;background:var(--navy);color:#fff;border:none;border-radius:var(--r);font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:4px;">
+          <i class="ti ti-book"></i> 사용 방법 보기
+        </button>
       </div>
 
       <!-- 식단 기록 -->
