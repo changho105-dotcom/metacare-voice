@@ -356,13 +356,22 @@ function enterByName(){
   var year = ($id('login-year').value||'').trim();
   var errEl = $id('login-error');
   errEl.style.display = 'none';
-  if(!name||!year){
-    errEl.textContent = '이름과 출생년도를 모두 입력해 주세요';
+  if(!name){
+    errEl.textContent = '이름을 입력해 주세요';
     errEl.style.display = 'block';
     return;
   }
   var users = _getUsers();
-  var match = users.find(function(u){ return u.name===name && String(u.birthYear)===String(year); });
+  var match;
+  if(year){
+    // 이름+출생년도 모두 입력한 경우: 둘 다 일치해야 함
+    match = users.find(function(u){ return u.name===name && String(u.birthYear)===String(year); });
+    // 출생년도가 없는 기존 사용자도 이름만으로 허용
+    if(!match) match = users.find(function(u){ return u.name===name && !u.birthYear; });
+  } else {
+    // 이름만 입력한 경우: 이름 일치하면 입장
+    match = users.find(function(u){ return u.name===name; });
+  }
   if(!match){
     errEl.textContent = '등록된 정보를 찾을 수 없습니다. 관리자에게 문의하세요';
     errEl.style.display = 'block';
