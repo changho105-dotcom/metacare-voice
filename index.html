@@ -36,8 +36,8 @@
   <div id="scr-admin-pw" class="screen dark center">
     <div style="font-size:48px;">🔐</div>
     <h2>Admin 로그인</h2>
-    <input id="admin-pw-input" class="inp pw-inp" type="text" inputmode="numeric" autocomplete="off" placeholder="비밀번호"
-           onkeydown="if(event.key==='Enter')A.checkPw()" style="-webkit-text-security:disc;text-security:disc;">
+    <input id="admin-pw-input" class="inp pw-inp" type="password" autocomplete="new-password" placeholder="••••••"
+           onkeydown="if(event.key==='Enter')A.checkPw()">
     <div class="row gap">
       <button class="btn-ghost" onclick="A.goScreen('scr-profile')">취소</button>
       <button class="btn-primary" onclick="A.checkPw()">확인</button>
