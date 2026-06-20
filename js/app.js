@@ -675,12 +675,15 @@ function _initHealthHome(mode){
   if(g('tip-title')) g('tip-title').textContent=c.tipTitle;
   if(g('vg2')) g('vg2').innerHTML='<i class="ti ti-salad"></i>'+c.vg2;
   // 식사 슬롯 색상 동기화
-  ['ms-breakfast','ms-lunch','ms-dinner'].forEach(function(id){
-    var el=$id(id); if(!el) return;
-    el.style.background=c.goalBg;
-    el.style.color='#fff';
-    el.classList.add('colored');
-  });
+  var goalBg = c.goalBg;
+  setTimeout(function(){
+    ['ms-breakfast','ms-lunch','ms-dinner'].forEach(function(id){
+      var el=$id(id); if(!el) return;
+      el.style.background=goalBg;
+      el.style.color='#fff';
+      el.classList.add('colored');
+    });
+  }, 100);
 }
 
 function _initCancerHome(u){
