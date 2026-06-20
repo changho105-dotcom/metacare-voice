@@ -632,6 +632,7 @@ function _initApp(){
   _refreshPhotos();
   _refreshCondSummary();
   _refreshHomeAnalysis();
+  _refreshHomeExercise();
   if(ic){ _refreshMedHome(); _refreshTodaySym(); }
   else{ _refreshStats(); _refreshTip(); }
 
@@ -664,7 +665,7 @@ function _initHealthHome(mode){
   if(g('home-mode-sub')) g('home-mode-sub').textContent=c.sub;
   if(g('home-days-lbl')) g('home-days-lbl').textContent=c.daysLbl;
   if(g('home-goal-card')){ g('home-goal-card').style.background=c.goalBg; }
-  if(g('home-goal-lbl')) g('home-goal-lbl').textContent=c.goalLbl;
+  if(g('home-goal-lbl')) g('home-goal-lbl').textContent='오늘의 '+c.goalLbl;
   var vals = c.goalHtml.match(/<div class="val">([^<]+)<\/div>/g)||[];
   var lbls = c.goalHtml.match(/<div class="lbl-s">([^<]+)<\/div>/g)||[];
   var txt = lbls.map(function(l,i){
@@ -862,6 +863,7 @@ function goPage(p){
     _refreshPhotos();
     _refreshCondSummary();
     _refreshHomeAnalysis();
+    _refreshHomeExercise();
     if(USER&&USER.mode!=='cancer'){ _refreshStats(); }
     else{ _refreshMedHome(); _refreshTodaySym(); if(USER.ctype==='prostate') _refreshPSABanner(); }
   }
@@ -1066,8 +1068,35 @@ function analyzeEx(){
   p+=ic?'암 환자 관점에서(면역 기능, 체력 유지, 피로 관리) 분석해 주세요. 3~4문장.':
     (u&&u.mode?({keto:'케토제닉',carnivore:'카니보어',lchf:'저탄고지',diet:'다이어트'}[u.mode]||''):'')+' 식단 관점에서(지방 연소, 체력, 운동 후 식사 주의사항) 분석해 주세요. 3~4문장.';
   _api({max_tokens:350,messages:[{role:'user',content:p}]}, function(reply){
-    ar.innerHTML='<div class="tip-lbl">AI 운동 분석</div>'+esc(reply||'분석 결과를 가져오지 못했어요.');
+    var result=reply||'분석 결과를 가져오지 못했어요.';
+    ar.innerHTML='<div class="tip-lbl">AI 운동 분석</div>'+esc(result);
+    _saveExerciseResult(type, dur, memo, result);
   });
+}
+
+function _saveExerciseResult(type, dur, memo, analysis){
+  var today=todayStr();
+  var days=_getRecs();
+  var dayRec=days.find(function(d){return d.date===today;});
+  if(!dayRec){ dayRec={date:today,photos:{},steps:''}; days.push(dayRec); }
+  if(!dayRec.exercise) dayRec.exercise=[];
+  dayRec.exercise.push({type:type,dur:dur,memo:memo,analysis:analysis,ts:Date.now()});
+  _setRecs(days);
+  _refreshHomeExercise();
+}
+
+function _refreshHomeExercise(){
+  var el=$id('home-exercise-result'); if(!el) return;
+  var today=todayStr();
+  var days=_getRecs();
+  var dayRec=days.find(function(d){return d.date===today;});
+  if(dayRec&&dayRec.exercise&&dayRec.exercise.length){
+    var latest=dayRec.exercise[dayRec.exercise.length-1];
+    el.style.display='block';
+    el.innerHTML='<div class="tip-lbl">오늘의 운동 분석</div><div style="font-size:12px;font-weight:700;margin-bottom:4px;">🏃 '+esc(latest.type)+(latest.dur?' · '+esc(latest.dur):'')+'</div>'+esc(latest.analysis);
+  } else {
+    el.style.display='none';
+  }
 }
 
 function setDietTab(t){
