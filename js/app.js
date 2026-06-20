@@ -540,13 +540,16 @@ function enterByName(){
   var users = _getUsers();
   var match;
   if(year){
-    // 이름+출생년도 모두 입력한 경우: 둘 다 일치해야 함
     match = users.find(function(u){ return u.name===name && String(u.birthYear)===String(year); });
-    // 출생년도가 없는 기존 사용자도 이름만으로 허용
     if(!match) match = users.find(function(u){ return u.name===name && !u.birthYear; });
   } else {
-    // 이름만 입력한 경우: 이름 일치하면 입장
-    match = users.find(function(u){ return u.name===name; });
+    var nameMatches = users.filter(function(u){ return u.name===name; });
+    if(nameMatches.length > 1){
+      errEl.textContent = '같은 이름의 사용자가 여럿 있습니다. 출생년도도 함께 입력해 주세요';
+      errEl.style.display = 'block';
+      return;
+    }
+    match = nameMatches[0] || null;
   }
   if(!match){
     errEl.textContent = '등록된 정보를 찾을 수 없습니다. 관리자에게 문의하세요';
@@ -1053,6 +1056,7 @@ function _refreshHomeAnalysis(){
   } else {
     el.style.display='none';
   }
+  _refreshComprehensiveBtn();
 }
 
 function analyzeEx(){
@@ -1097,6 +1101,53 @@ function _refreshHomeExercise(){
   } else {
     el.style.display='none';
   }
+  _refreshComprehensiveBtn();
+}
+
+function _refreshComprehensiveBtn(){
+  var btn=$id('home-comprehensive-btn');
+  var resEl=$id('home-comprehensive-result');
+  if(!btn||!resEl) return;
+  var today=todayStr();
+  var days=_getRecs();
+  var dayRec=days.find(function(d){return d.date===today;});
+  var hasDiet=dayRec&&dayRec.analysis&&dayRec.analysis.latest;
+  var hasExercise=dayRec&&dayRec.exercise&&dayRec.exercise.length;
+  btn.style.display=(hasDiet&&hasExercise)?'block':'none';
+  if(dayRec&&dayRec.comprehensive&&dayRec.comprehensive.result){
+    resEl.style.display='block';
+    resEl.innerHTML='<div class="tip-lbl">오늘 종합 평가</div>'+esc(dayRec.comprehensive.result);
+  } else {
+    resEl.style.display='none';
+  }
+}
+
+function comprehensiveEval(){
+  if(!KEY){ toast('API 키가 없습니다'); return; }
+  var today=todayStr();
+  var days=_getRecs();
+  var dayRec=days.find(function(d){return d.date===today;});
+  if(!dayRec||!dayRec.analysis||!dayRec.analysis.latest){ toast('식단 분석 결과가 없습니다'); return; }
+  if(!dayRec.exercise||!dayRec.exercise.length){ toast('운동 분석 결과가 없습니다'); return; }
+  var resEl=$id('home-comprehensive-result');
+  resEl.style.display='block';
+  resEl.innerHTML='<div class="tip-lbl">오늘 종합 평가</div><div class="dots"><span></span><span></span><span></span></div>';
+  var dietText=dayRec.analysis.latest;
+  var latest=dayRec.exercise[dayRec.exercise.length-1];
+  var exText='['+latest.type+(latest.dur?' · '+latest.dur:'')+'] '+latest.analysis;
+  var u=USER, mode=u?u.mode:'lchf';
+  var modeDesc={keto:'케토제닉',carnivore:'카니보어',lchf:'저탄고지',diet:'균형 건강식',cancer:'암 환자 항산화 식단'}[mode]||mode;
+  var prompt='오늘의 식단 분석과 운동 분석을 바탕으로 '+modeDesc+' 관점의 종합 평가를 해주세요.\n\n[식단 분석]\n'+dietText+'\n\n[운동 분석]\n'+exText+'\n\n두 결과를 연계하여 오늘 하루 건강 관리 전반에 대한 종합 평가와 내일을 위한 핵심 조언을 4~5문장으로 작성해주세요.';
+  _api({max_tokens:500,messages:[{role:'user',content:prompt}]}, function(reply){
+    var result=reply||'종합 평가를 가져오지 못했어요.';
+    resEl.innerHTML='<div class="tip-lbl">오늘 종합 평가</div>'+esc(result);
+    var days2=_getRecs();
+    var dayRec2=days2.find(function(d){return d.date===today;});
+    if(dayRec2){
+      dayRec2.comprehensive={result:result,ts:Date.now()};
+      _setRecs(days2);
+    }
+  });
 }
 
 function setDietTab(t){
@@ -1700,7 +1751,7 @@ return {
   // 코치
   askQ:askQ, sendChat:sendChat,
   // 식단 분석
-  analyze:analyze, analyzeEx:analyzeEx, setDietTab:setDietTab, setCancerTab:setCancerTab,
+  analyze:analyze, analyzeEx:analyzeEx, setDietTab:setDietTab, setCancerTab:setCancerTab, comprehensiveEval:comprehensiveEval,
   // PSA
   openSheet:openSheet, closeSheet:closeSheet, savePSA:savePSA, openMarkerSheet:openMarkerSheet,
   // 컨디션 기록
