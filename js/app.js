@@ -663,7 +663,6 @@ function _initHealthHome(mode){
   if(g('home-days-lbl')) g('home-days-lbl').textContent=c.daysLbl;
   if(g('home-goal-card')){ g('home-goal-card').style.background=c.goalBg; }
   if(g('home-goal-lbl')) g('home-goal-lbl').textContent=c.goalLbl;
-  // 수치를 부제목으로 표시
   var vals = c.goalHtml.match(/<div class="val">([^<]+)<\/div>/g)||[];
   var lbls = c.goalHtml.match(/<div class="lbl-s">([^<]+)<\/div>/g)||[];
   var txt = vals.map(function(v,i){
@@ -675,6 +674,13 @@ function _initHealthHome(mode){
   if(g('home-banner-sub')) g('home-banner-sub').textContent=c.bannerSub;
   if(g('tip-title')) g('tip-title').textContent=c.tipTitle;
   if(g('vg2')) g('vg2').innerHTML='<i class="ti ti-salad"></i>'+c.vg2;
+  // 식사 슬롯 색상 동기화
+  ['ms-breakfast','ms-lunch','ms-dinner'].forEach(function(id){
+    var el=$id(id); if(!el) return;
+    el.style.background=c.goalBg;
+    el.style.color='#fff';
+    el.classList.add('colored');
+  });
 }
 
 function _initCancerHome(u){
@@ -685,6 +691,11 @@ function _initCancerHome(u){
   var gc=$id('home-goal-card'); if(gc){ gc.style.background='linear-gradient(135deg,#4a1d96,#6B3FA0)'; }
   var gl=$id('home-goal-lbl'); if(gl) gl.textContent='최근 PSA 수치';
   var gi=$id('home-goal-items'); if(gi) gi.textContent='-- ng/mL';
+  ['ms-breakfast','ms-lunch','ms-dinner'].forEach(function(id){
+    var el=$id(id); if(!el) return;
+    el.style.background='linear-gradient(135deg,#4a1d96,#6B3FA0)';
+    el.style.color='#fff'; el.classList.add('colored');
+  });
   var bs=$id('home-banner-sub'); if(bs) bs.textContent='항산화·저당 관점의 암 환자 맞춤 식단 분석';
   var tt=$id('tip-title'); if(tt) tt.style.display='none';
   // 팁 박스 숨김

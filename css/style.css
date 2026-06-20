@@ -185,9 +185,10 @@ h2{font-size:20px;}
 /* 오늘의 식사 3칸 */
 .meal-slots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%;}
 .meal-slot{background:#fff;border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.meal-slot.colored{border:none;}
 .meal-slot:active{opacity:.8;}
-.meal-slot-lbl{font-size:12px;font-weight:700;color:var(--navy);padding:7px 8px 4px;text-align:center;}
-.meal-slot-img{height:90px;display:flex;align-items:center;justify-content:center;background:var(--cream);overflow:hidden;}
+.meal-slot-lbl{font-size:13px;font-weight:700;padding:8px 8px 4px;text-align:center;}
+.meal-slot-img{height:90px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.2);overflow:hidden;}
 .meal-slot-img img{width:100%;height:100%;object-fit:cover;}
 .goal-vals{display:flex;gap:12px;}
 .goal-val-item .val{font-size:14px;font-weight:700;}
