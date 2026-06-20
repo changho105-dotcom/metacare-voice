@@ -1134,7 +1134,44 @@ function onFile(e,src){
   var f=e.target.files[0]; e.target.value=''; if(!f) return;
   var r=new FileReader(); r.onload=function(ev){ _compress(ev.target.result,function(small){
     $id('preview-img').src=small; $id('preview-wrap').style.display=''; goPage('diet');
+    // 오늘 날짜로 기록장에 자동 저장
+    _autoSavePhotoToLog(small);
   }); }; r.readAsDataURL(f);
+}
+
+function _autoSavePhotoToLog(imgData){
+  var today = todayStr();
+  var hour = new Date().getHours();
+  var meal = hour < 10 ? 'breakfast' : hour < 15 ? 'lunch' : 'dinner';
+
+  var recs = _getRecs();
+  var dayRec = recs.find(function(r){ return r.date === today; });
+
+  if(!dayRec){
+    dayRec = {date:today, photos:{}, steps:''};
+    recs.push(dayRec);
+  }
+
+  // Storage에 업로드
+  var path = 'photos/'+USER.id+'/'+today+'_'+meal+'_'+Date.now()+'.jpg';
+  var ref = _storage.ref(path);
+  var byteStr = atob(imgData.split(',')[1]);
+  var ab = new ArrayBuffer(byteStr.length);
+  var ia = new Uint8Array(ab);
+  for(var i=0;i<byteStr.length;i++) ia[i]=byteStr.charCodeAt(i);
+  var blob = new Blob([ab],{type:'image/jpeg'});
+
+  ref.put(blob).then(function(){ return ref.getDownloadURL(); }).then(function(url){
+    dayRec.photos[meal] = url;
+    _setRecs(recs);
+    _refreshPhotos(); _refreshStats();
+    toast('기록장에도 저장됐어요 ✓');
+  }).catch(function(){
+    // Storage 실패 시 base64로 폴백
+    dayRec.photos[meal] = imgData;
+    _setRecs(recs);
+    _refreshPhotos(); _refreshStats();
+  });
 }
 
 function pickMeal(src){ closeSheet('sh-meal'); $id('f-meal-'+src).value=''; $id('f-meal-'+src).click(); }
