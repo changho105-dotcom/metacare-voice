@@ -1343,45 +1343,6 @@ function _refreshPhotos(){
   });
 }
 
-function openMealSlot(meal){
-  // 오늘 날짜 레코드가 없으면 생성
-  var days = _getRecs(), today = todayStr();
-  var todayRec = days.find(function(d){ return d.date===today; });
-  if(!todayRec){
-    todayRec = {date:today, photos:{}, steps:''};
-    days.push(todayRec);
-    _setRecs(days);
-  }
-  // 직접 파일 선택
-  var input = document.createElement('input');
-  input.type='file'; input.accept='image/*'; input.capture='environment';
-  input.onchange = function(e){
-    var f=e.target.files[0]; if(!f) return;
-    var r=new FileReader(); r.onload=function(ev){ _compress(ev.target.result,function(small){
-      // Storage 업로드
-      var path='photos/'+USER.id+'/'+today+'_'+meal+'_'+Date.now()+'.jpg';
-      var ref=_storage.ref(path);
-      var byteStr=atob(small.split(',')[1]);
-      var ab=new ArrayBuffer(byteStr.length);
-      var ia=new Uint8Array(ab);
-      for(var i=0;i<byteStr.length;i++) ia[i]=byteStr.charCodeAt(i);
-      var blob=new Blob([ab],{type:'image/jpeg'});
-      ref.put(blob).then(function(){ return ref.getDownloadURL(); }).then(function(url){
-        todayRec.photos[meal]=url;
-        _setRecs(days);
-        _refreshPhotos();
-        toast('저장됐어요 ✓');
-      }).catch(function(){
-        todayRec.photos[meal]=small;
-        _setRecs(days);
-        _refreshPhotos();
-        toast('저장됐어요 ✓');
-      });
-    }); }; r.readAsDataURL(f);
-  };
-  input.click();
-}
-
 function _refreshStats(){
   var days=_getRecs(),today=todayStr();
   var todayData=days.find(function(d){return d.date===today;});
@@ -1458,7 +1419,7 @@ return {
   // 복약
   saveMedForm:saveMedForm, saveMedSheet:saveMedSheet, toggleMed:toggleMed, deleteMed:deleteMed,
   // 사진
-  pickPhoto:pickPhoto, onFile:onFile, pickMeal:pickMeal, onMealFile:onMealFile, openMealSlot:openMealSlot,
+  pickPhoto:pickPhoto, onFile:onFile, pickMeal:pickMeal, onMealFile:onMealFile, openMealSlot:openMealSlot, pickHomeMeal:pickHomeMeal, onHomeMealFile:onHomeMealFile,
   // 기록장
   addLogDay:addLogDay, exportExcel:exportExcel,
   // 뷰어
@@ -1469,3 +1430,41 @@ return {
 };
 
 })();
+
+/* ── 홈 식사 슬롯 바텀시트 ── */
+var _homeMealSlot = null;
+
+function openMealSlot(meal){
+  var days=_getRecs(), today=todayStr();
+  var todayRec=days.find(function(d){return d.date===today;});
+  if(!todayRec){ todayRec={date:today,photos:{},steps:''}; days.push(todayRec); _setRecs(days); }
+  _homeMealSlot={meal:meal,days:days,todayRec:todayRec,today:today};
+  var title={breakfast:'🌅 아침',lunch:'☀️ 점심',dinner:'🌙 저녁'}[meal]||meal;
+  var t=$id('sh-home-meal-title'); if(t) t.textContent=title+' 사진 선택';
+  openSheet('sh-home-meal');
+}
+
+function pickHomeMeal(src){
+  closeSheet('sh-home-meal');
+  var inp=$id('f-home-meal-'+src); if(inp){inp.value='';inp.click();}
+}
+
+function onHomeMealFile(e,src){
+  var f=e.target.files[0]; e.target.value=''; if(!f||!_homeMealSlot) return;
+  var s=_homeMealSlot; _homeMealSlot=null;
+  var r=new FileReader(); r.onload=function(ev){ _compress(ev.target.result,function(small){
+    var path='photos/'+USER.id+'/'+s.today+'_'+s.meal+'_'+Date.now()+'.jpg';
+    var ref=_storage.ref(path);
+    var byteStr=atob(small.split(',')[1]);
+    var ab=new ArrayBuffer(byteStr.length);
+    var ia=new Uint8Array(ab);
+    for(var i=0;i<byteStr.length;i++) ia[i]=byteStr.charCodeAt(i);
+    var blob=new Blob([ab],{type:'image/jpeg'});
+    toast('저장 중...');
+    ref.put(blob).then(function(){return ref.getDownloadURL();}).then(function(url){
+      s.todayRec.photos[s.meal]=url; _setRecs(s.days); _refreshPhotos(); toast('저장됐어요 ✓');
+    }).catch(function(){
+      s.todayRec.photos[s.meal]=small; _setRecs(s.days); _refreshPhotos(); toast('저장됐어요 ✓');
+    });
+  }); }; r.readAsDataURL(f);
+}

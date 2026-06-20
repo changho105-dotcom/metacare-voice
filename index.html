@@ -501,7 +501,17 @@
   <div class="viewer-wrap"><img id="hv-img" src="" alt=""></div>
 </div>
 
-<!-- 파일 인풋 -->
+<!-- 홈 식사 사진 바텀시트 -->
+<div class="overlay" id="sh-home-meal" onclick="if(event.target.id==='sh-home-meal')A.closeSheet('sh-home-meal')">
+  <div class="sheet">
+    <div class="sh-title" id="sh-home-meal-title">사진 선택</div>
+    <button class="sh-btn" onclick="A.pickHomeMeal('cam')"><i class="ti ti-camera"></i> 촬영하기</button>
+    <button class="sh-btn" onclick="A.pickHomeMeal('gal')"><i class="ti ti-photo"></i> 갤러리에서 가져오기</button>
+    <button class="sh-cancel" onclick="A.closeSheet('sh-home-meal')">취소</button>
+  </div>
+</div>
+<input type="file" id="f-home-meal-cam" accept="image/*" capture="environment" style="display:none" onchange="A.onHomeMealFile(event,'cam')">
+<input type="file" id="f-home-meal-gal" accept="image/*" style="display:none" onchange="A.onHomeMealFile(event,'gal')">
 <input type="file" id="f-cam" accept="image/*" capture="environment" style="display:none" onchange="A.onFile(event,'cam')">
 <input type="file" id="f-gal" accept="image/*" style="display:none" onchange="A.onFile(event,'gal')">
 <input type="file" id="f-meal-cam" accept="image/*" capture="environment" style="display:none" onchange="A.onMealFile(event,'cam')">
