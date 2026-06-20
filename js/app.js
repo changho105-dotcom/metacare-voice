@@ -692,8 +692,9 @@ function _initCancerHome(u){
   var sub=$id('home-mode-sub'); if(sub) sub.textContent=ip?(sl[u.stage]||'전립선암')+' 관리 중':'암 치유 관리 중';
   var dl=$id('home-days-lbl'); if(dl) dl.textContent='관리';
   var gc=$id('home-goal-card'); if(gc){ gc.style.background='linear-gradient(135deg,#4a1d96,#6B3FA0)'; }
-  var gl=$id('home-goal-lbl'); if(gl) gl.textContent='최근 PSA 수치';
-  var gi=$id('home-goal-items'); if(gi) gi.textContent='-- ng/mL';
+  var markers = _getMarkers(u.ctype);
+  var gl=$id('home-goal-lbl'); if(gl) gl.textContent=markers[0]||'종양 마커';
+  var gi=$id('home-goal-items'); if(gi) gi.textContent='-- '+_getMarkerUnit(markers[0]);
   ['ms-breakfast','ms-lunch','ms-dinner'].forEach(function(id){
     var el=$id(id); if(!el) return;
     el.style.background='linear-gradient(135deg,#4a1d96,#6B3FA0)';
@@ -701,10 +702,61 @@ function _initCancerHome(u){
   });
   var bs=$id('home-banner-sub'); if(bs) bs.textContent='항산화·저당 관점의 암 환자 맞춤 식단 분석';
   var tt=$id('tip-title'); if(tt) tt.style.display='none';
-  // 팁 박스 숨김
   var tb=document.querySelector('.tip-box'); if(tb) tb.style.display='none';
-  var vg2=$id('vg2'); if(vg2) vg2.innerHTML='<i class="ti ti-chart-line"></i>"PSA 기록해줘"';
+  var vg2=$id('vg2'); if(vg2) vg2.innerHTML='<i class="ti ti-chart-line"></i>"마커 기록해줘"';
   if(ip) _refreshPSABanner();
+}
+
+/* ── 암종별 종양 마커 설정 ── */
+var _MARKER_CFG = {
+  prostate:  {markers:['PSA'],           units:{PSA:'ng/mL'},          label:'PSA 추적'},
+  breast:    {markers:['CA 15-3','CEA'], units:{'CA 15-3':'U/mL', CEA:'ng/mL'}, label:'유방암 마커'},
+  colon:     {markers:['CEA','CA 19-9'], units:{CEA:'ng/mL','CA 19-9':'U/mL'},  label:'대장암 마커'},
+  stomach:   {markers:['CEA','CA 19-9'], units:{CEA:'ng/mL','CA 19-9':'U/mL'},  label:'위암 마커'},
+  lung:      {markers:['CEA','CYFRA 21-1'], units:{CEA:'ng/mL','CYFRA 21-1':'ng/mL'}, label:'폐암 마커'},
+  liver:     {markers:['AFP'],           units:{AFP:'ng/mL'},           label:'간암 마커'},
+  pancreas:  {markers:['CA 19-9','CEA'], units:{'CA 19-9':'U/mL', CEA:'ng/mL'}, label:'췌장암 마커'},
+  bile:      {markers:['CA 19-9','CEA'], units:{'CA 19-9':'U/mL', CEA:'ng/mL'}, label:'담도암 마커'},
+  thyroid:   {markers:['Tg','TSH'],      units:{Tg:'ng/mL', TSH:'μIU/mL'},      label:'갑상선 마커'},
+  cervical:  {markers:['SCC','CEA'],     units:{SCC:'ng/mL', CEA:'ng/mL'},       label:'자궁경부암 마커'},
+  kidney:    {markers:['CEA'],           units:{CEA:'ng/mL'},           label:'종양 마커'},
+  other:     {markers:['CEA'],           units:{CEA:'ng/mL'},           label:'종양 마커'}
+};
+
+function _getMarkers(ctype){ var c=_MARKER_CFG[ctype]||_MARKER_CFG.other; return c.markers; }
+function _getMarkerUnit(marker){ if(!USER) return ''; var c=_MARKER_CFG[USER.ctype]||_MARKER_CFG.other; return c.units[marker]||''; }
+function _getMarkerLabel(){ if(!USER) return '종양 마커 추적'; var c=_MARKER_CFG[USER.ctype]||_MARKER_CFG.other; return c.label; }
+
+function openMarkerSheet(){
+  if(!USER) return;
+  var markers = _getMarkers(USER.ctype);
+  var label = _getMarkerLabel();
+  // 바텀시트 제목 업데이트
+  var t=$id('sh-marker-title'); if(t) t.textContent=label+' 기록';
+  // 마커가 여러 개면 선택 UI, 하나면 바로 입력
+  var inp=$id('sh-marker-inputs');
+  if(inp){
+    var html='';
+    if(markers.length>1){
+      html+='<label class="lbl">마커 선택</label>';
+      html+='<select class="inp-sm" id="marker-select" style="margin-bottom:8px;">';
+      markers.forEach(function(m){ html+='<option value="'+m+'">'+m+' ('+(_getMarkerUnit(m)||'수치')+')</option>'; });
+      html+='</select>';
+    } else {
+      html+='<div style="font-size:13px;font-weight:700;color:var(--purple);margin-bottom:6px;">'+markers[0]+' ('+(_getMarkerUnit(markers[0])||'수치')+')</div>';
+    }
+    html+='<input class="inp-sm" id="psa-val" type="number" placeholder="수치 입력" step="0.01" min="0">';
+    html+='<input class="inp-sm" id="psa-date" type="text" placeholder="날짜 (예: 2026-06-20)" style="margin-top:8px;" value="'+todayStr()+'">';
+    html+='<input class="inp-sm" id="psa-note" type="text" placeholder="메모 (선택)" style="margin-top:8px;">';
+    inp.innerHTML=html;
+  }
+  openSheet('sh-psa');
+}
+
+// 추적 탭 진입 시 마커 제목 업데이트
+function _initMarkerTrack(){
+  if(!USER||USER.mode!=='cancer') return;
+  var t=$id('marker-title'); if(t) t.textContent=_getMarkerLabel();
 }
 
 function refreshTip(){
@@ -802,7 +854,7 @@ function goPage(p){
   $id('pages').scrollTop=0;
   _currentPage = p;
   if(p==='log'){ _xlLoad(); if(USER&&USER.mode==='cancer') _loadSymCards(); }
-  if(p==='track'&&USER&&USER.mode==='cancer'){ _loadPSAHistory(); _loadSymAvg(); }
+  if(p==='track'&&USER&&USER.mode==='cancer'){ _initMarkerTrack(); _loadPSAHistory(); _loadSymAvg(); }
   if(p==='chat'){ setTimeout(function(){ var cs=$id('chat-scroll'); if(cs) cs.scrollTop=cs.scrollHeight; },100); }
   if(p==='home'){
     _refreshPhotos();
@@ -1011,10 +1063,13 @@ function closeSheet(id){ $id(id)&&$id(id).classList.remove('on'); }
 
 function savePSA(){
   var v=parseFloat($id('psa-val').value); if(isNaN(v)||v<0){ toast('유효한 수치를 입력하세요'); return; }
+  var sel=$id('marker-select');
+  var markerName = sel ? sel.value : (_getMarkers(USER?USER.ctype:'prostate')[0]||'PSA');
+  var unit = _getMarkerUnit(markerName)||'ng/mL';
   var data=_getPSA();
-  data.push({v:v,date:$id('psa-date').value||todayStr(),note:$id('psa-note').value||'',ts:Date.now()});
+  data.push({v:v, marker:markerName, unit:unit, date:$id('psa-date').value||todayStr(), note:$id('psa-note').value||'', ts:Date.now()});
   _setPSA(data); closeSheet('sh-psa'); _refreshPSABanner(); _loadPSAHistory();
-  toast('PSA '+v+' ng/mL 저장됐어요');
+  toast(markerName+' '+v+' '+unit+' 저장됐어요');
 }
 
 function _quickSavePSA(v){ var data=_getPSA(); data.push({v:v,date:todayStr(),note:'',ts:Date.now()}); _setPSA(data); _refreshPSABanner(); _loadPSAHistory(); }
@@ -1022,14 +1077,16 @@ function _quickSavePSA(v){ var data=_getPSA(); data.push({v:v,date:todayStr(),no
 function _loadPSAHistory(){
   var el=$id('psa-history'); if(!el) return;
   var data=_getPSA();
-  if(!data.length){ el.innerHTML='<div class="empty-state" style="padding:18px;"><i class="ti ti-chart-line"></i><br>PSA 기록이 없어요.</div>'; return; }
+  if(!data.length){ el.innerHTML='<div class="empty-state" style="padding:18px;"><i class="ti ti-chart-line"></i><br>기록이 없어요</div>'; return; }
   el.innerHTML='';
   [].concat(data).reverse().forEach(function(item,i,arr){
     var prev=arr[i+1],ac='',at='→';
-    if(prev){ if(item.v>prev.v){ac='up';at='▲';}else if(item.v<prev.v){ac='dn';at='▼';} }
+    if(prev&&prev.marker===item.marker){ if(item.v>prev.v){ac='up';at='▲';}else if(item.v<prev.v){ac='dn';at='▼';} }
+    var markerName=item.marker||'PSA';
+    var unit=item.unit||'ng/mL';
     var row=document.createElement('div'); row.className='psa-row-item';
-    row.innerHTML='<div><div class="psa-row-date">'+item.date+'</div>'+(item.note?'<div style="font-size:10px;color:var(--mu);">'+esc(item.note)+'</div>':'')+'</div>'
-      +'<div style="display:flex;align-items:center;gap:6px;"><span class="psa-arr '+(ac||'')+'">'+at+'</span><span class="psa-row-val">'+item.v.toFixed(1)+' <span style="font-size:10px;font-weight:400;color:var(--mu);">ng/mL</span></span></div>';
+    row.innerHTML='<div><div class="psa-row-date">'+item.date+' <span style="font-size:10px;background:var(--purple-l);color:var(--purple);padding:1px 6px;border-radius:8px;font-weight:700;">'+markerName+'</span></div>'+(item.note?'<div style="font-size:10px;color:var(--mu);">'+esc(item.note)+'</div>':'')+'</div>'
+      +'<div style="display:flex;align-items:center;gap:6px;"><span class="psa-arr '+(ac||'')+'">'+at+'</span><span class="psa-row-val">'+item.v.toFixed(2)+' <span style="font-size:10px;font-weight:400;color:var(--mu);">'+unit+'</span></span></div>';
     el.appendChild(row);
   });
 }
@@ -1448,7 +1505,7 @@ return {
   // 식단 분석
   analyze:analyze, analyzeEx:analyzeEx, setDietTab:setDietTab, setCancerTab:setCancerTab,
   // PSA
-  openSheet:openSheet, closeSheet:closeSheet, savePSA:savePSA,
+  openSheet:openSheet, closeSheet:closeSheet, savePSA:savePSA, openMarkerSheet:openMarkerSheet,
   // 증상
   openSymSheet:openSymSheet, saveSymQuick:saveSymQuick, saveSym:saveSym,
   // 복약

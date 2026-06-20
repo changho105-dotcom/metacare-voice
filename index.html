@@ -391,14 +391,14 @@
             <div class="prog-row"><div class="row space-between mb4"><span>운동</span><span style="color:#854F0B;font-weight:700;">55%</span></div><div class="prog-bg"><div class="prog-bar" style="width:55%;background:#D85A30"></div></div></div>
           </div>
         </div>
-        <!-- PSA 추적 -->
+        <!-- 종양 마커 추적 -->
         <div id="track-cancer" style="display:none">
           <div class="row space-between align-center">
-            <div class="section-title mb0"><i class="ti ti-chart-line" style="color:var(--purple)"></i> PSA 추적</div>
-            <button class="btn-sm purple" onclick="A.openSheet('sh-psa')"><i class="ti ti-plus"></i> 기록</button>
+            <div class="section-title mb0"><i class="ti ti-chart-line" style="color:var(--purple)"></i> <span id="marker-title">종양 마커 추적</span></div>
+            <button class="btn-sm purple" onclick="A.openMarkerSheet()"><i class="ti ti-plus"></i> 기록</button>
           </div>
           <div id="psa-history" class="col gap-sm">
-            <div class="empty-state" style="padding:18px;"><i class="ti ti-chart-line"></i><br>PSA 기록이 없어요</div>
+            <div class="empty-state" style="padding:18px;"><i class="ti ti-chart-line"></i><br>기록이 없어요</div>
           </div>
           <div class="section-title"><i class="ti ti-activity" style="color:var(--red)"></i> 이번 주 증상 평균</div>
           <div class="stat-row">
@@ -458,10 +458,12 @@
 </div>
 <div class="overlay" id="sh-psa" onclick="if(event.target.id==='sh-psa')A.closeSheet('sh-psa')">
   <div class="sheet">
-    <div class="sh-title">PSA 수치 기록</div>
-    <input class="inp-sm" id="psa-val" type="number" placeholder="수치 (예: 4.2)" step="0.1" min="0">
-    <input class="inp-sm" id="psa-date" type="text" placeholder="날짜" style="margin-top:8px;">
-    <input class="inp-sm" id="psa-note" type="text" placeholder="메모 (선택)" style="margin-top:8px;">
+    <div class="sh-title" id="sh-marker-title">수치 기록</div>
+    <div id="sh-marker-inputs" class="col gap-sm">
+      <input class="inp-sm" id="psa-val" type="number" placeholder="수치" step="0.01" min="0">
+      <input class="inp-sm" id="psa-date" type="text" placeholder="날짜" style="margin-top:8px;">
+      <input class="inp-sm" id="psa-note" type="text" placeholder="메모 (선택)" style="margin-top:8px;">
+    </div>
     <button class="btn-full purple" onclick="A.savePSA()" style="margin-top:8px;">저장</button>
     <button class="sh-cancel" onclick="A.closeSheet('sh-psa')">취소</button>
   </div>
