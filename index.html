@@ -18,6 +18,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -59,6 +60,10 @@
     </div>
     <div class="scroll-body">
       <div class="admin-grid">
+        <button class="admin-tile" onclick="A.goScreen('scr-admin-monitor')">
+          <div class="admin-tile-icon" style="background:#E8F5E9;">📊</div>
+          <div class="admin-tile-name">환자 현황</div>
+        </button>
         <button class="admin-tile" onclick="A.goScreen('scr-admin-users')">
           <div class="admin-tile-icon teal">👥</div>
           <div class="admin-tile-name">사용자 관리</div>
@@ -77,6 +82,24 @@
         </button>
       </div>
     </div>
+  </div>
+
+  <!-- ── Admin: 환자 현황 목록 ── -->
+  <div id="scr-admin-monitor" class="screen light">
+    <div class="topbar navy">
+      <button class="back-btn" onclick="A.goScreen('scr-admin')"><i class="ti ti-arrow-left"></i></button>
+      <span class="topbar-title">📊 환자 현황</span>
+    </div>
+    <div class="scroll-body" id="monitor-list"></div>
+  </div>
+
+  <!-- ── Admin: 환자 상세 현황 ── -->
+  <div id="scr-admin-patient" class="screen light">
+    <div class="topbar navy">
+      <button class="back-btn" onclick="A.goScreen('scr-admin-monitor')"><i class="ti ti-arrow-left"></i></button>
+      <span class="topbar-title" id="patient-topbar-title">환자 상세</span>
+    </div>
+    <div class="scroll-body" id="patient-detail"></div>
   </div>
 
   <!-- ── Admin: 사용자 관리 ── -->
