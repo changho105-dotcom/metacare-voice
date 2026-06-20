@@ -1305,12 +1305,57 @@ function exportExcel(){
 
 /* ── 홈 그리드 & 통계 ── */
 function _refreshPhotos(){
-  var grid=$id('home-photos'); if(!grid) return;
-  var days=_getRecs(), meals=['morning','lunch','dinner'], lbls={morning:'아침',lunch:'점심',dinner:'저녁'}, photos=[];
-  for(var i=days.length-1;i>=0&&photos.length<4;i--){ if(!days[i].photos) continue; for(var m=0;m<meals.length&&photos.length<4;m++){ var p=days[i].photos[meals[m]]; if(p) photos.push({url:p,label:lbls[meals[m]]}); } }
-  grid.innerHTML='';
-  photos.forEach(function(ph){ var item=document.createElement('div'); item.className='photo-item'; item.onclick=(function(u,l){return function(){_openHomeViewer(u,l);};})(ph.url,ph.label); item.innerHTML='<img src="'+ph.url+'" alt="'+ph.label+'"><span class="ph-tag">'+ph.label+'</span>'; grid.appendChild(item); });
-  for(var k=photos.length;k<4;k++){ var empty=document.createElement('div'); empty.className='photo-empty'; empty.innerHTML='<i class="ti ti-camera-plus"></i><span>기록장에서<br>추가</span>'; empty.onclick=function(){goPage('log');}; grid.appendChild(empty); }
+  var days=_getRecs(), today=todayStr();
+  var todayRec = days.find(function(d){ return d.date===today; });
+  var meals = ['breakfast','lunch','dinner'];
+  meals.forEach(function(meal){
+    var el = $id('ms-img-'+meal); if(!el) return;
+    var photo = todayRec && todayRec.photos && todayRec.photos[meal];
+    if(photo){
+      el.innerHTML = '<img src="'+photo+'" alt="'+meal+'" style="width:100%;height:100%;object-fit:cover;">';
+    } else {
+      el.innerHTML = '<i class="ti ti-plus" style="font-size:22px;color:var(--mu);"></i>';
+    }
+  });
+}
+
+function openMealSlot(meal){
+  // 오늘 날짜 레코드가 없으면 생성
+  var days = _getRecs(), today = todayStr();
+  var todayRec = days.find(function(d){ return d.date===today; });
+  if(!todayRec){
+    todayRec = {date:today, photos:{}, steps:''};
+    days.push(todayRec);
+    _setRecs(days);
+  }
+  // 직접 파일 선택
+  var input = document.createElement('input');
+  input.type='file'; input.accept='image/*'; input.capture='environment';
+  input.onchange = function(e){
+    var f=e.target.files[0]; if(!f) return;
+    var r=new FileReader(); r.onload=function(ev){ _compress(ev.target.result,function(small){
+      // Storage 업로드
+      var path='photos/'+USER.id+'/'+today+'_'+meal+'_'+Date.now()+'.jpg';
+      var ref=_storage.ref(path);
+      var byteStr=atob(small.split(',')[1]);
+      var ab=new ArrayBuffer(byteStr.length);
+      var ia=new Uint8Array(ab);
+      for(var i=0;i<byteStr.length;i++) ia[i]=byteStr.charCodeAt(i);
+      var blob=new Blob([ab],{type:'image/jpeg'});
+      ref.put(blob).then(function(){ return ref.getDownloadURL(); }).then(function(url){
+        todayRec.photos[meal]=url;
+        _setRecs(days);
+        _refreshPhotos();
+        toast('저장됐어요 ✓');
+      }).catch(function(){
+        todayRec.photos[meal]=small;
+        _setRecs(days);
+        _refreshPhotos();
+        toast('저장됐어요 ✓');
+      });
+    }); }; r.readAsDataURL(f);
+  };
+  input.click();
 }
 
 function _refreshStats(){
@@ -1389,7 +1434,7 @@ return {
   // 복약
   saveMedForm:saveMedForm, saveMedSheet:saveMedSheet, toggleMed:toggleMed, deleteMed:deleteMed,
   // 사진
-  pickPhoto:pickPhoto, onFile:onFile, pickMeal:pickMeal, onMealFile:onMealFile,
+  pickPhoto:pickPhoto, onFile:onFile, pickMeal:pickMeal, onMealFile:onMealFile, openMealSlot:openMealSlot,
   // 기록장
   addLogDay:addLogDay, exportExcel:exportExcel,
   // 뷰어

@@ -229,7 +229,7 @@
       </div>
       <div class="row gap-sm">
         <span class="badge" id="tb-badge"></span>
-        <button class="tb-btn" onclick="A.onMic()" id="vfab-top" style="width:44px;height:44px;font-size:22px;"><i class="ti ti-microphone" id="mic-icon"></i></button>
+        <button class="tb-btn" onclick="A.onMic()" id="vfab-top" style="width:48px;height:48px;font-size:28px;"><i class="ti ti-microphone" id="mic-icon"></i></button>
       </div>
     </div>
 
@@ -255,9 +255,9 @@
         <button onclick="A.goHelp()" style="width:100%;padding:15px;background:#fff;color:var(--navy);border:2px solid var(--navy);border-radius:var(--r);font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;">
           <i class="ti ti-book" style="font-size:22px;color:var(--teal);"></i> 📖 사용 방법 보기
         </button>
-        <div class="goal-card" id="home-goal-card">
-          <div class="sub mb6" id="home-goal-lbl"></div>
-          <div id="home-goal-items"></div>
+        <div class="goal-card-mini" id="home-goal-card">
+          <div class="sub" id="home-goal-lbl" style="font-size:11px;margin-bottom:4px;"></div>
+          <div id="home-goal-items" style="font-size:12px;"></div>
         </div>
         <button class="cam-banner" onclick="A.openSheet('sh-photo')">
           <div class="cam-icon"><i class="ti ti-camera"></i></div>
@@ -267,8 +267,21 @@
           </div>
           <i class="ti ti-chevron-right" style="margin-left:auto;opacity:.5;font-size:22px;"></i>
         </button>
-        <div class="section-title"><i class="ti ti-photo"></i> 최근 기록 사진</div>
-        <div class="card p12"><div class="photo-grid" id="home-photos"></div></div>
+        <div class="section-title"><i class="ti ti-sun"></i> 오늘의 식사</div>
+        <div class="meal-slots" id="home-meal-slots">
+          <div class="meal-slot" id="ms-breakfast" onclick="A.openMealSlot('breakfast')">
+            <div class="meal-slot-lbl">🌅 아침</div>
+            <div class="meal-slot-img" id="ms-img-breakfast"><i class="ti ti-plus" style="font-size:22px;color:var(--mu);"></i></div>
+          </div>
+          <div class="meal-slot" id="ms-lunch" onclick="A.openMealSlot('lunch')">
+            <div class="meal-slot-lbl">☀️ 점심</div>
+            <div class="meal-slot-img" id="ms-img-lunch"><i class="ti ti-plus" style="font-size:22px;color:var(--mu);"></i></div>
+          </div>
+          <div class="meal-slot" id="ms-dinner" onclick="A.openMealSlot('dinner')">
+            <div class="meal-slot-lbl">🌙 저녁</div>
+            <div class="meal-slot-img" id="ms-img-dinner"><i class="ti ti-plus" style="font-size:22px;color:var(--mu);"></i></div>
+          </div>
+        </div>
         <div class="row space-between align-center">
           <div class="section-title mb0"><i class="ti ti-bulb"></i> <span id="tip-title">오늘의 팁</span></div>
           <button class="btn-text" onclick="A.refreshTip()"><i class="ti ti-refresh"></i> 새 팁</button>
@@ -417,9 +430,10 @@
 
     </div><!-- /pages -->
 
-    <button class="vfab" id="vfab" onclick="A.goBack()"><i class="ti ti-arrow-left" id="vfab-i"></i></button>
+    
 
     <nav class="bnav">
+      <button class="nb back-nb" onclick="A.goBack()"><i class="ti ti-arrow-left"></i><span>뒤로</span></button>
       <button class="nb active" id="nb-home"  onclick="A.goPage('home')"><i class="ti ti-home"></i><span>홈</span></button>
       <button class="nb"        id="nb-diet"  onclick="A.goPage('diet')"><i class="ti ti-camera"></i><span>식단</span></button>
       <button class="nb"        id="nb-log"   onclick="A.goPage('log')"><i class="ti ti-table"></i><span>기록장</span></button>

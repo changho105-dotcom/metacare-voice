@@ -129,7 +129,7 @@ h2{font-size:20px;}
 .badge.cancer{background:var(--purple);color:#fff;}
 
 /* FAB - absolute, 앱 안에서만 */
-.vfab{position:fixed;right:18px;bottom:calc(env(safe-area-inset-bottom,0px) + 90px);width:64px;height:64px;border-radius:50%;border:none;z-index:200;display:flex;align-items:center;justify-content:center;background:var(--navy);box-shadow:0 4px 18px rgba(26,47,76,.5);transition:background .2s;font-size:26px;color:#fff;cursor:pointer;}
+.vfab{position:fixed;right:18px;bottom:calc(env(safe-area-inset-bottom,0px) + 75px);width:64px;height:64px;border-radius:50%;border:none;z-index:9999;display:flex;align-items:center;justify-content:center;background:var(--navy);box-shadow:0 4px 18px rgba(26,47,76,.5);transition:background .2s;font-size:26px;color:#fff;cursor:pointer;}
 .vfab i{font-size:27px;color:#fff;}
 .vfab.listening{background:var(--red);animation:pulse 1s infinite;}
 .vfab.thinking{background:#C8A96E;}
@@ -180,6 +180,15 @@ h2{font-size:20px;}
 .ai-badge{display:inline;font-size:17px;font-weight:700;color:var(--teal);margin-left:2px;}
 .days-count{font-size:24px;font-weight:700;color:var(--tld);}
 .goal-card{border-radius:var(--r);padding:17px 18px;color:#fff;}
+.goal-card-mini{border-radius:var(--rs);padding:10px 14px;color:#fff;margin-bottom:0;}
+
+/* 오늘의 식사 3칸 */
+.meal-slots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.meal-slot{background:#fff;border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;cursor:pointer;}
+.meal-slot:active{opacity:.8;}
+.meal-slot-lbl{font-size:12px;font-weight:700;color:var(--navy);padding:7px 8px 4px;text-align:center;}
+.meal-slot-img{height:90px;display:flex;align-items:center;justify-content:center;background:var(--cream);overflow:hidden;}
+.meal-slot-img img{width:100%;height:100%;object-fit:cover;}
 .goal-vals{display:flex;gap:16px;}
 .goal-val-item .val{font-size:20px;font-weight:700;}
 .goal-val-item .lbl-s{font-size:10px;opacity:.65;margin-top:1px;}
