@@ -1316,12 +1316,14 @@ function _autoSavePhotoToLog(imgData, forceMeal){
     dayRec.photos[meal] = url;
     _setRecs(recs);
     _refreshPhotos(); _refreshStats();
+    _xlLoad(); // 기록장 카드 DOM 업데이트
     toast('기록장에도 저장됐어요 ✓');
   }).catch(function(){
     // Storage 실패 시 base64로 폴백
     dayRec.photos[meal] = imgData;
     _setRecs(recs);
     _refreshPhotos(); _refreshStats();
+    _xlLoad();
   });
 }
 
@@ -1404,9 +1406,24 @@ function _delCard(card){ card.remove(); if(!$id('log-cards').children.length) $i
 
 function _schedSave(){ if(_saveTimer) clearTimeout(_saveTimer); _saveTimer=setTimeout(_doSave,800); }
 function _doSave(){
+  var existingRecs = _getRecs(); // 기존 저장된 데이터
   var days=[]; document.querySelectorAll('#log-cards .day-card').forEach(function(card){
-    var photos={}; card.querySelectorAll('[data-meal]').forEach(function(slot){ var p=slot.getAttribute('data-photo'); if(p) photos[slot.getAttribute('data-meal')]=p; });
-    days.push({date:card.querySelector('.day-date').value,steps:card.querySelector('.steps-in').value,photos:photos});
+    var dateVal = card.querySelector('.day-date').value;
+    var photos={};
+    card.querySelectorAll('[data-meal]').forEach(function(slot){
+      var p=slot.getAttribute('data-photo');
+      if(p) photos[slot.getAttribute('data-meal')]=p;
+    });
+    // 기존 records에 있는 photos와 병합 (홈에서 저장된 것 보존)
+    var existing = existingRecs.find(function(r){ return r.date===dateVal; });
+    if(existing&&existing.photos){
+      Object.keys(existing.photos).forEach(function(k){
+        if(!photos[k]) photos[k]=existing.photos[k];
+      });
+    }
+    var rec = {date:dateVal, steps:card.querySelector('.steps-in').value, photos:photos};
+    if(existing&&existing.analysis) rec.analysis=existing.analysis;
+    days.push(rec);
   });
   _setRecs(days); _showAutosave(); _refreshPhotos(); _refreshStats();
 }
