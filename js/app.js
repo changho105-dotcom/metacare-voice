@@ -800,7 +800,7 @@ function goPage(p){
 var VS='idle', VQ=[], VR=null, VBusy=false;
 function _setVS(s){
   VS=s;
-  var icon=$id('vfab-i'), bar=$id('vbar'), dot=$id('vdot'), txt=$id('vtxt');
+  var icon=$id('mic-icon'), bar=$id('vbar'), dot=$id('vdot'), txt=$id('vtxt');
   if(s==='idle'){ bar.classList.remove('on'); if(icon) icon.className='ti ti-microphone'; }
   else if(s==='listening'){ bar.classList.add('on'); dot.className='vdot L'; txt.textContent='듣고 있어요...'; if(icon) icon.className='ti ti-microphone-off'; }
   else if(s==='thinking'){ bar.classList.add('on'); dot.className='vdot T'; txt.textContent='처리 중...'; if(icon) icon.className='ti ti-loader'; }
