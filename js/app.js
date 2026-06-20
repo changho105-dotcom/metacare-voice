@@ -665,10 +665,10 @@ function _initHealthHome(mode){
   if(g('home-goal-lbl')) g('home-goal-lbl').textContent=c.goalLbl;
   var vals = c.goalHtml.match(/<div class="val">([^<]+)<\/div>/g)||[];
   var lbls = c.goalHtml.match(/<div class="lbl-s">([^<]+)<\/div>/g)||[];
-  var txt = vals.map(function(v,i){
-    var val=v.replace(/<[^>]+>/g,'');
-    var lbl=lbls[i]?(lbls[i].replace(/<[^>]+>/g,'')):'';
-    return lbl+(lbl?' ':'')+val;
+  var txt = lbls.map(function(l,i){
+    var lbl=l.replace(/<[^>]+>/g,'');
+    var val=vals[i]?(vals[i].replace(/<[^>]+>/g,'')):'';
+    return lbl+' '+val;
   }).join(' · ');
   if(g('home-goal-items')) g('home-goal-items').textContent=txt;
   if(g('home-banner-sub')) g('home-banner-sub').textContent=c.bannerSub;
@@ -1338,7 +1338,7 @@ function _refreshPhotos(){
     if(photo){
       el.innerHTML = '<img src="'+photo+'" alt="'+meal+'" style="width:100%;height:100%;object-fit:cover;">';
     } else {
-      el.innerHTML = '<i class="ti ti-camera" style="font-size:36px;color:rgba(255,255,255,.8);"></i>';
+      el.innerHTML = '<i class="ti ti-camera" style="font-size:40px;color:#fff;"></i>';
     }
   });
 }
