@@ -135,12 +135,14 @@ function _handlePopState(e){
     var prev = _navStack[_navStack.length-1];
     if(prev.type==='screen') goScreen(prev.id);
     else if(prev.type==='page') goPage(prev.p);
-    // 뒤로가기 후 다시 히스토리 추가 (앱 종료 방지)
-    try{ history.pushState({navIdx:_navStack.length}, '', '#'+( _navStack[_navStack.length-1]||{id:''}).id); }catch(e2){}
+    try{ history.pushState({navIdx:_navStack.length}, '', '#'+((_navStack[_navStack.length-1]||{id:''}).id)); }catch(e2){}
   } else {
-    // 스택이 비면 프로필 화면으로
+    // 스택이 비면 프로필(로그인) 화면으로 이동하고 히스토리 다시 쌓기
     goScreen('scr-profile');
-    try{ history.pushState({navIdx:0}, '', '#scr-profile'); }catch(e2){}
+    try{
+      history.pushState({navIdx:-1}, '', location.href);
+      history.pushState({navIdx:0}, '', '#scr-profile');
+    }catch(e2){}
   }
   _suppressPush = false;
 }
@@ -781,12 +783,15 @@ function goHelp(){
 }
 
 /* ── 내비게이션 ── */
+var _currentPage = 'home';
+
 function goPage(p){
   document.querySelectorAll('.page').forEach(function(e){ e.classList.remove('active'); });
   document.querySelectorAll('.nb').forEach(function(e){ e.classList.remove('active'); });
   var pg=$id('pg-'+p); if(pg) pg.classList.add('active');
   var nb=$id('nb-'+p); if(nb) nb.classList.add('active');
   $id('pages').scrollTop=0;
+  _currentPage = p;
   if(p==='log'){ _xlLoad(); if(USER&&USER.mode==='cancer') _loadSymCards(); }
   if(p==='track'&&USER&&USER.mode==='cancer'){ _loadPSAHistory(); _loadSymAvg(); }
   if(p==='chat'){ setTimeout(function(){ var cs=$id('chat-scroll'); if(cs) cs.scrollTop=cs.scrollHeight; },100); }
@@ -811,14 +816,27 @@ function onMic(){
 }
 
 function goBack(){
+  var activeScreen = document.querySelector('.screen.active');
+  if(!activeScreen) return;
+
+  // 로그인 화면에서는 동작 안 함
+  if(activeScreen.id==='scr-profile') return;
+
+  // 앱 메인 화면 안에서는 홈으로
+  if(activeScreen.id==='scr-app'){
+    if(_currentPage !== 'home'){
+      goPage('home');
+    }
+    return;
+  }
+
+  // 다른 화면(Admin 등)에서는 이전 화면으로
   if(_navStack.length>1){
     _suppressPush=true;
     _navStack.pop();
     var prev=_navStack[_navStack.length-1];
     if(prev.type==='screen') goScreen(prev.id);
     _suppressPush=false;
-  } else {
-    goScreen('scr-profile');
   }
 }
 function _startRec(){
