@@ -631,6 +631,7 @@ function _initApp(){
   _xlLoad();
   _refreshPhotos();
   _refreshCondSummary();
+  _refreshHomeAnalysis();
   if(ic){ _refreshMedHome(); _refreshTodaySym(); }
   else{ _refreshStats(); _refreshTip(); }
 
@@ -860,6 +861,7 @@ function goPage(p){
   if(p==='home'){
     _refreshPhotos();
     _refreshCondSummary();
+    _refreshHomeAnalysis();
     if(USER&&USER.mode!=='cancer'){ _refreshStats(); }
     else{ _refreshMedHome(); _refreshTodaySym(); if(USER.ctype==='prostate') _refreshPSABanner(); }
   }
@@ -1003,17 +1005,52 @@ function _sendChatP(){
 /* ── AI 식단/운동 분석 ── */
 function analyze(){
   if(!KEY){ toast('API 키가 없습니다'); return; }
-  var name=$id('food-name').value.trim(), memo=$id('food-memo').value.trim();
+  var name=$id('food-name').value.trim();
   var pre=$id('preview-img'), hasPic=pre.src&&$id('preview-wrap').style.display!=='none';
   if(!hasPic&&!name){ toast('사진 또는 메뉴명을 입력하세요'); return; }
-  var ar=$id('ai-result'); ar.style.display='block'; ar.innerHTML='<div class="dots"><span></span><span></span><span></span></div>';
+  var ar=$id('ai-result'); ar.style.display='block'; ar.innerHTML='<div class="tip-lbl">AI 식단 분석</div><div class="dots"><span></span><span></span><span></span></div>';
   var u=USER;
   var ps={cancer:'암 환자 식단 관점에서(항산화,저당,항염,케토 적합도) 분석해 주세요. 전립선암이면 리코펜·십자화과도 언급. 3~4문장.',keto:'케토제닉 관점에서(탄단지 비율, 케토 적합도 0~10점, 혈당 영향) 분석해 주세요. 3~4문장.',carnivore:'카니보어(육식) 관점에서(동물성 식품 비율, 카니보어 적합도 0~10점, 식물성 성분 포함 여부) 분석해 주세요. 3~4문장.',lchf:'저탄고지 관점에서(탄수화물 함량, 혈당 지수, 포만감) 분석해 주세요. 3~4문장.',diet:'균형 건강식 관점에서(칼로리 추정, 영양 균형, 지중해식 적합도) 분석해 주세요. 3~4문장.'};
   var p=(ps[u?u.mode:'keto']||ps.keto);
   var msgs;
-  if(hasPic){ var b64=pre.src.split(',')[1],mt=pre.src.startsWith('data:image/png')?'image/png':'image/jpeg'; var txt=p; if(name)txt+=' 음식:'+name; if(memo)txt+=' 메모:'+memo; msgs=[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:txt}]}]; }
+  if(hasPic){ var b64=pre.src.split(',')[1],mt=pre.src.startsWith('data:image/png')?'image/png':'image/jpeg'; var txt=p; if(name)txt+=' 음식:'+name; msgs=[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:txt}]}]; }
   else{ msgs=[{role:'user',content:'"'+name+'"을 '+p}]; }
-  _api({max_tokens:400,messages:msgs}, function(reply){ ar.textContent=reply||'분석 결과를 가져오지 못했어요.'; });
+  _api({max_tokens:400,messages:msgs}, function(reply){
+    var result = reply||'분석 결과를 가져오지 못했어요.';
+    ar.innerHTML='<div class="tip-lbl">AI 식단 분석</div>'+esc(result);
+    // 분석 결과를 오늘 기록장에 저장
+    _saveAnalysisResult(result);
+  });
+}
+
+function _saveAnalysisResult(result){
+  var today=todayStr();
+  var days=_getRecs();
+  var dayRec=days.find(function(d){return d.date===today;});
+  if(!dayRec){ dayRec={date:today,photos:{},steps:''}; days.push(dayRec); }
+  // 시간대별로 분석 결과 저장
+  var hour=new Date().getHours();
+  var meal=hour<10?'breakfast':hour<15?'lunch':'dinner';
+  if(!dayRec.analysis) dayRec.analysis={};
+  dayRec.analysis[meal]=result;
+  dayRec.analysis.latest=result;
+  dayRec.analysis.ts=Date.now();
+  _setRecs(days);
+  // 홈 화면 분석 결과 업데이트
+  _refreshHomeAnalysis();
+}
+
+function _refreshHomeAnalysis(){
+  var el=$id('home-ai-result'); if(!el) return;
+  var today=todayStr();
+  var days=_getRecs();
+  var dayRec=days.find(function(d){return d.date===today;});
+  if(dayRec&&dayRec.analysis&&dayRec.analysis.latest){
+    el.style.display='block';
+    el.innerHTML='<div class="tip-lbl">오늘의 식단 분석</div>'+esc(dayRec.analysis.latest);
+  } else {
+    el.style.display='none';
+  }
 }
 
 function analyzeEx(){
