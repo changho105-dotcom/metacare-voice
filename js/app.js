@@ -6,11 +6,7 @@
 var A = (function(){
 
 /* ── 상태 ── */
-var KEY = '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'; // Anthropic API key
-var USER = null;        // 현재 로그인 사용자
-var _newMode = '';
-var _newCtype = '';
-var _newStage = 0;
+var KEY = 'sk-ant-api03-bcd4aSE74SFzO71OHBwcBRMTSLmk3mflxcXrme2c92hIiZVr70mJ_kkzqVguweBH6F44ETwxxnnh2sqUit-XUg-a8Y9UwAA';var _newStage = 0;
 var _pendMeal = null;   // 기록장 식사 슬롯
 var _vCtx = null;       // 뷰어 컨텍스트
 var _vRot = 0;
@@ -104,6 +100,7 @@ function goScreen(id, opts){
   var el = $id(id);
   if(el) el.classList.add('active');
   if(id==='scr-admin-users') _renderAdminList();
+  if(id==='scr-admin-monitor') _renderMonitorList();
   if(id==='scr-add-user') _resetAddForm();
   if(!_suppressPush){
     _navStack.push({type:'screen', id:id});
@@ -156,6 +153,146 @@ function checkPw(){
 /* ── Admin 기능 ── */
 function _getUsers(){ return S.gj('mc_users', []); }
 function _setUsers(u){ S.sj('mc_users', u); }
+
+/* ── 환자 현황 모니터링 ── */
+function _renderMonitorList(){
+  var users = _getUsers();
+  var el = $id('monitor-list'); if(!el) return;
+  if(!users.length){
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--mu);">등록된 환자가 없습니다</div>';
+    return;
+  }
+  var ml = {cancer:'암환자', keto:'케토제닉', carnivore:'카니보어', lchf:'저탄고지', diet:'다이어트 건강식'};
+  var mi = {cancer:'🔬', keto:'🥑', carnivore:'🥩', lchf:'🍖', diet:'🥗'};
+  var cn = {thyroid:'갑상선암',colorectal:'대장암',lung:'폐암',stomach:'위암',breast:'유방암',liver:'간암',pancreas:'췌장암',bile:'담낭·담도암',kidney:'신장암',cervical:'자궁경부암',prostate:'전립선암',other:'기타 암'};
+
+  el.innerHTML = users.map(function(u){
+    var ic = u.mode==='cancer';
+    var ctypeName = (u.ctype==='other'&&u.otherCancerName) ? u.otherCancerName : (cn[u.ctype]||'암환자');
+    var ms = ic ? ((u.stage)?u.stage+'기 '+ctypeName:ctypeName) : (ml[u.mode]||u.mode);
+
+    // 최근 증상
+    var symData = S.gj('mc_'+u.id+'_sym', {});
+    var symKeys = Object.keys(symData).sort().reverse();
+    var lastSym = symKeys.length ? symData[symKeys[0]] : null;
+    var symTxt = lastSym ? '통증 '+( lastSym.pain!==undefined?lastSym.pain+'점':'미기록')+' / 피로 '+(lastSym.fatigue!==undefined?lastSym.fatigue+'점':'미기록') : '기록 없음';
+
+    // 최근 PSA
+    var psaData = S.gj('mc_'+u.id+'_psa', []);
+    var lastPsa = psaData.length ? psaData[psaData.length-1] : null;
+    var psaTxt = lastPsa ? lastPsa.v.toFixed(1)+' ng/mL ('+lastPsa.date+')' : '기록 없음';
+
+    // 최근 기록장
+    var recs = S.gj('mc_'+u.id+'_records', []);
+    var lastRec = recs.length ? recs[recs.length-1] : null;
+    var recTxt = lastRec ? lastRec.date+' ('+Object.keys(lastRec.photos||{}).length+'끼)' : '기록 없음';
+
+    // 복약
+    var meds = S.gj('mc_'+u.id+'_meds', []);
+    var medDone = S.gj('mc_'+u.id+'_med_done', {});
+    var today = new Date();
+    var todayStr = String(today.getFullYear()).slice(2)+'년 '+(today.getMonth()+1<10?'0':'')+(today.getMonth()+1)+'월 '+(today.getDate()<10?'0':'')+today.getDate()+'일';
+    var doneToday = medDone[todayStr]||{};
+    var medTxt = meds.length ? meds.filter(function(m){return doneToday[m.id];}).length+'/'+meds.length+'개 완료' : '약 없음';
+
+    return '<div class="admin-user-card" onclick="A.showPatient(\''+u.id+'\')" style="cursor:pointer;flex-direction:column;align-items:flex-start;gap:10px;">'
+      +'<div style="display:flex;align-items:center;gap:10px;width:100%;">'
+      +'<div class="admin-user-av '+(ic?'cancer':'health')+'" style="font-size:18px;">'+(mi[u.mode]||'👤')+'</div>'
+      +'<div style="flex:1"><div class="admin-user-name">'+esc(u.name)+(u.birthYear?' · '+u.birthYear+'년생':'')+'</div>'
+      +'<div class="admin-user-detail">'+esc(ms)+'</div></div>'
+      +'<i class="ti ti-chevron-right" style="color:var(--mu);font-size:18px;"></i>'
+      +'</div>'
+      +(ic?'<div style="display:flex;gap:8px;width:100%;flex-wrap:wrap;">'
+        +'<span style="background:var(--purple-l);color:var(--purple);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;">PSA: '+esc(psaTxt)+'</span>'
+        +'<span style="background:var(--red-l);color:var(--red);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;">'+esc(symTxt)+'</span>'
+        +'</div>':'')
+      +'<div style="font-size:12px;color:var(--mu);">최근기록: '+esc(recTxt)+' · 복약: '+esc(medTxt)+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function showPatient(userId){
+  var users = _getUsers();
+  var u = users.find(function(x){return x.id===userId;});
+  if(!u) return;
+
+  var ic = u.mode==='cancer';
+  var cn = {thyroid:'갑상선암',colorectal:'대장암',lung:'폐암',stomach:'위암',breast:'유방암',liver:'간암',pancreas:'췌장암',bile:'담낭·담도암',kidney:'신장암',cervical:'자궁경부암',prostate:'전립선암',other:'기타 암'};
+  var ctypeName = (u.ctype==='other'&&u.otherCancerName) ? u.otherCancerName : (cn[u.ctype]||'암환자');
+  var ms = ic ? ((u.stage)?u.stage+'기 '+ctypeName:ctypeName) : u.mode;
+
+  var el = $id('patient-detail'); if(!el) return;
+  var title = $id('patient-topbar-title'); if(title) title.textContent = u.name+' 님';
+
+  var html = '';
+
+  // 기본 정보
+  html += '<div class="card"><div class="card-hd"><span>👤 기본 정보</span></div>'
+    +'<div class="card-body">'
+    +'<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);"><span style="color:var(--mu);">이름</span><span style="font-weight:700;">'+esc(u.name)+'</span></div>'
+    +(u.birthYear?'<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd);"><span style="color:var(--mu);">출생년도</span><span style="font-weight:700;">'+u.birthYear+'년생</span></div>':'')
+    +'<div style="display:flex;justify-content:space-between;padding:6px 0;"><span style="color:var(--mu);">모드</span><span style="font-weight:700;">'+esc(ms)+'</span></div>'
+    +'</div></div>';
+
+  // PSA 기록 (암환자)
+  if(ic){
+    var psaData = S.gj('mc_'+u.id+'_psa', []);
+    html += '<div class="card"><div class="card-hd"><span>📈 PSA 기록</span></div><div class="card-body">';
+    if(!psaData.length){ html += '<div style="color:var(--mu);font-size:13px;">기록 없음</div>'; }
+    else {
+      [].concat(psaData).reverse().slice(0,5).forEach(function(p){
+        html += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);">'
+          +'<span style="color:var(--mu);font-size:13px;">'+esc(p.date)+'</span>'
+          +'<span style="font-weight:700;color:var(--purple);">'+p.v.toFixed(1)+' ng/mL</span></div>';
+      });
+    }
+    html += '</div></div>';
+
+    // 증상 기록
+    var symData = S.gj('mc_'+u.id+'_sym', {});
+    var symKeys = Object.keys(symData).sort().reverse().slice(0,5);
+    html += '<div class="card"><div class="card-hd"><span>🩺 최근 증상</span></div><div class="card-body">';
+    if(!symKeys.length){ html += '<div style="color:var(--mu);font-size:13px;">기록 없음</div>'; }
+    else {
+      symKeys.forEach(function(date){
+        var d = symData[date];
+        html += '<div style="padding:7px 0;border-bottom:1px solid var(--bd);">'
+          +'<div style="font-size:12px;color:var(--mu);margin-bottom:4px;">'+esc(date)+'</div>'
+          +'<div style="display:flex;gap:10px;flex-wrap:wrap;">'
+          +(d.pain!==undefined?'<span style="background:var(--red-l);color:var(--red);font-size:12px;font-weight:700;padding:2px 8px;border-radius:20px;">통증 '+d.pain+'점</span>':'')
+          +(d.fatigue!==undefined?'<span style="background:var(--wb);color:var(--warn);font-size:12px;font-weight:700;padding:2px 8px;border-radius:20px;">피로 '+d.fatigue+'점</span>':'')
+          +(d.urine!==undefined?'<span style="background:#E3F2FD;color:#1976D2;font-size:12px;font-weight:700;padding:2px 8px;border-radius:20px;">배뇨 '+d.urine+'점</span>':'')
+          +'</div>'+(d.memo?'<div style="font-size:12px;color:var(--mu);margin-top:3px;">'+esc(d.memo)+'</div>':'')
+          +'</div>';
+      });
+    }
+    html += '</div></div>';
+
+    // 복약
+    var meds = S.gj('mc_'+u.id+'_meds', []);
+    html += '<div class="card"><div class="card-hd"><span>💊 복약 목록</span></div><div class="card-body">';
+    if(!meds.length){ html += '<div style="color:var(--mu);font-size:13px;">등록된 약 없음</div>'; }
+    else { meds.forEach(function(m){ html += '<div style="padding:6px 0;border-bottom:1px solid var(--bd);font-size:13px;">'+esc(m.name)+(m.dose?' ('+esc(m.dose)+')':'')+(m.time?' · '+esc(m.time):'')+'</div>'; }); }
+    html += '</div></div>';
+  }
+
+  // 식단 기록
+  var recs = S.gj('mc_'+u.id+'_records', []);
+  html += '<div class="card"><div class="card-hd"><span>🍽️ 최근 식단 기록</span></div><div class="card-body">';
+  if(!recs.length){ html += '<div style="color:var(--mu);font-size:13px;">기록 없음</div>'; }
+  else {
+    [].concat(recs).reverse().slice(0,5).forEach(function(r){
+      var cnt = Object.keys(r.photos||{}).length;
+      html += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd);">'
+        +'<span style="color:var(--mu);font-size:13px;">'+esc(r.date)+'</span>'
+        +'<span style="font-weight:700;">식사 '+cnt+'끼'+(r.steps?' · '+r.steps+'보':'')+'</span></div>';
+    });
+  }
+  html += '</div></div>';
+
+  el.innerHTML = html;
+  goScreen('scr-admin-patient');
+}
 
 function _renderAdminList(){
   var users = _getUsers();
@@ -1139,7 +1276,7 @@ return {
   // 설정
   checkPw:checkPw,
   // Admin
-  delUser:delUser, changePw:changePw, backup:backup, restore:restore, fullReset:fullReset, filterAdminUsers:filterAdminUsers, backupText:backupText, copyBackupText:copyBackupText,
+  delUser:delUser, changePw:changePw, backup:backup, restore:restore, fullReset:fullReset, filterAdminUsers:filterAdminUsers, backupText:backupText, copyBackupText:copyBackupText, showPatient:showPatient,
   // 사용자 추가
   _selMode:_selMode, _selCtype:_selCtype, _selStage:_selStage, addUser:addUser,
   // 앱
