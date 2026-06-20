@@ -229,6 +229,7 @@
       </div>
       <div class="row gap-sm">
         <span class="badge" id="tb-badge"></span>
+        <button class="tb-btn" onclick="A.onMic()" id="vfab-top"><i class="ti ti-microphone" id="vfab-i"></i></button>
         <button class="tb-btn" onclick="A.goScreen('scr-profile')"><i class="ti ti-logout"></i></button>
       </div>
     </div>
@@ -417,7 +418,7 @@
 
     </div><!-- /pages -->
 
-    <button class="vfab" id="vfab" onclick="A.onMic()"><i class="ti ti-microphone" id="vfab-i"></i></button>
+    <button class="vfab" id="vfab" onclick="A.goBack()"><i class="ti ti-arrow-left" id="vfab-i"></i></button>
 
     <nav class="bnav">
       <button class="nb active" id="nb-home"  onclick="A.goPage('home')"><i class="ti ti-home"></i><span>홈</span></button>

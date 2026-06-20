@@ -135,13 +135,22 @@ function _handlePopState(e){
     var prev = _navStack[_navStack.length-1];
     if(prev.type==='screen') goScreen(prev.id);
     else if(prev.type==='page') goPage(prev.p);
+    // 뒤로가기 후 다시 히스토리 추가 (앱 종료 방지)
+    try{ history.pushState({navIdx:_navStack.length}, '', '#'+( _navStack[_navStack.length-1]||{id:''}).id); }catch(e2){}
   } else {
-    // 더 갈 곳 없으면 프로필 화면으로 (앱 종료 방지)
+    // 스택이 비면 프로필 화면으로
     goScreen('scr-profile');
+    try{ history.pushState({navIdx:0}, '', '#scr-profile'); }catch(e2){}
   }
   _suppressPush = false;
 }
 window.addEventListener('popstate', _handlePopState);
+
+// 앱 종료 방지 - 초기 히스토리 2개 쌓기
+try{
+  history.pushState({navIdx:-1}, '', location.href);
+  history.pushState({navIdx:0}, '', location.href);
+}catch(e){}
 
 /* (최초 설정 화면 제거됨 — API 키는 코드에 내장되어 있음) */
 
@@ -791,15 +800,26 @@ function goPage(p){
 var VS='idle', VQ=[], VR=null, VBusy=false;
 function _setVS(s){
   VS=s;
-  var fab=$id('vfab'), icon=$id('vfab-i'), bar=$id('vbar'), dot=$id('vdot'), txt=$id('vtxt');
-  fab.className='vfab'+(s!=='idle'?' '+s:'');
-  if(s==='idle'){ bar.classList.remove('on'); icon.className='ti ti-microphone'; }
-  else if(s==='listening'){ bar.classList.add('on'); dot.className='vdot L'; txt.textContent='듣고 있어요...'; icon.className='ti ti-microphone-off'; }
-  else if(s==='thinking'){ bar.classList.add('on'); dot.className='vdot T'; txt.textContent='처리 중...'; icon.className='ti ti-loader'; }
+  var icon=$id('vfab-i'), bar=$id('vbar'), dot=$id('vdot'), txt=$id('vtxt');
+  if(s==='idle'){ bar.classList.remove('on'); if(icon) icon.className='ti ti-microphone'; }
+  else if(s==='listening'){ bar.classList.add('on'); dot.className='vdot L'; txt.textContent='듣고 있어요...'; if(icon) icon.className='ti ti-microphone-off'; }
+  else if(s==='thinking'){ bar.classList.add('on'); dot.className='vdot T'; txt.textContent='처리 중...'; if(icon) icon.className='ti ti-loader'; }
 }
 function onMic(){
   if(VS==='listening') _stopRec();
   else _startRec();
+}
+
+function goBack(){
+  if(_navStack.length>1){
+    _suppressPush=true;
+    _navStack.pop();
+    var prev=_navStack[_navStack.length-1];
+    if(prev.type==='screen') goScreen(prev.id);
+    _suppressPush=false;
+  } else {
+    goScreen('scr-profile');
+  }
 }
 function _startRec(){
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -1346,7 +1366,7 @@ _loadCloudData(function(){
 /* ── 공개 API ── */
 return {
   // 화면
-  goScreen:goScreen, logoTap:logoTap, enterByName:enterByName, goHelp:goHelp,
+  goScreen:goScreen, logoTap:logoTap, enterByName:enterByName, goHelp:goHelp, goBack:goBack,
   // 설정
   checkPw:checkPw,
   // Admin
