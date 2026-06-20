@@ -1105,10 +1105,8 @@ function _refreshHomeExercise(){
 }
 
 function _refreshComprehensiveBtn(){
-  var btn=$id('home-comprehensive-btn');
   var resEl=$id('home-comprehensive-result');
-  if(!btn||!resEl) return;
-  btn.style.display='block';
+  if(!resEl) return;
   var today=todayStr();
   var days=_getRecs();
   var dayRec=days.find(function(d){return d.date===today;});
