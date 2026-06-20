@@ -1242,17 +1242,18 @@ function _compress(dataUrl,cb){
 function pickPhoto(src){ closeSheet('sh-photo'); $id('f-'+src).value=''; $id('f-'+src).click(); }
 function onFile(e,src){
   var f=e.target.files[0]; e.target.value=''; if(!f) return;
+  var meal = _pendingMeal; _pendingMeal = null;
   var r=new FileReader(); r.onload=function(ev){ _compress(ev.target.result,function(small){
     $id('preview-img').src=small; $id('preview-wrap').style.display=''; goPage('diet');
-    // 오늘 날짜로 기록장에 자동 저장
-    _autoSavePhotoToLog(small);
+    // 오늘 날짜로 기록장에 자동 저장 (홈에서 넘어온 경우 해당 시간대로)
+    _autoSavePhotoToLog(small, meal);
   }); }; r.readAsDataURL(f);
 }
 
-function _autoSavePhotoToLog(imgData){
+function _autoSavePhotoToLog(imgData, forceMeal){
   var today = todayStr();
   var hour = new Date().getHours();
-  var meal = hour < 10 ? 'breakfast' : hour < 15 ? 'lunch' : 'dinner';
+  var meal = forceMeal || (hour < 10 ? 'breakfast' : hour < 15 ? 'lunch' : 'dinner');
 
   var recs = _getRecs();
   var dayRec = recs.find(function(r){ return r.date === today; });
@@ -1531,14 +1532,14 @@ function _refreshCondSummary(){
 
 /* ── 홈 식사 슬롯 바텀시트 ── */
 var _homeMealSlot = null;
+var _pendingMeal = null; // 홈 식사 슬롯에서 넘어올 때 시간대 기억
 function openMealSlot(meal){
-  var days=_getRecs(), today=todayStr();
-  var todayRec=days.find(function(d){return d.date===today;});
-  if(!todayRec){ todayRec={date:today,photos:{},steps:''}; days.push(todayRec); _setRecs(days); }
-  _homeMealSlot={meal:meal,days:days,todayRec:todayRec,today:today};
-  var title={breakfast:'🌅 아침',lunch:'☀️ 점심',dinner:'🌙 저녁'}[meal]||meal;
-  var t=$id('sh-home-meal-title'); if(t) t.textContent=title+' 사진 선택';
-  openSheet('sh-home-meal');
+  // 식단 탭으로 이동해서 사진 찍기
+  _pendingMeal = meal; // 어떤 시간대인지 기억
+  goPage('diet');
+  setDietTab('food');
+  // 바로 사진 선택 시트 열기
+  setTimeout(function(){ openSheet('sh-photo'); }, 200);
 }
 function pickHomeMeal(src){
   closeSheet('sh-home-meal');
