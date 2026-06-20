@@ -1419,17 +1419,17 @@ return {
   // 복약
   saveMedForm:saveMedForm, saveMedSheet:saveMedSheet, toggleMed:toggleMed, deleteMed:deleteMed,
   // 사진
-  pickPhoto:pickPhoto, onFile:onFile, pickMeal:pickMeal, onMealFile:onMealFile, openMealSlot:openMealSlot, pickHomeMeal:pickHomeMeal, onHomeMealFile:onHomeMealFile,
+  pickPhoto:pickPhoto, onFile:onFile, pickMeal:pickMeal, onMealFile:onMealFile,
   // 기록장
   addLogDay:addLogDay, exportExcel:exportExcel,
   // 뷰어
   _openViewer:_openViewer, closeViewer:closeViewer, vRot:vRot, vChg:vChg, vDel:vDel,
   closeHomeViewer:closeHomeViewer,
   // 기록장 내부
-  _openMealSheet:_openMealSheet
+  _openMealSheet:_openMealSheet,
+  // 홈 식사 슬롯
+  openMealSlot:openMealSlot, pickHomeMeal:pickHomeMeal, onHomeMealFile:onHomeMealFile
 };
-
-})();
 
 /* ── 홈 식사 슬롯 바텀시트 ── */
 var _homeMealSlot = null;
@@ -1468,3 +1468,5 @@ function onHomeMealFile(e,src){
     });
   }); }; r.readAsDataURL(f);
 }
+
+})();
