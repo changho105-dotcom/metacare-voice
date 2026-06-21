@@ -1256,10 +1256,15 @@ function _saveExerciseResult(type, dur, memo, analysis){
   var days=_getRecs();
   var dayRec=days.find(function(d){return d.date===today;});
   if(!dayRec){ dayRec={date:today,photos:{},steps:''}; days.push(dayRec); }
-  if(!dayRec.exercise) dayRec.exercise=[];
-  dayRec.exercise.push({type:type,dur:dur,memo:memo,analysis:analysis,ts:Date.now()});
+  // 하루 1회만 - 기존 기록 덮어쓰기
+  dayRec.exercise=[{type:type,dur:dur,memo:memo,analysis:analysis,ts:Date.now()}];
   _setRecs(days);
   _refreshHomeExercise();
+  _refreshComprehensiveBtn();
+  // 기록장 카드 업데이트
+  _xlLoad();
+  // 기록장에서 왔으면 기록장으로 돌아가기
+  if(_exFromLog){ _exFromLog=null; setTimeout(function(){ goPage('log'); },300); }
 }
 
 function _refreshHomeExercise(){
@@ -1578,19 +1583,64 @@ function _makeCard(d){
   var id='card-'+_cardSeq;
   var card=document.createElement('div'); card.className='day-card'; card.id=id;
   var hd=document.createElement('div'); hd.className='day-hd';
-  var di=document.createElement('input'); di.className='day-date'; di.type='text'; di.value=d.date||''; di.placeholder='26년 05월 25일'; di.addEventListener('input',_schedSave);
+  var di=document.createElement('input'); di.className='day-date'; di.type='text'; di.value=d.date||''; di.placeholder='날짜'; di.addEventListener('input',_schedSave);
   var del=document.createElement('button'); del.className='day-del'; del.innerHTML='<i class="ti ti-trash"></i>'; del.addEventListener('click',function(){_delCard(card);});
   hd.appendChild(di); hd.appendChild(del); card.appendChild(hd);
+
+  // 식사 사진 3칸
   var grid=document.createElement('div'); grid.className='meal-grid';
   ['morning','lunch','dinner'].forEach(function(meal){ var slot=document.createElement('div'); slot.setAttribute('data-meal',meal); grid.appendChild(slot); });
   card.appendChild(grid);
+
+  // 만보 기록
   var sr=document.createElement('div'); sr.className='steps-row';
   var sl=document.createElement('span'); sl.className='steps-lbl'; sl.innerHTML='<i class="ti ti-walk"></i>만보';
   var si=document.createElement('input'); si.className='steps-in'; si.type='text'; si.value=d.steps||''; si.placeholder='오늘 걸음 수'; si.addEventListener('input',_schedSave);
   sr.appendChild(sl); sr.appendChild(si); card.appendChild(sr);
+
+  // 운동 기록 섹션
+  var ex = d.exercise && d.exercise.length ? d.exercise[d.exercise.length-1] : null;
+  var exRow=document.createElement('div');
+  exRow.className='steps-row'; exRow.style.borderTop='1px solid var(--bd)';
+  exRow.setAttribute('data-ex-cardid', id);
+  var exLbl=document.createElement('span'); exLbl.className='steps-lbl';
+  exLbl.innerHTML='<i class="ti ti-run" style="color:var(--warn);"></i>운동';
+  var exVal=document.createElement('div'); exVal.style.cssText='flex:1;font-size:12px;color:var(--mu);';
+  exVal.setAttribute('data-ex-val','1');
+  if(ex){
+    exVal.innerHTML='<span style="color:var(--navy);font-weight:600;">'+esc(ex.type)+(ex.dur?' · '+esc(ex.dur):'')+'</span>';
+  } else {
+    exVal.innerHTML='<span style="color:var(--mu);">기록 없음</span>';
+  }
+  var exBtn=document.createElement('button');
+  exBtn.style.cssText='padding:5px 10px;background:var(--warn);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;';
+  exBtn.textContent = ex ? '수정' : '기록';
+  exBtn.onclick = function(){ _openExerciseSheet(id, d.date); };
+  exRow.appendChild(exLbl); exRow.appendChild(exVal); exRow.appendChild(exBtn);
+  card.appendChild(exRow);
+
   card.querySelectorAll('[data-meal]').forEach(function(slot){ var meal=slot.getAttribute('data-meal'),photo=d.photos?d.photos[meal]:null; if(photo) _renderFilled(slot,photo,_loadRot(id,meal)); else _renderEmpty(slot); });
   return card;
 }
+
+function _openExerciseSheet(cardId, date){
+  // 기존 운동 데이터 불러오기
+  var days=_getRecs();
+  var dayRec=days.find(function(d){return d.date===date;});
+  var ex = dayRec&&dayRec.exercise&&dayRec.exercise.length ? dayRec.exercise[dayRec.exercise.length-1] : null;
+
+  // 식단 탭 운동 폼으로 이동
+  goPage('diet'); setDietTab('ex');
+  setTimeout(function(){
+    var typeEl=$id('ex-type'); if(typeEl) typeEl.value=ex?ex.type:'';
+    var durEl=$id('ex-dur'); if(durEl) durEl.value=ex?ex.dur:'';
+    var memoEl=$id('ex-memo'); if(memoEl) memoEl.value=ex?ex.memo:'';
+    // 저장 후 기록장으로 돌아오도록 플래그
+    _exFromLog={cardId:cardId, date:date};
+  }, 200);
+}
+
+var _exFromLog = null;
 
 function _renderEmpty(slot){
   var meal=slot.getAttribute('data-meal'),cid=slot.closest('.day-card').id;
@@ -1629,6 +1679,9 @@ function _doSave(){
     }
     var rec = {date:dateVal, steps:card.querySelector('.steps-in').value, photos:photos};
     if(existing&&existing.analysis) rec.analysis=existing.analysis;
+    if(existing&&existing.exercise) rec.exercise=existing.exercise;
+    if(existing&&existing.comprehensive) rec.comprehensive=existing.comprehensive;
+    if(existing&&existing.condRecs) rec.condRecs=existing.condRecs;
     days.push(rec);
   });
   _setRecs(days); _showAutosave(); _refreshPhotos(); _refreshStats();
