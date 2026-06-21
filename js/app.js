@@ -1732,12 +1732,70 @@ function loadBackupList(){
 var _homeMealSlot = null;
 var _pendingMeal = null; // 홈 식사 슬롯에서 넘어올 때 시간대 기억
 function openMealSlot(meal){
-  // breakfast → morning 으로 변환 (기록장 키와 통일)
+  // 사진이 이미 있으면 뷰어로 보여주기
   var mealMap = {breakfast:'morning', lunch:'lunch', dinner:'dinner'};
-  _pendingMeal = mealMap[meal] || meal;
+  var mealKey = mealMap[meal] || meal;
+  var days=_getRecs(), today=todayStr();
+  var todayRec=days.find(function(d){return d.date===today;});
+  var existingPhoto = todayRec && todayRec.photos && todayRec.photos[mealKey];
+
+  if(existingPhoto){
+    // 사진이 있으면 뷰어 열기
+    var mealName={breakfast:'🌅 아침',lunch:'☀️ 점심',dinner:'🌙 저녁'}[meal]||meal;
+    var analysis = todayRec.analysis && (todayRec.analysis[mealKey]||todayRec.analysis.latest);
+    _openHomeMealViewer(existingPhoto, mealName, analysis, meal);
+    return;
+  }
+
+  // 사진 없으면 식단 탭으로 이동
+  _pendingMeal = mealKey;
   goPage('diet');
   setDietTab('food');
   setTimeout(function(){ openSheet('sh-photo'); }, 200);
+}
+
+function _openHomeMealViewer(photoUrl, mealName, analysis, meal){
+  // 기존 홈 뷰어 활용
+  var img=$id('hv-img'); if(img) img.src=photoUrl;
+  var viewer=$id('home-viewer'); if(viewer) viewer.classList.add('on');
+
+  // 분석 내용 표시
+  var analysisEl=$id('home-meal-analysis');
+  if(!analysisEl){
+    // 동적으로 생성
+    var div=document.createElement('div');
+    div.id='home-meal-analysis';
+    div.style.cssText='position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:18px 18px 0 0;padding:16px;z-index:201;max-height:50vh;overflow-y:auto;';
+    div.innerHTML='<div style="font-size:14px;font-weight:700;margin-bottom:8px;">'+mealName+' 분석</div>'
+      +'<div style="font-size:13px;line-height:1.8;color:#1A2F4C;">'+(analysis||'분석 내용 없음')+'</div>'
+      +'<div style="display:flex;gap:8px;margin-top:12px;">'
+      +'<button onclick="A.closeHomeMealViewer()" style="flex:1;padding:12px;background:#f5f4f2;border:none;border-radius:10px;font-size:14px;font-weight:700;">닫기</button>'
+      +'<button onclick="A.replaceHomeMealPhoto(\''+meal+'\')" style="flex:1;padding:12px;background:#1a6b4a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;">사진 교체</button>'
+      +'</div>';
+    document.body.appendChild(div);
+  } else {
+    analysisEl.style.display='block';
+    analysisEl.innerHTML='<div style="font-size:14px;font-weight:700;margin-bottom:8px;">'+mealName+' 분석</div>'
+      +'<div style="font-size:13px;line-height:1.8;color:#1A2F4C;">'+(analysis||'분석 내용 없음')+'</div>'
+      +'<div style="display:flex;gap:8px;margin-top:12px;">'
+      +'<button onclick="A.closeHomeMealViewer()" style="flex:1;padding:12px;background:#f5f4f2;border:none;border-radius:10px;font-size:14px;font-weight:700;">닫기</button>'
+      +'<button onclick="A.replaceHomeMealPhoto(\''+meal+'\')" style="flex:1;padding:12px;background:#1a6b4a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;">사진 교체</button>'
+      +'</div>';
+  }
+}
+
+function closeHomeMealViewer(){
+  var viewer=$id('home-viewer'); if(viewer) viewer.classList.remove('on');
+  var analysisEl=$id('home-meal-analysis'); if(analysisEl) analysisEl.style.display='none';
+}
+
+function replaceHomeMealPhoto(meal){
+  closeHomeMealViewer();
+  var mealMap={breakfast:'morning',lunch:'lunch',dinner:'dinner'};
+  _pendingMeal=mealMap[meal]||meal;
+  goPage('diet');
+  setDietTab('food');
+  setTimeout(function(){ openSheet('sh-photo'); },200);
 }
 function pickHomeMeal(src){
   closeSheet('sh-home-meal');
@@ -1830,7 +1888,8 @@ return {
   // 기록장 내부
   _openMealSheet:_openMealSheet,
   // 홈 식사 슬롯
-  openMealSlot:openMealSlot, pickHomeMeal:pickHomeMeal, onHomeMealFile:onHomeMealFile
+  openMealSlot:openMealSlot, pickHomeMeal:pickHomeMeal, onHomeMealFile:onHomeMealFile,
+  closeHomeMealViewer:closeHomeMealViewer, replaceHomeMealPhoto:replaceHomeMealPhoto
 };
 
 })();
