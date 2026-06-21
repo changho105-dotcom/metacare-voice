@@ -647,14 +647,25 @@ function enterByName(){
 /* ── 로그인 ── */
 function loginUser(u){
   USER = u;
-  // 마지막 로그인 사용자 저장 (새로고침 시 자동 재로그인)
   try{ 
-    var lastPage = localStorage.getItem('mc_last_page')||'home';
+    var saved = localStorage.getItem('mc_last_user');
+    var lastPage = 'home';
+    if(saved){
+      var info = JSON.parse(saved);
+      if(info.id === u.id) lastPage = info.lastPage||'home';
+    }
     localStorage.setItem('mc_last_user', JSON.stringify({id:u.id, name:u.name, birthYear:u.birthYear, lastPage:lastPage})); 
+    // 빠른 입장 버튼 숨기기
+    var quickBtn=$id('quick-login-btn'); if(quickBtn) quickBtn.style.display='none';
   }catch(e){}
   if(!KEY){ toast('API 키가 없습니다. Admin에서 설정해주세요.'); return; }
   _initApp();
   goScreen('scr-app');
+  // 마지막 페이지 복원 (같은 사용자일 때만)
+  try{
+    var s=localStorage.getItem('mc_last_user');
+    if(s){ var inf=JSON.parse(s); var lp=inf.lastPage||'home'; if(lp!=='home') setTimeout(function(){ goPage(lp); },100); }
+  }catch(e){}
 }
 
 /* ── 자동 재로그인 ── */
@@ -666,14 +677,32 @@ function _tryAutoLogin(){
     var users = _getUsers();
     var match = users.find(function(u){ return u.id===info.id; });
     if(!match) return false;
-    USER = match;
-    if(!KEY){ return false; }
-    _initApp();
-    goScreen('scr-app');
-    // 마지막 페이지로 이동
-    var lastPage = info.lastPage||'home';
-    if(lastPage!=='home') setTimeout(function(){ goPage(lastPage); }, 100);
-    return true;
+    
+    // 자동 로그인 대신 로그인 화면에 이름 미리 채워두기
+    var nameEl=$id('login-name');
+    var yearEl=$id('login-year');
+    if(nameEl) nameEl.value = match.name;
+    if(yearEl) yearEl.value = match.birthYear;
+    
+    // 빠른 입장 버튼 표시
+    var quickBtn=$id('quick-login-btn');
+    if(!quickBtn){
+      var btn=document.createElement('button');
+      btn.id='quick-login-btn';
+      btn.className='btn-primary';
+      btn.style.cssText='background:var(--teal);margin-top:-8px;';
+      btn.innerHTML='⚡ '+match.name+'님으로 바로 입장';
+      btn.onclick=function(){
+        loginUser(match);
+      };
+      var loginBtn=document.querySelector('#scr-profile .btn-primary');
+      if(loginBtn) loginBtn.parentNode.insertBefore(btn, loginBtn);
+    } else {
+      quickBtn.style.display='block';
+      quickBtn.innerHTML='⚡ '+match.name+'님으로 바로 입장';
+      quickBtn.onclick=function(){ loginUser(match); };
+    }
+    return false; // 로그인 화면은 항상 표시
   }catch(e){ return false; }
 }
 
