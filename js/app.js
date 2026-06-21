@@ -201,6 +201,11 @@ function goScreen(id, opts){
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   var el = $id(id);
   if(el) el.classList.add('active');
+  if(id==='scr-profile'){
+    // 로그아웃 시 자동 로그인 정보 삭제
+    try{ localStorage.removeItem('mc_last_user'); }catch(e){}
+    USER = null;
+  }
   if(id==='scr-admin-users') _renderAdminList();
   if(id==='scr-admin-monitor') _renderMonitorList();
   if(id==='scr-add-user') _resetAddForm();
@@ -642,9 +647,25 @@ function enterByName(){
 /* ── 로그인 ── */
 function loginUser(u){
   USER = u;
+  // 마지막 로그인 사용자 저장 (새로고침 시 자동 재로그인)
+  try{ localStorage.setItem('mc_last_user', JSON.stringify({id:u.id, name:u.name, birthYear:u.birthYear})); }catch(e){}
   if(!KEY){ toast('API 키가 없습니다. Admin에서 설정해주세요.'); return; }
   _initApp();
   goScreen('scr-app');
+}
+
+/* ── 자동 재로그인 ── */
+function _tryAutoLogin(){
+  try{
+    var saved = localStorage.getItem('mc_last_user');
+    if(!saved) return false;
+    var info = JSON.parse(saved);
+    var users = _getUsers();
+    var match = users.find(function(u){ return u.id===info.id; });
+    if(!match) return false;
+    loginUser(match);
+    return true;
+  }catch(e){ return false; }
 }
 
 /* ── 앱 초기화 ── */
@@ -1624,10 +1645,13 @@ function _showAutosave(){ var b=$id('autosave'); if(!b) return; b.classList.add(
 
 /* ── 초기 진입 ── */
 _loadCloudData(function(){
-  $id('scr-profile').classList.add('active');
-  _navStack.push({type:'screen',id:'scr-profile'});
-  try{ history.replaceState({navIdx:0}, '', '#scr-profile'); }catch(e){}
   var lo = $id('loading-overlay'); if(lo) lo.style.display='none';
+  // 자동 재로그인 시도
+  if(!_tryAutoLogin()){
+    $id('scr-profile').classList.add('active');
+    _navStack.push({type:'screen',id:'scr-profile'});
+    try{ history.replaceState({navIdx:0}, '', '#scr-profile'); }catch(e){}
+  }
 });
 
 /* ── 컨디션 기록 ── */
