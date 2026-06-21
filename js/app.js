@@ -648,7 +648,10 @@ function enterByName(){
 function loginUser(u){
   USER = u;
   // 마지막 로그인 사용자 저장 (새로고침 시 자동 재로그인)
-  try{ localStorage.setItem('mc_last_user', JSON.stringify({id:u.id, name:u.name, birthYear:u.birthYear})); }catch(e){}
+  try{ 
+    var lastPage = localStorage.getItem('mc_last_page')||'home';
+    localStorage.setItem('mc_last_user', JSON.stringify({id:u.id, name:u.name, birthYear:u.birthYear, lastPage:lastPage})); 
+  }catch(e){}
   if(!KEY){ toast('API 키가 없습니다. Admin에서 설정해주세요.'); return; }
   _initApp();
   goScreen('scr-app');
@@ -663,7 +666,13 @@ function _tryAutoLogin(){
     var users = _getUsers();
     var match = users.find(function(u){ return u.id===info.id; });
     if(!match) return false;
-    loginUser(match);
+    USER = match;
+    if(!KEY){ return false; }
+    _initApp();
+    goScreen('scr-app');
+    // 마지막 페이지로 이동
+    var lastPage = info.lastPage||'home';
+    if(lastPage!=='home') setTimeout(function(){ goPage(lastPage); }, 100);
     return true;
   }catch(e){ return false; }
 }
@@ -959,6 +968,11 @@ function goPage(p){
   var nb=$id('nb-'+p); if(nb) nb.classList.add('active');
   $id('pages').scrollTop=0;
   _currentPage = p;
+  // 마지막 페이지 저장
+  try{ 
+    var saved=localStorage.getItem('mc_last_user');
+    if(saved){ var info=JSON.parse(saved); info.lastPage=p; localStorage.setItem('mc_last_user',JSON.stringify(info)); }
+  }catch(e){}
   if(p==='log'){ _xlLoad(); if(USER&&USER.mode==='cancer') _loadSymCards(); }
   if(p==='track'&&USER&&USER.mode==='cancer'){ _initMarkerTrack(); _loadPSAHistory(); _loadSymAvg(); }
   if(p==='chat'){ setTimeout(function(){ var cs=$id('chat-scroll'); if(cs) cs.scrollTop=cs.scrollHeight; },100); }
