@@ -745,6 +745,7 @@ function _initApp(){
   _refreshCondSummary();
   _refreshHomeAnalysis();
   _refreshHomeExercise();
+  _refreshComprehensiveBtn();
   if(ic){ _refreshMedHome(); _refreshTodaySym(); }
   else{ _refreshStats(); _refreshTip(); }
 
@@ -981,6 +982,7 @@ function goPage(p){
     _refreshCondSummary();
     _refreshHomeAnalysis();
     _refreshHomeExercise();
+    _refreshComprehensiveBtn();
     if(USER&&USER.mode!=='cancer'){ _refreshStats(); }
     else{ _refreshMedHome(); _refreshTodaySym(); if(USER.ctype==='prostate') _refreshPSABanner(); }
   }
@@ -1767,6 +1769,46 @@ function loadBackupList(){
    
    키 이름 규칙: mc_backup_YYYY-MM-DD
 ── */
+
+/* ── 종합 AI 분석 ── */
+function _refreshComprehensiveBtn(){
+  var today=todayStr();
+  var days=_getRecs();
+  var dayRec=days.find(function(d){return d.date===today;});
+  var hasFood=dayRec&&dayRec.analysis&&dayRec.analysis.latest;
+  var hasEx=dayRec&&dayRec.exercise&&dayRec.exercise.length;
+  var wrap=$id('home-comprehensive-wrap');
+  if(wrap) wrap.style.display=(hasFood&&hasEx)?'block':'none';
+  var compEl=$id('home-comprehensive-result');
+  if(compEl&&dayRec&&dayRec.comprehensive){
+    compEl.style.display='block';
+    compEl.innerHTML='<div class="tip-lbl">오늘의 종합 평가</div>'+esc(dayRec.comprehensive);
+  }
+}
+
+function analyzeComprehensive(){
+  if(!KEY){ toast('API 키가 없습니다'); return; }
+  var today=todayStr();
+  var days=_getRecs();
+  var dayRec=days.find(function(d){return d.date===today;});
+  if(!dayRec){ toast('오늘 기록이 없습니다'); return; }
+  var foodAnalysis=dayRec.analysis&&dayRec.analysis.latest;
+  var exList=dayRec.exercise||[];
+  if(!foodAnalysis||!exList.length){ toast('식단과 운동 분석이 모두 필요합니다'); return; }
+  var compEl=$id('home-comprehensive-result');
+  compEl.style.display='block';
+  compEl.innerHTML='<div class="tip-lbl">오늘의 종합 평가</div><div class="dots"><span></span><span></span><span></span></div>';
+  var exSummary=exList.map(function(e){return e.type+(e.dur?' '+e.dur:'');}).join(', ');
+  var mode=USER?USER.mode:'lchf';
+  var modeDesc={keto:'케토제닉',carnivore:'카니보어',lchf:'저탄고지',diet:'균형 건강식',cancer:'암 환자'}[mode]||mode;
+  var prompt='['+modeDesc+' 모드] 오늘의 종합 평가를 해주세요.\n\n[식단 분석]\n'+foodAnalysis+'\n\n[운동 기록]\n'+exSummary+'\n\n식단과 운동을 종합해서 오늘 하루 건강 관리를 평가하고, 내일을 위한 조언을 3~4문장으로 해주세요.';
+  _api({max_tokens:400,messages:[{role:'user',content:prompt}]},function(reply){
+    var result=reply||'종합 평가를 가져오지 못했어요.';
+    compEl.innerHTML='<div class="tip-lbl">오늘의 종합 평가</div>'+esc(result);
+    dayRec.comprehensive=result; _setRecs(days);
+  });
+}
+
 var _homeMealSlot = null;
 var _pendingMeal = null; // 홈 식사 슬롯에서 넘어올 때 시간대 기억
 function openMealSlot(meal){
@@ -1912,6 +1954,8 @@ return {
   openSheet:openSheet, closeSheet:closeSheet, savePSA:savePSA, openMarkerSheet:openMarkerSheet,
   // 컨디션 기록
   openConditionSheet:openConditionSheet, selectCondState:selectCondState, saveCondition:saveCondition,
+  // 종합 분석
+  analyzeComprehensive:analyzeComprehensive,
   // 증상
   openSymSheet:openSymSheet, saveSymQuick:saveSymQuick, saveSym:saveSym,
   // 복약
