@@ -5,6 +5,19 @@
 ════════════════════════════ */
 var A = (function(){
 
+/* ══════════════════════════════════════════════════════
+   ⚠️  절대 변경 금지 구역 (CRITICAL - DO NOT MODIFY)
+   아래 함수/변수는 데이터 구조의 핵심입니다.
+   변경 시 기존 사용자 데이터가 모두 손실됩니다.
+   
+   - todayStr()       : 날짜 형식 YYYY-MM-DD 고정
+   - uk(k)            : 사용자별 키 접두사 고정
+   - _getRecs()       : records 키 이름 고정
+   - _setRecs()       : records 키 이름 고정
+   - _cache           : Firestore 동기화 캐시
+   - _docRef          : Firestore 문서 경로 고정
+══════════════════════════════════════════════════════ */
+
 /* ── 상태 ── */
 var KEY = ''; // Anthropic API key - Firebase에서 로드
 var USER = null;        // 현재 로그인 사용자
@@ -84,7 +97,10 @@ function _loadCloudData(cb){
   _docRef.get().then(function(doc){
     _cache = doc.exists ? (doc.data()||{}) : {};
     _cacheReady = true;
-    dataLoaded = true; tryDone();
+    dataLoaded = true;
+    // 데이터 로드 후 자동 백업
+    setTimeout(_autoBackup, 2000);
+    tryDone();
   }).catch(function(err){
     console.error('Firestore 로드 오류', err);
     _cache = {};
@@ -93,7 +109,73 @@ function _loadCloudData(cb){
   });
 }
 
-/* ── DOM 헬퍼 ── */
+/* ══════════════════════════════════════════════════════
+   🛡️  자동 백업 시스템 (AUTO-BACKUP SYSTEM)
+   앱 로드 시 자동으로 스냅샷 저장
+   최근 7일치 보관, 언제든 복구 가능
+══════════════════════════════════════════════════════ */
+function _autoBackup(){
+  try {
+    var today = new Date();
+    var dateKey = today.getFullYear()+'-'
+      +String(today.getMonth()+1).padStart(2,'0')+'-'
+      +String(today.getDate()).padStart(2,'0');
+    var backupKey = 'mc_backup_'+dateKey;
+    
+    // 오늘 백업이 이미 있으면 건너뜀
+    if(_cache[backupKey]) return;
+    
+    // 현재 전체 캐시를 스냅샷으로 저장
+    var snapshot = JSON.stringify(_cache);
+    _cache[backupKey] = snapshot;
+    
+    // 7일 이상 된 백업 자동 삭제
+    var cutoff = new Date(today);
+    cutoff.setDate(cutoff.getDate() - 7);
+    Object.keys(_cache).forEach(function(k){
+      if(k.startsWith('mc_backup_')){
+        var keyDate = k.replace('mc_backup_','');
+        if(keyDate < cutoff.getFullYear()+'-'
+          +String(cutoff.getMonth()+1).padStart(2,'0')+'-'
+          +String(cutoff.getDate()).padStart(2,'0')){
+          delete _cache[k];
+        }
+      }
+    });
+    
+    // Firestore에 저장
+    _saveCloud();
+    console.log('✅ 자동 백업 완료:', dateKey);
+  } catch(e) {
+    console.error('백업 오류:', e);
+  }
+}
+
+function _listBackups(){
+  return Object.keys(_cache)
+    .filter(function(k){ return k.startsWith('mc_backup_'); })
+    .sort().reverse();
+}
+
+function _restoreBackup(dateKey){
+  var backupKey = 'mc_backup_'+dateKey;
+  if(!_cache[backupKey]){ toast('백업을 찾을 수 없습니다'); return false; }
+  try {
+    var snapshot = JSON.parse(_cache[backupKey]);
+    // 백업 데이터를 현재 캐시에 복원 (백업 키는 유지)
+    var backups = {};
+    Object.keys(_cache).forEach(function(k){
+      if(k.startsWith('mc_backup_')) backups[k]=_cache[k];
+    });
+    _cache = Object.assign({}, snapshot, backups);
+    _saveCloud();
+    toast('✅ '+dateKey+' 백업으로 복원됐습니다. 앱을 새로고침하세요.');
+    return true;
+  } catch(e) {
+    toast('복원 실패: '+e.message);
+    return false;
+  }
+}
 function $id(id){ return document.getElementById(id); }
 function toast(msg){ var t=$id('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); }, 2500); }
 
@@ -1618,7 +1700,35 @@ function _refreshCondSummary(){
   el.textContent = parts.length ? parts.join(' · ') : '탭해서 기록하세요';
 }
 
-/* ── 홈 식사 슬롯 바텀시트 ── */
+function loadBackupList(){
+  var el=$id('auto-backup-list'); if(!el) return;
+  var backups=_listBackups();
+  if(!backups.length){ el.innerHTML='<p class="sub dark-text">자동 백업 없음</p>'; return; }
+  el.innerHTML='';
+  backups.forEach(function(k){
+    var dateKey=k.replace('mc_backup_','');
+    var btn=document.createElement('div');
+    btn.className='row gap';
+    btn.style.marginBottom='6px';
+    btn.innerHTML='<div style="flex:1;font-size:13px;font-weight:700;color:var(--navy);">📅 '+dateKey+'</div>'
+      +'<button class="btn-sm teal" onclick="if(confirm(\''+dateKey+' 백업으로 복원하시겠습니까?\')){A.restoreBackup(\''+dateKey+'\');}">복원</button>';
+    el.appendChild(btn);
+  });
+}
+
+/* ── 범용 백업 모듈 (다른 앱에도 적용 가능) ──
+   사용법:
+   1. _autoBackup() - 앱 로드 시 호출
+   2. _listBackups() - 백업 목록 조회
+   3. _restoreBackup(dateKey) - 특정 날짜 백업으로 복원
+   
+   조건:
+   - Firebase Firestore 사용
+   - _cache 객체로 데이터 관리
+   - _saveCloud() 함수로 저장
+   
+   키 이름 규칙: mc_backup_YYYY-MM-DD
+── */
 var _homeMealSlot = null;
 var _pendingMeal = null; // 홈 식사 슬롯에서 넘어올 때 시간대 기억
 function openMealSlot(meal){
@@ -1691,6 +1801,7 @@ return {
   checkPw:checkPw,
   // Admin
   delUser:delUser, changePw:changePw, backup:backup, restore:restore, fullReset:fullReset, filterAdminUsers:filterAdminUsers, backupText:backupText, copyBackupText:copyBackupText, showPatient:showPatient,
+  loadBackupList:loadBackupList, restoreBackup:_restoreBackup,
   // 사용자 추가
   _selMode:_selMode, _selCtype:_selCtype, _selStage:_selStage, addUser:addUser,
   // 앱
