@@ -1685,18 +1685,59 @@ function _xlLoad(){
 
 function exportExcel(){
   var days=_getRecs(); if(!days.length){toast('기록이 없습니다');return;}
-  var aoa=[['스마트 메타케어 식단 일지'],[],['날짜','아침','점심','저녁','만보']];
-  days.forEach(function(d){ aoa.push([d.date,d.photos&&d.photos.morning?'✓':'',d.photos&&d.photos.lunch?'✓':'',d.photos&&d.photos.dinner?'✓':'',d.steps]); });
+  
+  // 식단 + 운동 시트
+  var aoa=[['스마트 메타케어 건강 일지'],[],
+    ['날짜','아침','점심','저녁','걸음수','운동종류','운동시간','식단분석요약']];
+  days.forEach(function(d){
+    var ex=d.exercise&&d.exercise.length?d.exercise[d.exercise.length-1]:null;
+    var analysis=d.analysis&&d.analysis.latest?d.analysis.latest.replace(/#+\s/g,'').substring(0,100):'';
+    aoa.push([
+      d.date,
+      d.photos&&d.photos.morning?'✓':'',
+      d.photos&&d.photos.lunch?'✓':'',
+      d.photos&&d.photos.dinner?'✓':'',
+      d.steps||'',
+      ex?ex.type:'',
+      ex?ex.dur:'',
+      analysis
+    ]);
+  });
+
+  // 컨디션 시트
+  var condRecs=_getCondRecs();
+  var aoa2=[['컨디션 기록'],[],
+    ['날짜','몸상태','체중(kg)','혈당','혈압(수축)','혈압(이완)','수면(시간)','메모']];
+  condRecs.forEach(function(c){
+    aoa2.push([c.date,c.state||'',c.weight||'',c.glucose||'',c.bpSys||'',c.bpDia||'',c.sleep||'',c.memo||'']);
+  });
+
+  var wb=XLSX.utils.book_new();
+  var ws1=XLSX.utils.aoa_to_sheet(aoa);
+  ws1['!cols']=[{wch:14},{wch:6},{wch:6},{wch:6},{wch:10},{wch:16},{wch:10},{wch:40}];
+  XLSX.utils.book_append_sheet(wb,ws1,'식단·운동');
+
+  if(condRecs.length){
+    var ws2=XLSX.utils.aoa_to_sheet(aoa2);
+    ws2['!cols']=[{wch:14},{wch:10},{wch:8},{wch:8},{wch:10},{wch:10},{wch:8},{wch:20}];
+    XLSX.utils.book_append_sheet(wb,ws2,'컨디션');
+  }
+
   if(USER&&USER.mode==='cancer'){
     var symData=_getSym(),psaData=_getPSA(),medData=_getMeds();
-    aoa.push([],[' === 증상 기록 ==='],['날짜','통증','배뇨','피로','메모']);
-    Object.keys(symData).sort().forEach(function(date){ var d=symData[date]; aoa.push([date,d.pain!==undefined?d.pain:'',d.urine!==undefined?d.urine:'',d.fatigue!==undefined?d.fatigue:'',d.memo||'']); });
-    if(psaData.length){ aoa.push([],[' === PSA 기록 ==='],['날짜','수치(ng/mL)','메모']); psaData.forEach(function(p){ aoa.push([p.date,p.v,p.note||'']); }); }
-    if(medData.length){ aoa.push([],[' === 복약 목록 ==='],['약 이름','용량','시간']); medData.forEach(function(m){ aoa.push([m.name,m.dose||'',m.time||'']); }); }
+    var aoa3=[['증상 기록'],[],['날짜','통증','배뇨','피로','메모']];
+    Object.keys(symData).sort().forEach(function(date){ var d=symData[date]; aoa3.push([date,d.pain!==undefined?d.pain:'',d.urine!==undefined?d.urine:'',d.fatigue!==undefined?d.fatigue:'',d.memo||'']); });
+    var ws3=XLSX.utils.aoa_to_sheet(aoa3);
+    XLSX.utils.book_append_sheet(wb,ws3,'증상');
+    if(psaData.length){
+      var aoa4=[['마커 기록'],[],['날짜','수치','메모']];
+      psaData.forEach(function(p){ aoa4.push([p.date,p.v,p.note||'']); });
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa4),'마커');
+    }
   }
-  var ws=XLSX.utils.aoa_to_sheet(aoa); ws['!cols']=[{wch:16},{wch:8},{wch:8},{wch:8},{wch:12}];
-  var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'기록');
-  XLSX.writeFile(wb,'metacare_'+todayStr().replace(/[년월일\s]/g,'')+'.xlsx'); toast('엑셀 저장 완료!');
+
+  XLSX.writeFile(wb,'metacare_'+todayStr()+'.xlsx');
+  toast('엑셀 저장 완료!');
 }
 
 /* ── 홈 그리드 & 통계 ── */
