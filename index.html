@@ -357,18 +357,16 @@
       <div id="pg-track" class="page">
         <!-- 건강관리 추천 -->
         <div id="track-health">
-          <div class="section-title"><i class="ti ti-list-check"></i> 맞춤 추천</div>
-          <div class="rec-list">
-            <div class="rec"><div class="rec-meta"><i class="ti ti-sun"></i> 아침 추천</div><div class="rec-name">아보카도 에그 볼</div><div class="rec-note">탄수화물 2g · 지방 22g · 단백질 13g</div><span class="pill green">케토 적합</span></div>
-            <div class="rec"><div class="rec-meta"><i class="ti ti-cloud-sun"></i> 점심 추천</div><div class="rec-name">닭가슴살 샐러드</div><div class="rec-note">탄수화물 5g · 지방 18g · 단백질 35g</div><span class="pill green">케토 적합</span></div>
-            <div class="rec ex"><div class="rec-meta"><i class="ti ti-run"></i> 운동 추천</div><div class="rec-name">저강도 유산소 30분</div><div class="rec-note">케톤 산화 촉진 · 지방 연소 최적화</div><span class="pill orange">오늘 미완</span></div>
+          <div class="row space-between align-center">
+            <div class="section-title mb0"><i class="ti ti-list-check"></i> 오늘의 맞춤 추천</div>
+            <button class="btn-sm teal" onclick="A.loadAiRec()"><i class="ti ti-refresh"></i> 새 추천</button>
           </div>
-          <div class="section-title"><i class="ti ti-chart-pie"></i> 주간 진행률</div>
-          <div class="card">
-            <div class="prog-row"><div class="row space-between mb4"><span>식단 목표</span><span style="color:var(--tld);font-weight:700;">91%</span></div><div class="prog-bg"><div class="prog-bar" style="width:91%;background:var(--teal)"></div></div></div>
-            <div class="prog-row"><div class="row space-between mb4"><span>단백질</span><span style="color:var(--warn);font-weight:700;">78%</span></div><div class="prog-bg"><div class="prog-bar" style="width:78%;background:var(--warn)"></div></div></div>
-            <div class="prog-row"><div class="row space-between mb4"><span>운동</span><span style="color:#854F0B;font-weight:700;">55%</span></div><div class="prog-bg"><div class="prog-bar" style="width:55%;background:#D85A30"></div></div></div>
+          <div id="ai-rec-box" class="tip-box" style="margin-top:8px;">
+            <div class="tip-lbl">AI 추천</div>
+            <div id="ai-rec-text">오늘 기록을 바탕으로 추천을 받아보세요.</div>
           </div>
+          <div class="section-title" style="margin-top:16px;"><i class="ti ti-chart-pie"></i> 이번 주 기록 현황</div>
+          <div id="week-stats-box" class="card"></div>
         </div>
         <!-- 종양 마커 추적 -->
         <div id="track-cancer" style="display:none">

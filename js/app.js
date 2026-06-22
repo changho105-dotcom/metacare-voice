@@ -887,6 +887,46 @@ function openMarkerSheet(){
 }
 
 // 추적 탭 진입 시 마커 제목 업데이트
+/* ── AI 맞춤 추천 ── */
+function loadAiRec(){
+  if(!KEY){ toast('API 키가 없습니다'); return; }
+  var recEl=$id('ai-rec-text'); if(!recEl) return;
+  recEl.innerHTML='<div class="dots"><span></span><span></span><span></span></div>';
+  var today=todayStr();
+  var days=_getRecs();
+  var todayRec=days.find(function(d){return d.date===today;});
+  var foodAnalysis=todayRec&&todayRec.analysis?todayRec.analysis.latest:'';
+  var exercise=todayRec&&todayRec.exercise&&todayRec.exercise.length?todayRec.exercise[todayRec.exercise.length-1]:null;
+  var photos=todayRec&&todayRec.photos?Object.keys(todayRec.photos).length:0;
+  var recentDays=days.slice(-7);
+  var exDays=recentDays.filter(function(d){return d.exercise&&d.exercise.length;}).length;
+  var mealDays=recentDays.filter(function(d){return d.photos&&Object.keys(d.photos).length>0;}).length;
+  var mode=USER?USER.mode:'lchf';
+  var modeDesc={keto:'케토제닉',carnivore:'카니보어',lchf:'저탄고지',diet:'균형 건강식',cancer:'암 환자'}[mode]||mode;
+  var prompt='['+modeDesc+' 모드] 오늘 건강 기록:\n';
+  if(photos>0) prompt+='식사 '+photos+'끼 촬영\n';
+  if(foodAnalysis) prompt+='식단 분석 요약: '+foodAnalysis.substring(0,200)+'\n';
+  if(exercise) prompt+='운동: '+exercise.type+(exercise.dur?' '+exercise.dur:'')+(exercise.steps?' '+exercise.steps+'보':'')+'\n';
+  prompt+='최근 7일: 식사 기록 '+mealDays+'일, 운동 '+exDays+'일\n\n';
+  prompt+='이 데이터를 바탕으로 내일을 위한 식단 추천 1가지, 운동 추천 1가지, 생활 습관 조언 1가지를 구체적으로 3~4문장으로 해주세요.';
+  _api({max_tokens:400,messages:[{role:'user',content:prompt}]},function(reply){
+    recEl.innerHTML=esc(reply||'추천을 가져오지 못했어요. 다시 시도해주세요.');
+    _renderWeekStats();
+  });
+}
+
+function _renderWeekStats(){
+  var el=$id('week-stats-box'); if(!el) return;
+  var days=_getRecs();
+  var recentDays=days.slice(-7);
+  var mealDays=recentDays.filter(function(d){return d.photos&&Object.keys(d.photos).length>0;}).length;
+  var exDays=recentDays.filter(function(d){return d.exercise&&d.exercise.length;}).length;
+  el.innerHTML='<div class="prog-row"><div class="row space-between mb4"><span>식사 기록</span><span style="color:var(--teal);font-weight:700;">'+mealDays+'/7일</span></div>'
+    +'<div class="prog-bg"><div class="prog-bar" style="width:'+(mealDays/7*100).toFixed(0)+'%;background:var(--teal)"></div></div></div>'
+    +'<div class="prog-row"><div class="row space-between mb4"><span>운동 기록</span><span style="color:var(--warn);font-weight:700;">'+exDays+'/7일</span></div>'
+    +'<div class="prog-bg"><div class="prog-bar" style="width:'+(exDays/7*100).toFixed(0)+'%;background:var(--warn)"></div></div></div>';
+}
+
 function _initMarkerTrack(){
   if(!USER||USER.mode!=='cancer') return;
   var t=$id('marker-title'); if(t) t.textContent=_getMarkerLabel();
@@ -984,7 +1024,10 @@ function goPage(p){
   }catch(e){}
   if(p==='log'){ _xlLoad(); if(USER&&USER.mode==='cancer') _loadSymCards(); }
   if(p==='ex'){ _refreshExPage(); }
-  if(p==='track'&&USER&&USER.mode==='cancer'){ _initMarkerTrack(); _loadPSAHistory(); _loadSymAvg(); }
+  if(p==='track'){
+    if(USER&&USER.mode==='cancer'){ _initMarkerTrack(); _loadPSAHistory(); _loadSymAvg(); }
+    else { _renderWeekStats(); loadAiRec(); }
+  }
   if(p==='chat'){ setTimeout(function(){ var cs=$id('chat-scroll'); if(cs) cs.scrollTop=cs.scrollHeight; },100); }
   if(p==='home'){
     _refreshPhotos();
@@ -2017,7 +2060,7 @@ return {
   checkPw:checkPw,
   // Admin
   delUser:delUser, changePw:changePw, backup:backup, restore:restore, fullReset:fullReset, filterAdminUsers:filterAdminUsers, backupText:backupText, copyBackupText:copyBackupText, showPatient:showPatient,
-  loadBackupList:loadBackupList, restoreBackup:_restoreBackup,
+  loadAiRec:loadAiRec, loadBackupList:loadBackupList, restoreBackup:_restoreBackup,
   // 사용자 추가
   _selMode:_selMode, _selCtype:_selCtype, _selStage:_selStage, addUser:addUser,
   // 앱
