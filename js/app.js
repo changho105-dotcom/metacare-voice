@@ -909,7 +909,7 @@ function loadAiRec(){
   if(exercise) prompt+='운동: '+exercise.type+(exercise.dur?' '+exercise.dur:'')+(exercise.steps?' '+exercise.steps+'보':'')+'\n';
   prompt+='최근 7일: 식사 기록 '+mealDays+'일, 운동 '+exDays+'일\n\n';
   prompt+='이 데이터를 바탕으로 내일을 위한 식단 추천 1가지, 운동 추천 1가지, 생활 습관 조언 1가지를 구체적으로 3~4문장으로 해주세요.';
-  _api({max_tokens:400,messages:[{role:'user',content:prompt}]},function(reply){
+  _api({max_tokens:600,messages:[{role:'user',content:prompt}]},function(reply){
     recEl.innerHTML=esc(reply||'추천을 가져오지 못했어요. 다시 시도해주세요.');
     _renderWeekStats();
   });
@@ -1925,7 +1925,7 @@ function analyzeComprehensive(){
   var mode=USER?USER.mode:'lchf';
   var modeDesc={keto:'케토제닉',carnivore:'카니보어',lchf:'저탄고지',diet:'균형 건강식',cancer:'암 환자'}[mode]||mode;
   var prompt='['+modeDesc+' 모드] 오늘의 종합 평가를 해주세요.\n\n[식단 분석]\n'+foodAnalysis+'\n\n[운동 기록]\n'+exSummary+'\n\n식단과 운동을 종합해서 오늘 하루 건강 관리를 평가하고, 내일을 위한 조언을 3~4문장으로 해주세요.';
-  _api({max_tokens:400,messages:[{role:'user',content:prompt}]},function(reply){
+  _api({max_tokens:700,messages:[{role:'user',content:prompt}]},function(reply){
     var result=reply||'종합 평가를 가져오지 못했어요.';
     compEl.innerHTML='<div class="tip-lbl">오늘의 종합 평가</div>'+esc(result);
     dayRec.comprehensive=result; _setRecs(days);
