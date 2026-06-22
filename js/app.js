@@ -1439,7 +1439,7 @@ function onFile(e,src){
   var f=e.target.files[0]; e.target.value=''; if(!f) return;
   var meal = _pendingMeal; _pendingMeal = null;
   var r=new FileReader(); r.onload=function(ev){ _compress(ev.target.result,function(small){
-    $id('preview-img').src=small; $id('preview-wrap').style.display=''; goPage('diet');
+    // 식단탭 제거됨 - 홈에서 처리
     // 오늘 날짜로 기록장에 자동 저장 (홈에서 넘어온 경우 해당 시간대로)
     _autoSavePhotoToLog(small, meal);
   }); }; r.readAsDataURL(f);
@@ -1909,7 +1909,7 @@ function openMealSlot(meal){
 
   // 사진 없으면 식단 탭으로 이동
   _pendingMeal = mealKey;
-  goPage('diet');
+
   setTimeout(function(){ openSheet('sh-photo'); }, 200);
 }
 
@@ -1952,7 +1952,7 @@ function replaceHomeMealPhoto(meal){
   closeHomeMealViewer();
   var mealMap={breakfast:'morning',lunch:'lunch',dinner:'dinner'};
   _pendingMeal=mealMap[meal]||meal;
-  goPage('diet');
+
   setTimeout(function(){ openSheet('sh-photo'); },200);
 }
 function pickHomeMeal(src){
