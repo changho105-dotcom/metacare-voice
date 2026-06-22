@@ -1033,6 +1033,7 @@ function goPage(p){
     if(saved){ var info=JSON.parse(saved); info.lastPage=p; localStorage.setItem('mc_last_user',JSON.stringify(info)); }
   }catch(e){}
   if(p==='log'){ _xlLoad(); if(USER&&USER.mode==='cancer') _loadSymCards(); }
+  if(p==='ex'){ _refreshExPage(); }
   if(p==='track'&&USER&&USER.mode==='cancer'){ _initMarkerTrack(); _loadPSAHistory(); _loadSymAvg(); }
   if(p==='chat'){ setTimeout(function(){ var cs=$id('chat-scroll'); if(cs) cs.scrollTop=cs.scrollHeight; },100); }
   if(p==='home'){
@@ -1236,28 +1237,31 @@ function analyzeEx(){
   if(!KEY){ toast('API 키가 없습니다'); return; }
   var type=$id('ex-type').value.trim(); if(!type){ toast('운동 종류를 입력하세요'); return; }
   var dur=$id('ex-dur').value.trim();
+  var steps=$id('ex-steps')?$id('ex-steps').value.trim():'';
   var memo=$id('ex-memo')?$id('ex-memo').value.trim():'';
   var ar=$id('ex-result')||$id('ai-result');
   ar.style.display='block';
   ar.innerHTML='<div class="tip-lbl">AI 운동 분석</div><div class="dots"><span></span><span></span><span></span></div>';
   var u=USER, ic=u&&u.mode==='cancer';
-  var p='"'+type+'"'+(dur?' '+dur:'')+(memo?' ('+memo+')':'')+'을 ';
+  var p='"'+type+'"'+(dur?' '+dur:'')+(steps?' 걸음수:'+steps:'')+' ';
   p+=ic?'암 환자 관점에서(면역 기능, 체력 유지, 피로 관리) 분석해 주세요. 3~4문장.':
     (u&&u.mode?({keto:'케토제닉',carnivore:'카니보어',lchf:'저탄고지',diet:'다이어트'}[u.mode]||''):'')+' 식단 관점에서(지방 연소, 체력, 운동 후 식사 주의사항) 분석해 주세요. 3~4문장.';
   _api({max_tokens:350,messages:[{role:'user',content:p}]}, function(reply){
     var result=reply||'분석 결과를 가져오지 못했어요.';
     ar.innerHTML='<div class="tip-lbl">AI 운동 분석</div>'+esc(result);
-    _saveExerciseResult(type, dur, memo, result);
+    _saveExerciseResult(type, dur, steps, memo, result);
   });
 }
 
-function _saveExerciseResult(type, dur, memo, analysis){
+function _saveExerciseResult(type, dur, steps, memo, analysis){
   var today=todayStr();
   var days=_getRecs();
   var dayRec=days.find(function(d){return d.date===today;});
   if(!dayRec){ dayRec={date:today,photos:{},steps:''}; days.push(dayRec); }
   // 하루 1회만 - 기존 기록 덮어쓰기
-  dayRec.exercise=[{type:type,dur:dur,memo:memo,analysis:analysis,ts:Date.now()}];
+  dayRec.exercise=[{type:type,dur:dur,steps:steps,memo:memo,analysis:analysis,ts:Date.now()}];
+  // 걸음 수를 steps 필드에도 저장
+  if(steps) dayRec.steps=steps;
   _setRecs(days);
   _refreshHomeExercise();
   _refreshComprehensiveBtn();
@@ -1265,6 +1269,7 @@ function _saveExerciseResult(type, dur, memo, analysis){
   _xlLoad();
   // 기록장에서 왔으면 기록장으로 돌아가기
   if(_exFromLog){ _exFromLog=null; setTimeout(function(){ goPage('log'); },300); }
+  toast('운동 기록이 저장됐어요 ✓');
 }
 
 function _refreshHomeExercise(){
@@ -1630,7 +1635,7 @@ function _openExerciseSheet(cardId, date){
   var ex = dayRec&&dayRec.exercise&&dayRec.exercise.length ? dayRec.exercise[dayRec.exercise.length-1] : null;
 
   // 식단 탭 운동 폼으로 이동
-  goPage('diet'); setDietTab('ex');
+  goPage('ex');
   setTimeout(function(){
     var typeEl=$id('ex-type'); if(typeEl) typeEl.value=ex?ex.type:'';
     var durEl=$id('ex-dur'); if(durEl) durEl.value=ex?ex.dur:'';
@@ -1881,7 +1886,29 @@ function loadBackupList(){
    키 이름 규칙: mc_backup_YYYY-MM-DD
 ── */
 
-/* ── 종합 AI 분석 ── */
+function _refreshExPage(){
+  var today=todayStr();
+  var days=_getRecs();
+  var dayRec=days.find(function(d){return d.date===today;});
+  var ex=dayRec&&dayRec.exercise&&dayRec.exercise.length?dayRec.exercise[dayRec.exercise.length-1]:null;
+  var statusEl=$id('today-ex-status');
+  if(ex&&statusEl){
+    statusEl.style.display='block';
+    statusEl.innerHTML='<div class="tip-lbl">오늘 기록된 운동</div>'
+      +'<div style="font-size:14px;font-weight:700;">🏃 '+esc(ex.type)+(ex.dur?' · '+esc(ex.dur):'')+'</div>'
+      +(ex.steps?'<div style="font-size:12px;color:var(--mu);margin-top:2px;">👣 '+ex.steps+'보</div>':'')
+      +'<div style="font-size:12px;color:var(--mu);margin-top:4px;">수정하려면 아래에 새로 입력하고 분석하세요</div>';
+    // 기존 값 채우기
+    if($id('ex-type')) $id('ex-type').value=ex.type||'';
+    if($id('ex-dur')) $id('ex-dur').value=ex.dur||'';
+    if($id('ex-steps')) $id('ex-steps').value=ex.steps||'';
+    if($id('ex-memo')) $id('ex-memo').value=ex.memo||'';
+  } else if(statusEl){
+    statusEl.style.display='none';
+  }
+}
+
+function _refreshExPage_dummy(){} // placeholder
 function _refreshComprehensiveBtn(){
   var today=todayStr();
   var days=_getRecs();

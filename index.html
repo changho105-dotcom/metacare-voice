@@ -330,10 +330,6 @@
 
       <!-- 식단 & 운동 기록 -->
       <div id="pg-diet" class="page">
-        <div class="row gap" style="position:sticky;top:0;background:var(--cream);z-index:10;padding:4px 0 8px;margin:-15px -15px 0;padding:8px 15px;border-bottom:1px solid var(--bd);">
-          <button class="tbtn food active" id="tb-food" onclick="A.setDietTab('food')"><i class="ti ti-camera"></i>식단</button>
-          <button class="tbtn ex" id="tb-ex" onclick="A.setDietTab('ex')"><i class="ti ti-run"></i>운동</button>
-        </div>
         <!-- 식단 분석 -->
         <div id="food-form">
           <button class="cam-banner col-center" onclick="A.openSheet('sh-photo')" style="min-height:100px;">
@@ -348,18 +344,6 @@
           <div id="ai-result" style="display:none" class="tip-box"></div>
           <input class="inp-sm" id="food-name" type="text" placeholder="메뉴명 (선택)" style="margin-top:8px;">
           <button class="btn-full navy" onclick="A.analyze()" style="margin-top:8px;"><i class="ti ti-sparkles"></i> AI 식단 분석</button>
-        </div>
-        <!-- 운동 분석 -->
-        <div id="ex-form" style="display:none">
-          <div class="card p12" style="background:linear-gradient(135deg,#BA7517,#854F0B);color:#fff;border:none;">
-            <div style="font-size:14px;font-weight:700;margin-bottom:4px;">🏃 오늘 운동을 기록하세요</div>
-            <div style="font-size:12px;opacity:.85;">운동 종류와 시간을 입력하면 AI가 분석해드려요</div>
-          </div>
-          <input class="inp-sm" id="ex-type" type="text" placeholder="운동 종류 (예: 빠르게 걷기, 수영)" style="margin-top:8px;">
-          <input class="inp-sm" id="ex-dur" type="text" placeholder="운동 시간 (예: 30분, 1시간)" style="margin-top:8px;">
-          <input class="inp-sm" id="ex-memo" type="text" placeholder="메모 (선택)" style="margin-top:8px;">
-          <button class="btn-full warn" onclick="A.analyzeEx()" style="margin-top:8px;"><i class="ti ti-sparkles"></i> AI 운동 분석</button>
-          <div id="ex-result" style="display:none" class="tip-box"></div>
         </div>
         <!-- 암환자 전용 -->
         <div id="cancer-record-extra" style="display:none">
@@ -382,6 +366,21 @@
             <button class="btn-full purple" onclick="A.saveMedForm()"><i class="ti ti-pill"></i> 복약 저장</button>
           </div>
         </div>
+      </div>
+
+      <!-- 운동 탭 -->
+      <div id="pg-ex" class="page">
+        <div class="card p12" style="background:linear-gradient(135deg,#BA7517,#854F0B);color:#fff;border:none;">
+          <div style="font-size:16px;font-weight:700;margin-bottom:4px;">🏃 오늘의 운동 기록</div>
+          <div style="font-size:12px;opacity:.85;">운동 종류와 시간을 입력하면 AI가 분석해드려요 · 하루 1회</div>
+        </div>
+        <div id="today-ex-status" style="display:none;" class="tip-box"></div>
+        <input class="inp-sm" id="ex-type" type="text" placeholder="운동 종류 (예: 빠르게 걷기, 수영, 자전거)">
+        <input class="inp-sm" id="ex-dur" type="text" placeholder="운동 시간 (예: 30분, 1시간)" style="margin-top:8px;">
+        <input class="inp-sm" id="ex-steps" type="number" placeholder="걸음 수 (선택, 예: 8000)" style="margin-top:8px;">
+        <input class="inp-sm" id="ex-memo" type="text" placeholder="메모 (선택)" style="margin-top:8px;">
+        <button class="btn-full warn" onclick="A.analyzeEx()" style="margin-top:8px;"><i class="ti ti-sparkles"></i> AI 운동 분석</button>
+        <div id="ex-result" style="display:none" class="tip-box"></div>
       </div>
 
       <!-- 기록장 -->
@@ -462,8 +461,8 @@
       <button class="nb back-nb" onclick="A.goBack()"><i class="ti ti-arrow-left"></i><span>뒤로</span></button>
       <button class="nb active" id="nb-home"  onclick="A.goPage('home')"><i class="ti ti-home"></i><span>홈</span></button>
       <button class="nb"        id="nb-diet"  onclick="A.goPage('diet')"><i class="ti ti-camera"></i><span>식단</span></button>
+      <button class="nb"        id="nb-ex"    onclick="A.goPage('ex')"><i class="ti ti-run"></i><span>운동</span></button>
       <button class="nb"        id="nb-log"   onclick="A.goPage('log')"><i class="ti ti-table"></i><span>기록장</span></button>
-      <button class="nb"        id="nb-track" onclick="A.goPage('track')"><i class="ti ti-chart-line"></i><span id="nb-track-lbl">추적</span></button>
       <button class="nb"        id="nb-chat"  onclick="A.goPage('chat')"><i class="ti ti-message-circle"></i><span>코치</span></button>
     </nav>
   </div><!-- /scr-app -->
