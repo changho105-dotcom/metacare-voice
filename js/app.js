@@ -202,7 +202,7 @@ function _autoBackup(){
 function _verifyDataIntegrity(){
   try{
     var recs = ugj('records',[]);
-    var users = ugj('users',[]);
+    var users = S.gj('mc_users',[]);
     console.log('📊 데이터 무결성 검사: records='+recs.length+'개, users='+users.length+'명');
     if(users.length > 0 && recs.length === 0){
       console.warn('⚠️ 사용자는 있는데 기록이 없습니다. 백업 복원을 확인하세요.');
