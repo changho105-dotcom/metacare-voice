@@ -190,6 +190,14 @@ function _showGreeting(name){
   setTimeout(function(){ el.style.transition='opacity .5s'; el.style.opacity='0'; setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 500); }, 2000);
 }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function md(s){
+  // 마크다운 → HTML 간단 변환 (**굵게**, *기울임*, # 제목, 줄바꿈)
+  return esc(s)
+    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g,'<em>$1</em>')
+    .replace(/^#{1,3} (.+)/gm,'<strong>$1</strong>')
+    .replace(/\n/g,'<br>');
+}
 function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 function pad(n){ return n<10?'0'+n:String(n); }
 
@@ -1227,11 +1235,11 @@ function _refreshHomeAnalysis(){
   if(!dayRec||!dayRec.analysis){ el.style.display='none'; return; }
   var ana=dayRec.analysis;
   var parts=[];
-  var labels={breakfast:'🌅 아침',morning:'🌅 아침',lunch:'☀️ 점심',dinner:'🌙 저녁'};
-  ['breakfast','morning','lunch','dinner'].forEach(function(k){
-    if(ana[k]) parts.push('<div style="margin-bottom:8px;"><span style="font-size:11px;font-weight:700;color:var(--teal);">'+labels[k]+'</span><div style="margin-top:3px;">'+esc(ana[k])+'</div></div>');
+  var labels={morning:'🌅 아침',lunch:'☀️ 점심',dinner:'🌙 저녁'};
+  ['morning','lunch','dinner'].forEach(function(k){
+    if(ana[k]) parts.push('<div style="margin-bottom:8px;"><span style="font-size:11px;font-weight:700;color:var(--teal);">'+labels[k]+'</span><div style="margin-top:3px;">'+md(ana[k])+'</div></div>');
   });
-  if(!parts.length && ana.latest) parts.push('<div>'+esc(ana.latest)+'</div>');
+  if(!parts.length && ana.latest) parts.push('<div>'+md(ana.latest)+'</div>');
   if(!parts.length){ el.style.display='none'; return; }
   el.style.display='block';
   el.innerHTML='<div class="tip-lbl"><i class="ti ti-salad" style="font-size:10px;"></i> 오늘의 식단 분석</div>'+parts.join('');
@@ -1253,7 +1261,7 @@ function analyzeEx(){
     (u&&u.mode?({keto:'케토제닉',carnivore:'카니보어',lchf:'저탄고지',diet:'다이어트'}[u.mode]||''):'')+' 식단 관점에서(지방 연소, 체력, 운동 후 식사 주의사항) 분석해 주세요. 3~4문장.';
   _api({max_tokens:350,messages:[{role:'user',content:p}]}, function(reply){
     var result=reply||'분석 결과를 가져오지 못했어요.';
-    ar.innerHTML='<div class="tip-lbl">AI 운동 분석</div>'+esc(result);
+    ar.innerHTML='<div class="tip-lbl">AI 운동 분석</div>'+md(result);
     _saveExerciseResult(type, dur, steps, memo, result);
   });
 }
@@ -2182,7 +2190,7 @@ function _analyzeHomeMeal(imgData, mealName, note){
   }, function(reply){
     if(!reply) return;
     // 끼니 키로 저장
-    var mealKey={아침:'breakfast',점심:'lunch',저녁:'dinner'};
+    var mealKey={아침:'morning',점심:'lunch',저녁:'dinner'};
     var rawKey=null;
     Object.keys(mealKey).forEach(function(k){ if(mealName.indexOf(k)>-1) rawKey=mealKey[k]; });
     var today=todayStr(); var days=_getRecs();
