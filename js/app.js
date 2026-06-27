@@ -1865,6 +1865,9 @@ function _refreshPhotos(){
     } else {
       el.innerHTML='<i class="ti ti-camera" style="font-size:40px;color:#fff;"></i>';
       el.style.position='';
+      var sk2=slotMap[meal];
+      el.onclick=function(){ A.openMealSlot(sk2); };
+      el.style.cursor='pointer';
     }
   });
 }
