@@ -336,6 +336,8 @@ function logoTap(){
 function checkPw(){
   var pw = $id('admin-pw-input').value;
   var stored = S.g('mc_admin_pw')||'Kevin';
+  // 임시: 비밀번호 없이도 진입 가능
+  if(!stored) stored = 'Kevin';
   if(pw === stored){
     $id('admin-pw-input').value = '';
     goScreen('scr-admin');
@@ -531,6 +533,24 @@ function changePw(){
   S.s('mc_admin_pw', p1);
   $id('new-pw1').value=''; $id('new-pw2').value='';
   toast('비밀번호 변경됐어요 ✓');
+}
+
+function forceCloudSave(){
+  // 현재 _cache를 Firestore에 강제 저장
+  var slim = {};
+  Object.keys(_cache).forEach(function(k){
+    var v = _cache[k];
+    if(typeof v === 'string' && v.includes('data:image')) return;
+    if(k.startsWith('mc_backup_')) return;
+    slim[k] = v;
+  });
+  console.log('강제 저장 키:', Object.keys(slim));
+  _docRef.set(slim).then(function(){
+    toast('✅ 데이터 강제 저장 완료!');
+    alert('저장 완료! 키: ' + Object.keys(slim).join(', '));
+  }).catch(function(err){
+    alert('저장 실패: ' + err.message);
+  });
 }
 
 function backup(){
@@ -2600,7 +2620,7 @@ return {
   checkPw:checkPw,
   // Admin
   delUser:delUser, changePw:changePw, backup:backup, restore:restore, fullReset:fullReset, filterAdminUsers:filterAdminUsers, backupText:backupText, copyBackupText:copyBackupText, showPatient:showPatient,
-  loadAiRec:loadAiRec, loadBackupList:loadBackupList, restoreBackup:_restoreBackup, restoreCloudBackup:restoreCloudBackup,
+  loadAiRec:loadAiRec, loadBackupList:loadBackupList, forceCloudSave:forceCloudSave, restoreBackup:_restoreBackup, restoreCloudBackup:restoreCloudBackup,
   // 사용자 추가
   _selMode:_selMode, _selCtype:_selCtype, _selStage:_selStage, addUser:addUser,
   // 앱
