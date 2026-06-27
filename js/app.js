@@ -1770,8 +1770,15 @@ function _doSave(){
 }
 
 function _xlLoad(){
-  var days=_getRecs(); var c=$id('log-cards'); c.innerHTML=''; _cardSeq=0;
-  $id('log-empty').style.display=days.length?'none':'block';
+  var days=_getRecs();
+  // 오늘 날짜 없으면 자동 추가
+  var today=todayStr();
+  if(!days.find(function(d){return d.date===today;})){
+    days.push({date:today,photos:{},steps:''});
+    _setRecs(days);
+  }
+  var c=$id('log-cards'); c.innerHTML=''; _cardSeq=0;
+  $id('log-empty').style.display='none';
   days.slice().reverse().forEach(function(d){ c.appendChild(_makeCard(d)); });
 }
 
