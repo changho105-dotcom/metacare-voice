@@ -1779,9 +1779,9 @@ function _xlLoad(){
   }
   var c=$id('log-cards'); c.innerHTML=''; _cardSeq=0;
   $id('log-empty').style.display='none';
-  days.slice().reverse().forEach(function(d){ c.appendChild(_makeCard(d)); });
-  // 맨 위(오늘)로 스크롤
-  var pages=$id('pages'); if(pages) setTimeout(function(){ pages.scrollTop=0; },50);
+  days.forEach(function(d){ c.appendChild(_makeCard(d)); });
+  // 맨 아래(오늘)로 자동 스크롤
+  var pages=$id('pages'); if(pages) setTimeout(function(){ pages.scrollTop=pages.scrollHeight; },50);
 }
 
 function exportExcel(){
