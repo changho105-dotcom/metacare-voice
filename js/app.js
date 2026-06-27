@@ -775,6 +775,7 @@ function _initApp(){
   _refreshHomeAnalysis();
   _refreshHomeExercise();
   _refreshComprehensiveBtn();
+  _refreshYesterdayFeedback();
   if(ic){ _refreshMedHome(); _refreshTodaySym(); }
   else{ _refreshStats(); }
 
@@ -827,7 +828,7 @@ function _initCancerHome(u){
   var sl={1:'1기 국소 저위험',2:'2기 국소 중·고위험',3:'3기 국소 진행성',4:'4기 전이성'};
   var sub=$id('home-mode-sub'); if(sub) sub.textContent=ip?(sl[u.stage]||'전립선암')+' 관리 중':'암 치유 관리 중';
   var dl=$id('home-days-lbl'); if(dl) dl.textContent='관리';
-  var gc=$id('home-goal-card'); if(gc){ gc.style.background='linear-gradient(135deg,#4a1d96,#6B3FA0)'; }
+  var gc=$id('home-goal-card'); if(gc){ gc.style.background='linear-gradient(135deg,#3B1F8A,var(--purple))'; }
   var markers = _getMarkers(u.ctype);
   var gl=$id('home-goal-lbl'); if(gl) gl.textContent=markers[0]||'종양 마커';
   var gi=$id('home-goal-items'); if(gi) gi.textContent='-- '+_getMarkerUnit(markers[0]);
@@ -989,12 +990,12 @@ function goHelp(){
 
   var el = $id('help-body');
   if(!el) return;
-  el.innerHTML = '<div style="background:var(--navy);border-radius:var(--r);padding:16px 18px;margin-bottom:4px;">'
+  el.innerHTML = '<div style="background:var(--navy);border-radius:var(--r-md);padding:16px 18px;margin-bottom:4px;">'
     +'<div style="color:rgba(255,255,255,.6);font-size:13px;margin-bottom:4px;">'+esc(modeName)+' 모드</div>'
     +'<div style="color:#fff;font-size:18px;font-weight:700;">'+esc(u?u.name:'')+'님을 위한 사용 방법</div>'
     +'</div>'
     + items.map(function(item){
-      return '<div style="background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:18px;margin-bottom:10px;">'
+      return '<div style="background:#fff;border:1px solid var(--bd);border-radius:var(--r-md);padding:18px;margin-bottom:10px;">'
         +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
         +'<div style="width:40px;height:40px;border-radius:50%;background:var(--tl);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
         +'<i class="ti '+item.icon+'" style="font-size:20px;color:var(--teal);"></i></div>'
@@ -1035,6 +1036,7 @@ function goPage(p){
     _refreshHomeAnalysis();
     _refreshHomeExercise();
     _refreshComprehensiveBtn();
+    _refreshYesterdayFeedback();
     if(USER&&USER.mode!=='cancer'){ _refreshStats(); }
     else{ _refreshMedHome(); _refreshTodaySym(); if(USER.ctype==='prostate') _refreshPSABanner(); }
   }
@@ -1481,14 +1483,15 @@ function pickPhoto(src){ closeSheet('sh-photo'); $id('f-'+src).value=''; $id('f-
 function onFile(e,src){
   var f=e.target.files[0]; e.target.value=''; if(!f) return;
   var meal = _pendingMeal; _pendingMeal = null;
+  // 홈 식사 슬롯에서 넘어온 경우 메모 가져오기
+  var noteEl=$id('sh-photo-note');
+  var note = noteEl ? noteEl.value.trim() : '';
   var r=new FileReader(); r.onload=function(ev){ _compress(ev.target.result,function(small){
-    // 식단탭 제거됨 - 홈에서 처리
-    // 오늘 날짜로 기록장에 자동 저장 (홈에서 넘어온 경우 해당 시간대로)
-    _autoSavePhotoToLog(small, meal);
+    _autoSavePhotoToLog(small, meal, note);
   }); }; r.readAsDataURL(f);
 }
 
-function _autoSavePhotoToLog(imgData, forceMeal){
+function _autoSavePhotoToLog(imgData, forceMeal, note){
   var today = todayStr();
   var hour = new Date().getHours();
   // 기록장과 키 통일: morning/lunch/dinner
@@ -1503,6 +1506,11 @@ function _autoSavePhotoToLog(imgData, forceMeal){
     dayRec = {date:today, photos:{}, steps:''};
     recs.push(dayRec);
   }
+  // 메모 저장
+  if(note){
+    if(!dayRec.mealNotes) dayRec.mealNotes={};
+    dayRec.mealNotes[meal]=note;
+  }
 
   // Storage에 업로드
   var path = 'photos/'+USER.id+'/'+today+'_'+meal+'_'+Date.now()+'.jpg';
@@ -1513,22 +1521,27 @@ function _autoSavePhotoToLog(imgData, forceMeal){
   for(var i=0;i<byteStr.length;i++) ia[i]=byteStr.charCodeAt(i);
   var blob = new Blob([ab],{type:'image/jpeg'});
 
+  var mealNameForAI = {morning:'아침', lunch:'점심', dinner:'저녁'}[meal] || meal;
   ref.put(blob).then(function(){ return ref.getDownloadURL(); }).then(function(url){
     dayRec.photos[meal] = url;
     _setRecs(recs);
     _refreshPhotos(); _refreshStats();
     _xlLoad(); // 기록장 카드 DOM 업데이트
-    toast('기록장에도 저장됐어요 ✓');
+    toast(mealNameForAI+' 사진 저장됐어요 ✓');
+    _analyzeHomeMeal(imgData, mealNameForAI, note);
   }).catch(function(){
-    // Storage 실패 시 base64로 폴백
     dayRec.photos[meal] = imgData;
     _setRecs(recs);
     _refreshPhotos(); _refreshStats();
     _xlLoad();
+    _analyzeHomeMeal(imgData, mealNameForAI, note);
   });
 }
 
-function pickMeal(src){ closeSheet('sh-meal'); $id('f-meal-'+src).value=''; $id('f-meal-'+src).click(); }
+function pickMeal(src){
+  var note=$id('sh-meal-note'); if(note) note.value='';
+  closeSheet('sh-meal'); $id('f-meal-'+src).value=''; $id('f-meal-'+src).click();
+}
 function onMealFile(e,src){
   var f=e.target.files[0]; e.target.value=''; if(!f) return;
   var r=new FileReader(); r.onload=function(ev){ _compress(ev.target.result,function(small){
@@ -1546,12 +1559,23 @@ function onMealFile(e,src){
     for(var i=0;i<byteStr.length;i++) ia[i]=byteStr.charCodeAt(i);
     var blob = new Blob([ab],{type:'image/jpeg'});
     toast('사진 업로드 중...');
+    // 바텀시트 메모 저장
+    var mNoteEl=$id('sh-meal-note');
+    var mNote = mNoteEl ? mNoteEl.value.trim() : '';
+    if(mNote){
+      var days2=_getRecs();
+      var card2=$id(p.cardId);
+      var dateVal2 = card2 ? card2.querySelector('.day-date').value : '';
+      var dayRec2 = days2.find(function(d){return d.date===dateVal2;});
+      if(dayRec2){ if(!dayRec2.mealNotes) dayRec2.mealNotes={}; dayRec2.mealNotes[p.meal]=mNote; _setRecs(days2); }
+      // 카드 메모 textarea 업데이트
+      if(card2){ var na=card2.querySelector('[data-note-cardid]'); if(na){ var allN=Object.values(dayRec2&&dayRec2.mealNotes||{}).filter(Boolean).join(' / '); na.value=allN; } }
+    }
     ref.put(blob).then(function(){ return ref.getDownloadURL(); }).then(function(url){
       _saveRot(p.cardId,p.meal,0); _renderFilled(slot,url,0); _schedSave(); _refreshPhotos(); _refreshStats();
       toast('사진이 저장됐어요 ✓');
     }).catch(function(err){
       console.error('Storage 업로드 실패', err);
-      // 실패 시 base64로 폴백
       _saveRot(p.cardId,p.meal,0); _renderFilled(slot,small,0); _schedSave(); _refreshPhotos(); _refreshStats();
       toast('사진이 저장됐어요 ✓');
     });
@@ -1610,6 +1634,19 @@ function _makeCard(d){
   card.appendChild(exRow);
 
   card.querySelectorAll('[data-meal]').forEach(function(slot){ var meal=slot.getAttribute('data-meal'),photo=d.photos?d.photos[meal]:null; if(photo) _renderFilled(slot,photo,_loadRot(id,meal)); else _renderEmpty(slot); });
+
+  // 식사 메모 영역 (기록장)
+  var noteRow=document.createElement('div'); noteRow.className='meal-note-row';
+  var noteLbl=document.createElement('div'); noteLbl.style.cssText='font-size:11px;font-weight:700;color:var(--mu2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px;'; noteLbl.textContent='식사 메모';
+  var noteArea=document.createElement('textarea'); noteArea.className='meal-note-inp'; noteArea.rows=2;
+  noteArea.placeholder='아침/점심/저녁 식사 내용을 간단히 적어두세요 (예: 닭가슴살 샐러드, 현미밥 반공기)';
+  noteArea.setAttribute('data-note-cardid', id);
+  var existNotes = d.mealNotes ? Object.values(d.mealNotes).filter(Boolean).join(' / ') : '';
+  noteArea.value = existNotes || (d.mealNote||'');
+  noteArea.addEventListener('input', _schedSave);
+  noteRow.appendChild(noteLbl); noteRow.appendChild(noteArea);
+  card.appendChild(noteRow);
+
   return card;
 }
 
@@ -1646,7 +1683,19 @@ function _renderFilled(slot,url,rot){
   slot.innerHTML='<div class="meal-lbl '+lc[meal]+'">'+lm[meal]+'</div><div class="meal-filled" onclick="A._openViewer(\''+cid+'\',\''+meal+'\')" ><img src="'+url+'" alt="'+lm[meal]+'" style="transform:rotate('+(rot||0)+'deg)"><div class="meal-overlay"><i class="ti ti-eye"></i></div></div>';
 }
 
-function _openMealSheet(cardId,meal){ _pendMeal={cardId:cardId,meal:meal}; var lm={morning:'아침',lunch:'점심',dinner:'저녁'}; $id('sh-meal-title').textContent=(lm[meal]||meal)+' 사진 선택'; openSheet('sh-meal'); }
+function _openMealSheet(cardId,meal){
+  _pendMeal={cardId:cardId,meal:meal};
+  var lm={morning:'아침',lunch:'점심',dinner:'저녁'};
+  $id('sh-meal-title').textContent=(lm[meal]||meal)+' 사진 선택';
+  // 기록장에서 기존 메모 로드
+  var days=_getRecs();
+  var card=$id(cardId);
+  var dateVal = card ? card.querySelector('.day-date').value : '';
+  var dayRec = days.find(function(d){return d.date===dateVal;});
+  var existNote = dayRec&&dayRec.mealNotes ? (dayRec.mealNotes[meal]||'') : '';
+  var noteEl=$id('sh-meal-note'); if(noteEl) noteEl.value=existNote;
+  openSheet('sh-meal');
+}
 
 function _delCard(card){ card.remove(); if(!$id('log-cards').children.length) $id('log-empty').style.display='block'; _schedSave(); _refreshPhotos(); }
 
@@ -1667,11 +1716,15 @@ function _doSave(){
         if(!photos[k]) photos[k]=existing.photos[k];
       });
     }
+    var noteArea = card.querySelector('[data-note-cardid]');
+    var mealNote = noteArea ? noteArea.value.trim() : '';
     var rec = {date:dateVal, steps:card.querySelector('.steps-in').value, photos:photos};
+    if(mealNote) rec.mealNote = mealNote;
     if(existing&&existing.analysis) rec.analysis=existing.analysis;
     if(existing&&existing.exercise) rec.exercise=existing.exercise;
     if(existing&&existing.comprehensive) rec.comprehensive=existing.comprehensive;
     if(existing&&existing.condRecs) rec.condRecs=existing.condRecs;
+    if(existing&&existing.mealNotes) rec.mealNotes=existing.mealNotes;
     days.push(rec);
   });
   _setRecs(days); _showAutosave(); _refreshPhotos(); _refreshStats();
@@ -1976,24 +2029,31 @@ function analyzeComprehensive(){
 var _homeMealSlot = null;
 var _pendingMeal = null; // 홈 식사 슬롯에서 넘어올 때 시간대 기억
 function openMealSlot(meal){
-  // 사진이 이미 있으면 뷰어로 보여주기
   var mealMap = {breakfast:'morning', lunch:'lunch', dinner:'dinner'};
   var mealKey = mealMap[meal] || meal;
+  var mealName = {breakfast:'🌅 아침',lunch:'☀️ 점심',dinner:'🌙 저녁'}[meal]||meal;
   var days=_getRecs(), today=todayStr();
   var todayRec=days.find(function(d){return d.date===today;});
   var existingPhoto = todayRec && todayRec.photos && todayRec.photos[mealKey];
 
   if(existingPhoto){
-    // 사진이 있으면 뷰어 열기
-    var mealName={breakfast:'🌅 아침',lunch:'☀️ 점심',dinner:'🌙 저녁'}[meal]||meal;
-    var analysis = todayRec.analysis && (todayRec.analysis[mealKey]||todayRec.analysis.latest);
+    var analysis = todayRec && todayRec.analysis && (todayRec.analysis[mealKey]||todayRec.analysis.latest);
     _openHomeMealViewer(existingPhoto, mealName, analysis, meal);
     return;
   }
 
-  // 사진 없으면 식단 탭으로 이동
+  // 사진 없으면 sh-photo 시트 열기 (메모 포함)
   _pendingMeal = mealKey;
-
+  var titleEl = $id('sh-photo-title');
+  if(titleEl) titleEl.textContent = mealName + ' 사진 선택';
+  var noteWrap = $id('sh-photo-note-wrap');
+  if(noteWrap) noteWrap.style.display = 'block';
+  // 기존 메모 불러오기
+  var noteEl = $id('sh-photo-note');
+  if(noteEl){
+    var existingNote = todayRec && todayRec.mealNotes && todayRec.mealNotes[mealKey];
+    noteEl.value = existingNote || '';
+  }
   setTimeout(function(){ openSheet('sh-photo'); }, 200);
 }
 
@@ -2046,11 +2106,16 @@ function pickHomeMeal(src){
 function onHomeMealFile(e,src){
   var f=e.target.files[0]; e.target.value=''; if(!f||!_homeMealSlot) return;
   var s=_homeMealSlot; _homeMealSlot=null;
+  // 메모 가져오기
+  var noteEl=$id('sh-photo-note');
+  var note = noteEl ? noteEl.value.trim() : '';
+  closeSheet('sh-photo');
   var mealName={breakfast:'아침',lunch:'점심',dinner:'저녁'}[s.meal]||s.meal;
   var r=new FileReader(); r.onload=function(ev){ _compress(ev.target.result,function(small){
-    // 1. 식단 탭 미리보기에도 표시
     $id('preview-img').src=small; $id('preview-wrap').style.display='';
-    // 2. Storage 업로드
+    // 메모 저장
+    if(!s.todayRec.mealNotes) s.todayRec.mealNotes={};
+    if(note) s.todayRec.mealNotes[s.meal]=note;
     var path='photos/'+USER.id+'/'+s.today+'_'+s.meal+'_'+Date.now()+'.jpg';
     var ref=_storage.ref(path);
     var byteStr=atob(small.split(',')[1]);
@@ -2060,30 +2125,30 @@ function onHomeMealFile(e,src){
     var blob=new Blob([ab],{type:'image/jpeg'});
     toast('저장 중...');
     ref.put(blob).then(function(){return ref.getDownloadURL();}).then(function(url){
-      s.todayRec.photos[s.meal]=url; _setRecs(s.days); _refreshPhotos(); 
+      s.todayRec.photos[s.meal]=url; _setRecs(s.days); _refreshPhotos();
       toast(mealName+' 사진 저장됐어요 ✓');
-      // 3. AI 분석 실행
-      _analyzeHomeMeal(small, mealName);
+      _analyzeHomeMeal(small, mealName, note);
     }).catch(function(){
       s.todayRec.photos[s.meal]=small; _setRecs(s.days); _refreshPhotos();
       toast(mealName+' 사진 저장됐어요 ✓');
-      _analyzeHomeMeal(small, mealName);
+      _analyzeHomeMeal(small, mealName, note);
     });
   }); }; r.readAsDataURL(f);
 }
 
-function _analyzeHomeMeal(imgData, mealName){
+function _analyzeHomeMeal(imgData, mealName, note){
   if(!KEY) return;
-  // 결과를 홈 화면에 표시
   var resultEl = $id('home-ai-result');
   if(!resultEl) return;
   resultEl.style.display='block';
   resultEl.innerHTML='<div class="tip-lbl">AI 식단 분석 · '+mealName+'</div><div class="dots"><span></span><span></span><span></span></div>';
   var mode=USER?USER.mode:'lchf';
   var modeDesc={keto:'케토제닉(탄수화물 20g 이하)',carnivore:'카니보어(동물성 식품)',lchf:'저탄고지(탄수화물 100g 이하)',diet:'균형 건강식',cancer:'암 환자 항산화 식단'}[mode]||mode;
-  var prompt='['+mealName+' 식사 사진] '+modeDesc+' 관점에서 분석해주세요. 주요 음식명, 적합도, 개선 제안을 3~4문장으로 간결하게.';
+  var prompt='['+mealName+' 식사 사진] '+modeDesc+' 관점에서 분석해주세요.';
+  if(note) prompt += ' 사용자 메모: "'+note+'"';
+  prompt += ' 주요 음식명, 적합도, 개선 제안을 3~4문장으로 간결하게.';
   _api({
-    max_tokens:300,
+    max_tokens:350,
     messages:[{role:'user',content:[
       {type:'image',source:{type:'base64',media_type:'image/jpeg',data:imgData.split(',')[1]}},
       {type:'text',text:prompt}
@@ -2091,6 +2156,72 @@ function _analyzeHomeMeal(imgData, mealName){
   }, function(reply){
     resultEl.innerHTML='<div class="tip-lbl">AI 식단 분석 · '+mealName+'</div>'+esc(reply||'분석 결과를 가져오지 못했어요');
   });
+}
+
+/* ── 전날 AI 피드백 ── */
+function _refreshYesterdayFeedback(){
+  var wrap=$id('home-yesterday-wrap'); if(!wrap) return;
+  var card=$id('home-yesterday-card'); if(!card) return;
+  var days=_getRecs();
+  var today=todayStr();
+  // 어제 날짜 계산
+  var d=new Date(); d.setDate(d.getDate()-1);
+  var yy=d.getFullYear(), mm=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  var yesterday=yy+'-'+mm+'-'+dd;
+  var yRec=days.find(function(r){return r.date===yesterday;});
+  if(!yRec) { wrap.style.display='none'; return; }
+  var comp=yRec.comprehensive||'';
+  var foodAna=yRec.analysis&&yRec.analysis.latest||'';
+  var exInfo=yRec.exercise&&yRec.exercise.length?yRec.exercise[yRec.exercise.length-1]:null;
+  if(!comp&&!foodAna&&!exInfo){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  var tags='';
+  if(foodAna) tags+='<span class="ycard-tag food"><i class="ti ti-camera" style="font-size:9px;margin-right:3px;"></i>식단 분석</span>';
+  if(exInfo) tags+='<span class="ycard-tag ex"><i class="ti ti-run" style="font-size:9px;margin-right:3px;"></i>'+esc(exInfo.type)+(exInfo.dur?' · '+esc(exInfo.dur):'')+'</span>';
+  if(comp) tags+='<span class="ycard-tag comp"><i class="ti ti-sparkles" style="font-size:9px;margin-right:3px;"></i>종합 평가</span>';
+  var mainText = comp || foodAna;
+  // 너무 길면 자르기
+  if(mainText.length>220) mainText=mainText.substring(0,220)+'…';
+  card.innerHTML='<div class="ycard-header"><div class="ycard-icon"><i class="ti ti-history" style="font-size:14px;color:var(--teal);"></i></div><div><div class="ycard-title">어제 ('+yesterday.substring(5)+') AI 피드백</div><div class="ycard-meta">클릭하면 추적 탭에서 전체 확인</div></div></div>'
+    +'<div class="ycard-body">'+esc(mainText)+'</div>'
+    +'<div class="ycard-tags">'+tags+'</div>';
+  card.onclick=function(){ goPage('track'); };
+  card.style.cursor='pointer';
+}
+
+/* ── 기록장 메모만 저장 (사진 없이) ── */
+function saveMealNoteOnly(){
+  if(!_pendMeal) { closeSheet('sh-meal'); return; }
+  var noteEl=$id('sh-meal-note');
+  var note=noteEl?noteEl.value.trim():'';
+  if(!note){ closeSheet('sh-meal'); return; }
+  var p=_pendMeal; _pendMeal=null;
+  var card=$id(p.cardId); if(!card){ closeSheet('sh-meal'); return; }
+  var dateVal=card.querySelector('.day-date').value;
+  var days=_getRecs();
+  var dayRec=days.find(function(d){return d.date===dateVal;});
+  if(!dayRec){ dayRec={date:dateVal,photos:{},steps:''}; days.push(dayRec); }
+  if(!dayRec.mealNotes) dayRec.mealNotes={};
+  dayRec.mealNotes[p.meal]=note;
+  _setRecs(days);
+  // 기록장 카드 메모 textarea에도 반영
+  var noteArea=card.querySelector('[data-note-cardid]');
+  if(noteArea){
+    var allNotes=Object.values(dayRec.mealNotes).filter(Boolean).join(' / ');
+    noteArea.value=allNotes;
+  }
+  closeSheet('sh-meal');
+  toast('메모가 저장됐어요 ✓');
+}
+
+/* ── _homeMealSlot 세팅 래퍼 ── */
+function _prepHomeMealSlot(meal){
+  var mealMap={breakfast:'morning',lunch:'lunch',dinner:'dinner'};
+  var mealKey=mealMap[meal]||meal;
+  var days=_getRecs(), today=todayStr();
+  var todayRec=days.find(function(d){return d.date===today;});
+  if(!todayRec){ todayRec={date:today,photos:{},steps:''}; days.push(todayRec); }
+  _homeMealSlot={meal:mealKey, today:today, days:days, todayRec:todayRec};
 }
 
 /* ── 공개 API ── */
@@ -2132,6 +2263,7 @@ return {
   _openMealSheet:_openMealSheet,
   // 홈 식사 슬롯
   openMealSlot:openMealSlot, pickHomeMeal:pickHomeMeal, onHomeMealFile:onHomeMealFile,
+  saveMealNoteOnly:saveMealNoteOnly,
   closeHomeMealViewer:closeHomeMealViewer, replaceHomeMealPhoto:replaceHomeMealPhoto
 };
 

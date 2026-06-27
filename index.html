@@ -22,9 +22,10 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div id="loading-overlay" style="position:fixed;inset:0;background:#1A2F4C;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:99999;">
-  <div style="font-size:48px;">🧬</div>
-  <div style="color:#fff;font-size:14px;">불러오는 중...</div>
+<div id="loading-overlay" style="position:fixed;inset:0;background:#0F1E31;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:99999;">
+  <div style="font-size:56px;filter:drop-shadow(0 6px 18px rgba(25,184,155,.35));">🧬</div>
+  <div style="color:rgba(255,255,255,.9);font-size:16px;font-weight:700;letter-spacing:-.2px;">스마트 메타케어</div>
+  <div style="color:rgba(255,255,255,.38);font-size:13px;">불러오는 중...</div>
 </div>
 <div id="app">
 
@@ -230,7 +231,7 @@
 
   <!-- ── 메인 앱 ── -->
   <div id="scr-app" class="screen light">
-    <div class="topbar navy" id="app-topbar">
+    <div id="app-topbar">
       <div>
         <div class="topbar-title" id="tb-title">스마트 메타케어</div>
         <div class="topbar-sub" id="tb-sub"></div>
@@ -260,10 +261,10 @@
             <div class="days-count" id="home-days"></div>
           </div>
         </div>
-        <button onclick="A.goHelp()" style="width:100%;padding:15px;background:#fff;color:var(--navy);border:2px solid var(--navy);border-radius:var(--r);font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;">
+        <button onclick="A.goHelp()" style="width:100%;padding:15px;background:var(--white);color:var(--navy);border:2px solid var(--navy);border-radius:var(--r-md);font-size:var(--fs-lg);font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:var(--sh-sm);">
           <i class="ti ti-book" style="font-size:22px;color:var(--teal);"></i> 사용 방법 보기
         </button>
-        <div id="home-goal-card" style="width:100%;padding:15px;border-radius:var(--r);display:flex;align-items:center;gap:12px;color:#fff;">
+        <div id="home-goal-card" style="width:100%;padding:15px;border-radius:var(--r-md);display:flex;align-items:center;gap:12px;color:#fff;">
           <i class="ti ti-target" style="font-size:24px;flex-shrink:0;"></i>
           <div>
             <div style="font-size:15px;font-weight:700;white-space:nowrap;" id="home-goal-lbl">목표</div>
@@ -296,13 +297,19 @@
           </div>
         </div>
         <div id="home-comprehensive-wrap" style="display:none;">
-          <button onclick="A.analyzeComprehensive()" style="width:100%;padding:15px;background:linear-gradient(135deg,#4a1d96,#2A7B7B);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;">
+          <button onclick="A.analyzeComprehensive()" style="width:100%;padding:16px;background:linear-gradient(135deg,#3B1F8A,var(--teal));color:#fff;border:none;border-radius:var(--r-md);font-size:var(--fs-md);font-weight:700;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 4px 16px rgba(123,82,212,.25);">
             <i class="ti ti-sparkles" style="font-size:20px;"></i> 오늘 종합 평가 받기
           </button>
         </div>
         <div id="home-comprehensive-result" style="display:none;" class="tip-box"></div>
         <div id="home-ai-result" style="display:none;" class="tip-box"></div>
         <div id="home-exercise-result" style="display:none;" class="tip-box"></div>
+
+        <!-- 전날 AI 피드백 카드 -->
+        <div id="home-yesterday-wrap" style="display:none;">
+          <div class="section-title" style="margin-top:4px;"><i class="ti ti-history"></i> 어제의 AI 피드백 <span style="font-size:11px;color:var(--mu);font-weight:400;">동기부여</span></div>
+          <div id="home-yesterday-card" class="yesterday-card"></div>
+        </div>
         <!-- 암환자 전용 홈 섹션 -->
         <div id="home-cancer-section" style="display:none">
           <div id="psa-banner-wrap"></div>
@@ -319,9 +326,9 @@
 
       <!-- 운동 탭 -->
       <div id="pg-ex" class="page">
-        <div class="card p12" style="background:linear-gradient(135deg,#BA7517,#854F0B);color:#fff;border:none;">
-          <div style="font-size:16px;font-weight:700;margin-bottom:4px;">🏃 오늘의 운동 기록</div>
-          <div style="font-size:12px;opacity:.85;">운동 종류와 시간을 입력하면 AI가 분석해드려요 · 하루 1회</div>
+        <div class="card p12" style="background:linear-gradient(135deg,var(--warn),#C8830A);color:#fff;border:none;border-radius:var(--r-md);box-shadow:0 4px 16px rgba(240,165,0,.25);">
+          <div style="font-size:var(--fs-lg);font-weight:700;margin-bottom:4px;">🏃 오늘의 운동 기록</div>
+          <div style="font-size:var(--fs-xs);opacity:.85;">운동 종류와 시간을 입력하면 AI가 분석해드려요 · 하루 1회</div>
         </div>
         <div id="today-ex-status" style="display:none;" class="tip-box"></div>
         <input class="inp-sm" id="ex-type" type="text" placeholder="운동 종류 (예: 빠르게 걷기, 수영, 자전거)">
@@ -425,7 +432,11 @@
 
 <div class="overlay" id="sh-photo" onclick="if(event.target.id==='sh-photo')A.closeSheet('sh-photo')">
   <div class="sheet">
-    <div class="sh-title">사진 선택</div>
+    <div class="sh-title" id="sh-photo-title">사진 선택</div>
+    <div id="sh-photo-note-wrap" style="display:none;margin-bottom:12px;">
+      <label class="lbl">식사 메모 (선택)</label>
+      <textarea id="sh-photo-note" class="inp-sm" rows="2" placeholder="예: 닭가슴살 샐러드, 탄수화물 적게" style="resize:none;"></textarea>
+    </div>
     <button class="sh-btn" onclick="A.pickPhoto('cam')"><i class="ti ti-camera"></i> 촬영하기</button>
     <button class="sh-btn" onclick="A.pickPhoto('gal')"><i class="ti ti-photo"></i> 폰에서 가져오기</button>
     <button class="sh-cancel" onclick="A.closeSheet('sh-photo')">취소</button>
@@ -434,8 +445,15 @@
 <div class="overlay" id="sh-meal" onclick="if(event.target.id==='sh-meal')A.closeSheet('sh-meal')">
   <div class="sheet">
     <div class="sh-title" id="sh-meal-title">사진 선택</div>
+    <div style="margin-bottom:12px;">
+      <label class="lbl">식사 메모 (선택)</label>
+      <textarea id="sh-meal-note" class="inp-sm" rows="2" placeholder="예: 현미밥 반공기, 된장국, 두부조림" style="resize:none;"></textarea>
+    </div>
     <button class="sh-btn" onclick="A.pickMeal('cam')"><i class="ti ti-camera"></i> 촬영하기</button>
     <button class="sh-btn" onclick="A.pickMeal('gal')"><i class="ti ti-photo"></i> 폰에서 가져오기</button>
+    <div style="padding:10px 0 0;">
+      <button class="btn-full teal" onclick="A.saveMealNoteOnly()" style="margin-bottom:0;"><i class="ti ti-check"></i> 메모만 저장 (사진 없이)</button>
+    </div>
     <button class="sh-cancel" onclick="A.closeSheet('sh-meal')">취소</button>
   </div>
 </div>
