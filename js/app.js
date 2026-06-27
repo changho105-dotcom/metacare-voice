@@ -150,8 +150,31 @@ function _autoBackup(){
     // 같은 시간대 백업이 이미 있으면 건너뜀
     if(_cache[backupKey]) return;
     
-    // 현재 전체 캐시를 스냅샷으로 저장
-    var snapshot = JSON.stringify(_cache);
+    // base64 제외하고 스냅샷 저장
+    var slimCache = {};
+    Object.keys(_cache).forEach(function(k){
+      var v = _cache[k];
+      if(typeof v === 'string' && v.includes('data:image')) return; // base64 제외
+      if(k.startsWith('mc_backup_')) return; // 백업 중첩 제외
+      slimCache[k] = v;
+    });
+    // records 안의 base64도 제거
+    if(slimCache['records'] || slimCache[Object.keys(slimCache).find(function(k){return k.endsWith('_records');})]){
+      Object.keys(slimCache).forEach(function(k){
+        if(k.endsWith('_records')){
+          try{
+            var recs = JSON.parse(slimCache[k]);
+            recs.forEach(function(r){
+              if(r&&r.photos) Object.keys(r.photos).forEach(function(m){
+                if(r.photos[m]&&r.photos[m].startsWith('data:image')) delete r.photos[m];
+              });
+            });
+            slimCache[k] = JSON.stringify(recs);
+          }catch(e){}
+        }
+      });
+    }
+    var snapshot = JSON.stringify(slimCache);
     _cache[backupKey] = snapshot;
     
     // 7일 이상 된 백업 자동 삭제
@@ -207,7 +230,19 @@ function _cleanBase64FromRecs(){
     });
     if(totalCleaned > 0) usj('records', recs);
 
-    // 2. 백업 데이터(_cache 전체)에서 base64 제거
+    // 2. 기존 백업 스냅샷 자체를 삭제 (base64 포함된 크기 큰 것)
+    Object.keys(_cache).forEach(function(k){
+      if(k.startsWith('mc_backup_')){
+        var v = _cache[k];
+        if(typeof v === 'string' && v.includes('data:image')){
+          console.warn('🧹 base64 포함 백업 스냅샷 삭제:', k);
+          delete _cache[k];
+          totalCleaned++;
+        }
+      }
+    });
+
+    // 3. 백업 데이터(_cache 전체)에서 base64 제거
     Object.keys(_cache).forEach(function(cacheKey){
       var val = _cache[cacheKey];
       // 백업 스냅샷(JSON 문자열)에서 base64 제거
