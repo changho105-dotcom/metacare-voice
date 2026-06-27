@@ -98,8 +98,11 @@ function _loadCloudData(cb){
     _cache = doc.exists ? (doc.data()||{}) : {};
     _cacheReady = true;
     dataLoaded = true;
-    // 데이터 로드 후 자동 백업
-    setTimeout(_autoBackup, 2000);
+    // 데이터 로드 후 자동 백업 + 무결성 검사
+    setTimeout(function(){
+      _autoBackup();
+      _verifyDataIntegrity();
+    }, 2000);
     tryDone();
   }).catch(function(err){
     console.error('Firestore 로드 오류', err);
@@ -120,9 +123,10 @@ function _autoBackup(){
     var dateKey = today.getFullYear()+'-'
       +String(today.getMonth()+1).padStart(2,'0')+'-'
       +String(today.getDate()).padStart(2,'0');
-    var backupKey = 'mc_backup_'+dateKey;
+    var hour = today.getHours() < 14 ? 'am' : 'pm';
+    var backupKey = 'mc_backup_'+dateKey+'_'+hour;
     
-    // 오늘 백업이 이미 있으면 건너뜀
+    // 같은 시간대 백업이 이미 있으면 건너뜀
     if(_cache[backupKey]) return;
     
     // 현재 전체 캐시를 스냅샷으로 저장
@@ -149,6 +153,17 @@ function _autoBackup(){
   } catch(e) {
     console.error('백업 오류:', e);
   }
+}
+
+function _verifyDataIntegrity(){
+  try{
+    var recs = ugj('records',[]);
+    var users = ugj('users',[]);
+    console.log('📊 데이터 무결성 검사: records='+recs.length+'개, users='+users.length+'명');
+    if(users.length > 0 && recs.length === 0){
+      console.warn('⚠️ 사용자는 있는데 기록이 없습니다. 백업 복원을 확인하세요.');
+    }
+  }catch(e){ console.error('무결성 검사 오류:', e); }
 }
 
 function _listBackups(){
@@ -1623,7 +1638,42 @@ function onMealFile(e,src){
 
 /* ── 식단 기록장 ── */
 function _getRecs(){ return ugj('records',[]); }
-function _setRecs(d){ usj('records',d); }
+function _setRecs(d){
+  // 안전장치: 기존 데이터보다 현저히 적으면 저장 거부
+  if(Array.isArray(d)){
+    var existing = ugj('records',[]);
+    if(existing.length > 3 && d.length === 0){
+      console.error('🚨 _setRecs: 빈 배열 저장 차단 (기존:', existing.length, '개)');
+      toast('⚠️ 데이터 저장 오류 - 관리자에게 문의하세요');
+      return;
+    }
+    if(existing.length > 10 && d.length < existing.length * 0.5){
+      console.warn('⚠️ _setRecs: 데이터 급감 감지 ('+existing.length+'→'+d.length+')');
+    }
+  }
+  usj('records',d);
+  // 별도 컬렉션에 30분마다 안전 백업
+  _schedSafetyBackup();
+}
+
+var _safetyBackupTimer = null;
+function _schedSafetyBackup(){
+  if(_safetyBackupTimer) clearTimeout(_safetyBackupTimer);
+  _safetyBackupTimer = setTimeout(function(){
+    try{
+      var recs = ugj('records',[]);
+      if(!recs.length) return;
+      var backupDoc = _db.collection('backups').doc(USER.id);
+      backupDoc.set({
+        records: JSON.stringify(recs),
+        ts: Date.now(),
+        date: todayStr(),
+        count: recs.length
+      }).then(function(){ console.log('✅ 안전 백업 저장:', recs.length+'개'); })
+        .catch(function(e){ console.error('안전 백업 실패:', e); });
+    }catch(e){ console.error('안전 백업 오류:', e); }
+  }, 1800000); // 30분
+}
 
 function addLogDay(){
   var card=_makeCard({date:todayStr(),photos:{},steps:''});
@@ -2033,6 +2083,22 @@ function loadBackupList(){
    키 이름 규칙: mc_backup_YYYY-MM-DD
 ── */
 
+function restoreCloudBackup(){
+  if(!USER){ toast('로그인 필요'); return; }
+  if(!confirm('클라우드 백업으로 복원하시겠습니까?\n현재 데이터가 교체됩니다.')) return;
+  _db.collection('backups').doc(USER.id).get().then(function(doc){
+    if(!doc.exists){ toast('클라우드 백업이 없습니다'); return; }
+    var d=doc.data();
+    if(!d.records){ toast('백업 데이터가 손상됐습니다'); return; }
+    try{
+      var recs=JSON.parse(d.records);
+      usj('records', recs);
+      toast('✅ 클라우드 백업 복원 완료 ('+recs.length+'일치). 앱을 새로고침하세요.');
+      setTimeout(function(){ location.reload(); }, 2000);
+    }catch(e){ toast('복원 실패: '+e.message); }
+  }).catch(function(e){ toast('복원 오류: '+e.message); });
+}
+
 function _refreshExPage(){
   var today=todayStr();
   var days=_getRecs();
@@ -2392,7 +2458,7 @@ return {
   checkPw:checkPw,
   // Admin
   delUser:delUser, changePw:changePw, backup:backup, restore:restore, fullReset:fullReset, filterAdminUsers:filterAdminUsers, backupText:backupText, copyBackupText:copyBackupText, showPatient:showPatient,
-  loadAiRec:loadAiRec, loadBackupList:loadBackupList, restoreBackup:_restoreBackup,
+  loadAiRec:loadAiRec, loadBackupList:loadBackupList, restoreBackup:_restoreBackup, restoreCloudBackup:restoreCloudBackup,
   // 사용자 추가
   _selMode:_selMode, _selCtype:_selCtype, _selStage:_selStage, addUser:addUser,
   // 앱
