@@ -2138,9 +2138,10 @@ function _openHomeMealViewer(photoUrl, mealName, analysis, meal){
   if(!analysisEl){
     var div=document.createElement('div');
     div.id='home-meal-analysis';
-    div.style.cssText='position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;background:#fff;border-radius:22px 22px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom,0px)+16px);z-index:201;max-height:70vh;overflow-y:auto;box-shadow:0 -4px 24px rgba(15,30,49,.18);';
+    div.style.cssText='position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:22px 22px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom,0px)+16px);z-index:300;max-height:70vh;overflow-y:auto;box-shadow:0 -4px 24px rgba(15,30,49,.18);';
     div.innerHTML=html;
-    document.body.appendChild(div);
+    var appEl=$id('app')||document.body;
+    appEl.appendChild(div);
   } else {
     analysisEl.style.display='block';
     analysisEl.innerHTML=html;
