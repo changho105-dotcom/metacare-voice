@@ -2163,6 +2163,7 @@ function saveMealViewerNote(){
 }
 
 function reanalyzeMealPhoto(){
+  if(!KEY){ toast('API 키가 없습니다'); return; }
   var meal=_viewerMeal;
   var mealKey={breakfast:'morning',lunch:'lunch',dinner:'dinner'}[meal]||meal;
   var mealName={breakfast:'🌅 아침',lunch:'☀️ 점심',dinner:'🌙 저녁'}[meal]||meal;
@@ -2171,12 +2172,51 @@ function reanalyzeMealPhoto(){
   var photoUrl=dayRec&&dayRec.photos&&dayRec.photos[mealKey];
   var note=dayRec&&dayRec.mealNotes&&dayRec.mealNotes[mealKey]||'';
   if(!photoUrl){ toast('사진이 없습니다'); return; }
+
   // 분석 중 표시
-  var anaDiv=document.querySelector('#home-meal-analysis [style*="AI 분석"], #home-meal-analysis div:nth-child(3) div:last-child');
-  closeHomeMealViewer();
-  toast('재분석 중...');
-  // URL로는 직접 분석 불가 - 안내
-  toast('사진을 다시 촬영하면 재분석됩니다');
+  var anaEl=document.querySelector('#home-meal-analysis');
+  if(anaEl){
+    var anaBody=anaEl.querySelector('div[style*="AI 분석"] + div, div:nth-child(3) > div:last-child');
+    var aiSection=anaEl.querySelectorAll('div')[3];
+    if(aiSection) aiSection.innerHTML='<div class="dots"><span></span><span></span><span></span></div>';
+  }
+  toast('분석 중...');
+
+  // Firebase Storage URL → fetch → base64 변환 후 API 전송
+  fetch(photoUrl)
+    .then(function(r){ return r.blob(); })
+    .then(function(blob){
+      var reader=new FileReader();
+      reader.onload=function(ev){
+        var base64=ev.target.result.split(',')[1];
+        var mode=USER?USER.mode:'lchf';
+        var modeDesc={keto:'케토제닉(탄수화물 20g 이하)',carnivore:'카니보어(동물성 식품)',lchf:'저탄고지(탄수화물 100g 이하)',diet:'균형 건강식',cancer:'암 환자 항산화 식단'}[mode]||mode;
+        var prompt='['+mealName+' 식사 사진] '+modeDesc+' 관점에서 분석해주세요.';
+        if(note) prompt+=' 사용자 메모: "'+note+'"';
+        prompt+=' 주요 음식명, 적합도, 개선 제안을 2~3문장으로 간결하게.';
+        _api({
+          max_tokens:300,
+          messages:[{role:'user',content:[
+            {type:'image',source:{type:'base64',media_type:'image/jpeg',data:base64}},
+            {type:'text',text:prompt}
+          ]}]
+        }, function(reply){
+          if(!reply){ toast('분석 실패 - 다시 시도하세요'); return; }
+          // 결과 저장
+          if(!dayRec.analysis) dayRec.analysis={};
+          dayRec.analysis[mealKey]=reply;
+          dayRec.analysis.latest=reply;
+          _setRecs(days);
+          _refreshHomeAnalysis();
+          // 뷰어 패널 갱신
+          var analysis=dayRec.analysis&&(dayRec.analysis[mealKey]||dayRec.analysis.latest);
+          _openHomeMealViewer(photoUrl, mealName, reply, meal);
+          toast('분석 완료 ✓');
+        });
+      };
+      reader.readAsDataURL(blob);
+    })
+    .catch(function(){ toast('사진을 불러올 수 없습니다'); });
 }
 
 function deleteMealPhoto(meal){
