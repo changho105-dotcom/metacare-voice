@@ -163,7 +163,32 @@ function _verifyDataIntegrity(){
     if(users.length > 0 && recs.length === 0){
       console.warn('⚠️ 사용자는 있는데 기록이 없습니다. 백업 복원을 확인하세요.');
     }
+    // base64 데이터 정리 (Firestore 용량 초과 방지)
+    _cleanBase64FromRecs();
   }catch(e){ console.error('무결성 검사 오류:', e); }
+}
+
+function _cleanBase64FromRecs(){
+  try{
+    var recs = ugj('records',[]);
+    var cleaned = false;
+    recs.forEach(function(rec){
+      if(!rec.photos) return;
+      Object.keys(rec.photos).forEach(function(meal){
+        var photo = rec.photos[meal];
+        if(photo && photo.startsWith('data:image')){
+          console.warn('🧹 base64 사진 제거:', rec.date, meal);
+          delete rec.photos[meal];
+          cleaned = true;
+        }
+      });
+    });
+    if(cleaned){
+      usj('records', recs);
+      console.log('✅ base64 정리 완료 - Firestore 저장');
+      toast('📦 저장 공간 최적화 완료');
+    }
+  }catch(e){ console.error('base64 정리 오류:', e); }
 }
 
 function _listBackups(){
@@ -1583,12 +1608,10 @@ function _autoSavePhotoToLog(imgData, forceMeal, note){
     _xlLoad(); // 기록장 카드 DOM 업데이트
     toast(mealNameForAI+' 사진 저장됐어요 ✓');
     _analyzeHomeMeal(imgData, mealNameForAI, note);
-  }).catch(function(){
-    dayRec.photos[meal] = imgData;
-    _setRecs(recs);
-    _refreshPhotos(); _refreshStats();
-    _xlLoad();
-    _analyzeHomeMeal(imgData, mealNameForAI, note);
+  }).catch(function(err){
+    console.error('Storage 업로드 실패:', err);
+    toast('사진 업로드 실패 - 네트워크를 확인하고 다시 시도하세요');
+    // base64를 Firestore에 저장하지 않음 (용량 초과 방지)
   });
 }
 
@@ -1630,8 +1653,8 @@ function onMealFile(e,src){
       toast('사진이 저장됐어요 ✓');
     }).catch(function(err){
       console.error('Storage 업로드 실패', err);
-      _saveRot(p.cardId,p.meal,0); _renderFilled(slot,small,0); _schedSave(); _refreshPhotos(); _refreshStats();
-      toast('사진이 저장됐어요 ✓');
+      toast('사진 업로드 실패 - 네트워크를 확인하고 다시 시도하세요');
+      // base64를 Firestore에 저장하지 않음 (용량 초과 방지)
     });
   }); }; r.readAsDataURL(f);
 }
