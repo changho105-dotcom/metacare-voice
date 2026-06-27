@@ -1480,15 +1480,35 @@ function _compress(dataUrl,cb){
 
 /* ── 사진 파일 선택 ── */
 function pickPhoto(src){ closeSheet('sh-photo'); $id('f-'+src).value=''; $id('f-'+src).click(); }
+var _pendingImg = null; // 사진 데이터 임시 보관 (메모 입력 전)
+var _pendingImgMeal = null;
+
 function onFile(e,src){
   var f=e.target.files[0]; e.target.value=''; if(!f) return;
   var meal = _pendingMeal; _pendingMeal = null;
-  // 홈 식사 슬롯에서 넘어온 경우 메모 가져오기
-  var noteEl=$id('sh-photo-note');
-  var note = noteEl ? noteEl.value.trim() : '';
+  var mealName = {morning:'🌅 아침', lunch:'☀️ 점심', dinner:'🌙 저녁'}[meal] || '식사';
   var r=new FileReader(); r.onload=function(ev){ _compress(ev.target.result,function(small){
-    _autoSavePhotoToLog(small, meal, note);
+    // 사진 데이터 임시 저장
+    _pendingImg = small;
+    _pendingImgMeal = meal;
+    // 메모 입력 시트 표시
+    var thumb=$id('sh-memo-thumb');
+    if(thumb){ thumb.innerHTML='<img src="'+small+'" style="width:100%;height:100%;object-fit:cover;">'; }
+    var titleEl=$id('sh-memo-title');
+    if(titleEl) titleEl.textContent = mealName + ' 메모';
+    var memoEl=$id('sh-memo-text');
+    if(memoEl){ memoEl.value=''; setTimeout(function(){ memoEl.focus(); },300); }
+    openSheet('sh-meal-memo');
   }); }; r.readAsDataURL(f);
+}
+
+function saveMealWithMemo(){
+  var img = _pendingImg; var meal = _pendingImgMeal;
+  _pendingImg = null; _pendingImgMeal = null;
+  var memoEl=$id('sh-memo-text');
+  var note = memoEl ? memoEl.value.trim() : '';
+  closeSheet('sh-meal-memo');
+  if(img) _autoSavePhotoToLog(img, meal, note);
 }
 
 function _autoSavePhotoToLog(imgData, forceMeal, note){
@@ -2042,18 +2062,10 @@ function openMealSlot(meal){
     return;
   }
 
-  // 사진 없으면 sh-photo 시트 열기 (메모 포함)
+  // 사진 없으면 sh-photo 시트 열기
   _pendingMeal = mealKey;
   var titleEl = $id('sh-photo-title');
   if(titleEl) titleEl.textContent = mealName + ' 사진 선택';
-  var noteWrap = $id('sh-photo-note-wrap');
-  if(noteWrap) noteWrap.style.display = 'block';
-  // 기존 메모 불러오기
-  var noteEl = $id('sh-photo-note');
-  if(noteEl){
-    var existingNote = todayRec && todayRec.mealNotes && todayRec.mealNotes[mealKey];
-    noteEl.value = existingNote || '';
-  }
   setTimeout(function(){ openSheet('sh-photo'); }, 200);
 }
 
@@ -2263,7 +2275,7 @@ return {
   _openMealSheet:_openMealSheet,
   // 홈 식사 슬롯
   openMealSlot:openMealSlot, pickHomeMeal:pickHomeMeal, onHomeMealFile:onHomeMealFile,
-  saveMealNoteOnly:saveMealNoteOnly,
+  saveMealNoteOnly:saveMealNoteOnly, saveMealWithMemo:saveMealWithMemo,
   closeHomeMealViewer:closeHomeMealViewer, replaceHomeMealPhoto:replaceHomeMealPhoto
 };
 

@@ -433,13 +433,29 @@
 <div class="overlay" id="sh-photo" onclick="if(event.target.id==='sh-photo')A.closeSheet('sh-photo')">
   <div class="sheet">
     <div class="sh-title" id="sh-photo-title">사진 선택</div>
-    <div id="sh-photo-note-wrap" style="display:none;margin-bottom:12px;">
-      <label class="lbl">식사 메모 (선택)</label>
-      <textarea id="sh-photo-note" class="inp-sm" rows="2" placeholder="예: 닭가슴살 샐러드, 탄수화물 적게" style="resize:none;"></textarea>
-    </div>
     <button class="sh-btn" onclick="A.pickPhoto('cam')"><i class="ti ti-camera"></i> 촬영하기</button>
     <button class="sh-btn" onclick="A.pickPhoto('gal')"><i class="ti ti-photo"></i> 폰에서 가져오기</button>
     <button class="sh-cancel" onclick="A.closeSheet('sh-photo')">취소</button>
+  </div>
+</div>
+
+<!-- 사진 후 메모 입력 시트 -->
+<div class="overlay" id="sh-meal-memo" onclick="if(event.target.id==='sh-meal-memo')A.saveMealWithMemo()">
+  <div class="sheet">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+      <div id="sh-memo-thumb" style="width:56px;height:56px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--cream);display:flex;align-items:center;justify-content:center;">
+        <i class="ti ti-photo" style="font-size:22px;color:var(--mu);"></i>
+      </div>
+      <div>
+        <div class="sh-title" id="sh-memo-title" style="margin-bottom:2px;">아침 메모</div>
+        <div style="font-size:12px;color:var(--mu);">무엇을 드셨나요? (선택사항)</div>
+      </div>
+    </div>
+    <textarea id="sh-memo-text" class="inp-sm" rows="3"
+      placeholder="예: 현미밥 반공기, 된장국, 두부조림&#10;간단히 적어두면 AI 분석이 더 정확해져요"
+      style="resize:none;margin-bottom:12px;"></textarea>
+    <button class="btn-primary" onclick="A.saveMealWithMemo()"><i class="ti ti-check"></i> 저장</button>
+    <button class="sh-cancel" onclick="A.saveMealWithMemo()">메모 없이 저장</button>
   </div>
 </div>
 <div class="overlay" id="sh-meal" onclick="if(event.target.id==='sh-meal')A.closeSheet('sh-meal')">
