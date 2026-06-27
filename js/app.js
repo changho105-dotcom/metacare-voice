@@ -59,7 +59,28 @@ var _saveCloudTimer = null;
 function _saveCloud(){
   if(_saveCloudTimer) clearTimeout(_saveCloudTimer);
   _saveCloudTimer = setTimeout(function(){
-    _docRef.set(_cache).catch(function(err){ console.error('Firestore 저장 오류', err); });
+    // 핵심 데이터만 저장 (base64, 백업 스냅샷 제외)
+    var slim = {};
+    Object.keys(_cache).forEach(function(k){
+      var v = _cache[k];
+      // base64 이미지 직접 포함된 키 제외
+      if(typeof v === 'string' && v.includes('data:image')) return;
+      // 백업 스냅샷은 별도 저장하므로 제외
+      if(k.startsWith('mc_backup_')) return;
+      slim[k] = v;
+    });
+    _docRef.set(slim).catch(function(err){
+      console.error('Firestore 저장 오류', err);
+    });
+    // 백업은 별도 문서에 저장
+    var backupKeys = Object.keys(_cache).filter(function(k){ return k.startsWith('mc_backup_'); });
+    if(backupKeys.length){
+      var backupObj = {};
+      backupKeys.forEach(function(k){ backupObj[k] = _cache[k]; });
+      _db.collection('metacare').doc('backups').set(backupObj).catch(function(e){
+        console.warn('백업 저장 실패(용량 초과 가능):', e.message);
+      });
+    }
   }, 500);
 }
 
@@ -170,23 +191,80 @@ function _verifyDataIntegrity(){
 
 function _cleanBase64FromRecs(){
   try{
+    var totalCleaned = 0;
+
+    // 1. records에서 base64 제거
     var recs = ugj('records',[]);
-    var cleaned = false;
     recs.forEach(function(rec){
       if(!rec.photos) return;
       Object.keys(rec.photos).forEach(function(meal){
-        var photo = rec.photos[meal];
-        if(photo && photo.startsWith('data:image')){
-          console.warn('🧹 base64 사진 제거:', rec.date, meal);
+        if(rec.photos[meal] && rec.photos[meal].startsWith('data:image')){
+          console.warn('🧹 records base64 제거:', rec.date, meal);
           delete rec.photos[meal];
-          cleaned = true;
+          totalCleaned++;
         }
       });
     });
-    if(cleaned){
-      usj('records', recs);
-      console.log('✅ base64 정리 완료 - Firestore 저장');
-      toast('📦 저장 공간 최적화 완료');
+    if(totalCleaned > 0) usj('records', recs);
+
+    // 2. 백업 데이터(_cache 전체)에서 base64 제거
+    Object.keys(_cache).forEach(function(cacheKey){
+      var val = _cache[cacheKey];
+      // 백업 스냅샷(JSON 문자열)에서 base64 제거
+      if(typeof val === 'string' && val.includes('data:image')){
+        try{
+          var parsed = JSON.parse(val);
+          var backupCleaned = false;
+          // parsed가 객체면 records 키 탐색
+          Object.keys(parsed).forEach(function(k){
+            if(typeof parsed[k] === 'string' && parsed[k].startsWith('[')) {
+              try {
+                var arr = JSON.parse(parsed[k]);
+                if(Array.isArray(arr)){
+                  arr.forEach(function(rec){
+                    if(rec && rec.photos) Object.keys(rec.photos).forEach(function(m){
+                      if(rec.photos[m] && rec.photos[m].startsWith('data:image')){
+                        delete rec.photos[m]; backupCleaned=true; totalCleaned++;
+                      }
+                    });
+                  });
+                  if(backupCleaned) parsed[k] = JSON.stringify(arr);
+                }
+              }catch(e){}
+            }
+          });
+          if(backupCleaned){
+            _cache[cacheKey] = JSON.stringify(parsed);
+            console.warn('🧹 백업 base64 제거:', cacheKey);
+          }
+        }catch(e){}
+      }
+      // 직접 배열 형태로 저장된 경우
+      if(typeof val === 'string' && val.startsWith('[') && val.includes('data:image')){
+        try{
+          var arr = JSON.parse(val);
+          var arrCleaned = false;
+          arr.forEach(function(rec){
+            if(rec && rec.photos) Object.keys(rec.photos).forEach(function(m){
+              if(rec.photos[m] && rec.photos[m].startsWith('data:image')){
+                delete rec.photos[m]; arrCleaned=true; totalCleaned++;
+              }
+            });
+          });
+          if(arrCleaned){
+            _cache[cacheKey] = JSON.stringify(arr);
+            console.warn('🧹 캐시 배열 base64 제거:', cacheKey);
+          }
+        }catch(e){}
+      }
+    });
+
+    if(totalCleaned > 0){
+      _saveCloud();
+      console.log('✅ base64 정리 완료 - 총', totalCleaned, '개 제거');
+      toast('📦 저장 공간 최적화 완료 ('+totalCleaned+'개 정리)');
+    } else {
+      console.log('✅ base64 없음 - 정리 불필요');
     }
   }catch(e){ console.error('base64 정리 오류:', e); }
 }
@@ -2010,6 +2088,55 @@ function vDel(){
   var card=$id(_vCtx.cid); if(card){ var slot=card.querySelector('[data-meal="'+_vCtx.meal+'"]'); if(slot) _renderEmpty(slot); }
   _delRot(_vCtx.cid,_vCtx.meal); closeViewer(); _schedSave(); toast('사진이 삭제됐어요');
 }
+function vAnalyze(){
+  if(!_vCtx){ toast('뷰어가 열려있지 않습니다'); return; }
+  if(!KEY){ toast('API 키가 없습니다'); return; }
+  var card=$id(_vCtx.cid); if(!card) return;
+  var dateVal=card.querySelector('.day-date')?card.querySelector('.day-date').value:'';
+  var meal=_vCtx.meal;
+  var mealName={morning:'🌅 아침',lunch:'☀️ 점심',dinner:'🌙 저녁'}[meal]||meal;
+  var photoUrl=$id('viewer-img').src;
+  if(!photoUrl){ toast('사진이 없습니다'); return; }
+  var infoEl=$id('viewer-analysis');
+  if(infoEl) infoEl.innerHTML='<div class="dots"><span></span><span></span><span></span></div>';
+  toast('분석 중...');
+  fetch(photoUrl)
+    .then(function(r){ return r.blob(); })
+    .then(function(blob){
+      var reader=new FileReader();
+      reader.onload=function(ev){
+        var base64=ev.target.result.split(',')[1];
+        var mode=USER?USER.mode:'lchf';
+        var modeDesc={keto:'케토제닉(탄수화물 20g 이하)',carnivore:'카니보어(동물성 식품)',lchf:'저탄고지(탄수화물 100g 이하)',diet:'균형 건강식',cancer:'암 환자 항산화 식단'}[mode]||mode;
+        var days=_getRecs();
+        var dayRec=days.find(function(d){return d.date===dateVal;});
+        var note=dayRec&&dayRec.mealNotes?(dayRec.mealNotes[meal]||''):'';
+        var prompt='['+mealName+' 식사 사진] '+modeDesc+' 관점에서 분석해주세요.';
+        if(note) prompt+=' 사용자 메모: "'+note+'"';
+        prompt+=' 주요 음식명, 적합도, 개선 제안을 2~3문장으로.';
+        _api({max_tokens:300,messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:base64}},
+          {type:'text',text:prompt}
+        ]}]},function(reply){
+          if(!reply){ if(infoEl) infoEl.innerHTML='<div style="color:rgba(255,255,255,.45);">분석 실패 - 다시 시도하세요</div>'; return; }
+          // 결과 저장
+          if(!dayRec) { dayRec={date:dateVal,photos:{},steps:''}; days.push(dayRec); }
+          if(!dayRec.analysis) dayRec.analysis={};
+          dayRec.analysis[meal]=reply;
+          dayRec.analysis.latest=reply;
+          _setRecs(days);
+          // 뷰어에 표시
+          if(infoEl) infoEl.innerHTML='<div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.7;">'+md(reply)+'</div>';
+          toast('분석 완료 ✓');
+          // 홈 식단 분석도 갱신
+          _refreshHomeAnalysis();
+        });
+      };
+      reader.readAsDataURL(blob);
+    })
+    .catch(function(){ toast('사진을 불러올 수 없습니다'); });
+}
+
 function _openHomeViewer(url,lbl){ $id('hv-img').src=url; $id('home-viewer').classList.add('on'); }
 function closeHomeViewer(){ $id('home-viewer').classList.remove('on'); }
 
@@ -2534,7 +2661,7 @@ return {
   // 기록장
   addLogDay:addLogDay, exportExcel:exportExcel,
   // 뷰어
-  _openViewer:_openViewer, closeViewer:closeViewer, vRot:vRot, vChg:vChg, vDel:vDel,
+  _openViewer:_openViewer, closeViewer:closeViewer, vRot:vRot, vChg:vChg, vDel:vDel, vAnalyze:vAnalyze,
   closeHomeViewer:closeHomeViewer,
   // 기록장 내부
   _openMealSheet:_openMealSheet,
