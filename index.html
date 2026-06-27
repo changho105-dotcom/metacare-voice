@@ -283,15 +283,15 @@
         </button>
         <div class="section-title"><i class="ti ti-sun"></i> 오늘의 식사 <span style="font-size:11px;color:var(--mu);font-weight:400;">탭하면 사진 찍기</span></div>
         <div class="meal-slots" id="home-meal-slots">
-          <div class="home-meal-slot" id="ms-breakfast" >
+          <div class="home-meal-slot" id="ms-breakfast" onclick="A.openMealSlot('breakfast')">
             <div class="home-meal-slot-lbl">🌅 아침</div>
             <div class="home-meal-slot-img" id="ms-img-breakfast"><i class="ti ti-camera" style="font-size:36px;color:rgba(255,255,255,.8);"></i></div>
           </div>
-          <div class="home-meal-slot" id="ms-lunch" >
+          <div class="home-meal-slot" id="ms-lunch" onclick="A.openMealSlot('lunch')">
             <div class="home-meal-slot-lbl">☀️ 점심</div>
             <div class="home-meal-slot-img" id="ms-img-lunch"><i class="ti ti-camera" style="font-size:36px;color:rgba(255,255,255,.8);"></i></div>
           </div>
-          <div class="home-meal-slot" id="ms-dinner" >
+          <div class="home-meal-slot" id="ms-dinner" onclick="A.openMealSlot('dinner')">
             <div class="home-meal-slot-lbl">🌙 저녁</div>
             <div class="home-meal-slot-img" id="ms-img-dinner"><i class="ti ti-camera" style="font-size:36px;color:rgba(255,255,255,.8);"></i></div>
           </div>
@@ -510,6 +510,7 @@
 <!-- 뷰어 -->
 <div class="viewer" id="viewer">
   <div class="viewer-wrap"><img id="viewer-img" src="" alt=""></div>
+  <div id="viewer-analysis" style="display:none;padding:10px 16px;max-height:25vh;overflow-y:auto;width:100%;"></div>
   <div class="viewer-btns">
     <button class="vbtn" onclick="A.vRot(-90)"><i class="ti ti-rotate-counterclockwise"></i> 왼쪽</button>
     <button class="vbtn" onclick="A.vRot(90)"><i class="ti ti-rotate-clockwise"></i> 오른쪽</button>
@@ -518,9 +519,15 @@
     <button class="vbtn" onclick="A.closeViewer()"><i class="ti ti-x"></i> 닫기</button>
   </div>
 </div>
-<div class="viewer" id="home-viewer" onclick="if(event.target.id==='home-viewer')A.closeHomeMealViewer()">
-  <button onclick="A.closeHomeMealViewer()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,.13);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:18px;z-index:1;"><i class="ti ti-x"></i></button>
+<div class="viewer" id="home-viewer">
   <div class="viewer-wrap"><img id="hv-img" src="" alt=""></div>
+  <div id="home-viewer-analysis" style="display:none;padding:10px 16px;max-height:22vh;overflow-y:auto;width:100%;"></div>
+  <div class="viewer-btns">
+    <button class="vbtn teal" id="hv-reanalyze-btn"><i class="ti ti-sparkles"></i> 재분석</button>
+    <button class="vbtn teal" id="hv-replace-btn"><i class="ti ti-replace"></i> 교체</button>
+    <button class="vbtn red"  id="hv-delete-btn"><i class="ti ti-trash"></i> 삭제</button>
+    <button class="vbtn" onclick="A.closeHomeMealViewer()"><i class="ti ti-x"></i> 닫기</button>
+  </div>
 </div>
 
 <!-- 컨디션 기록 바텀시트 -->

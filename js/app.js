@@ -1852,22 +1852,15 @@ function _refreshPhotos(){
     var el = $id(slotId); if(!el) return;
     var photo = todayRec && todayRec.photos && todayRec.photos[meal];
     if(photo){
-      var sk=slotMap[meal];
-      var imgEl=document.createElement('img');
-      imgEl.src=photo; imgEl.alt=meal;
-      imgEl.style.cssText='width:100%;height:100%;object-fit:cover;cursor:pointer;display:block;';
-      imgEl.onclick=function(){ A.openMealSlot(sk); };
       var ov=document.createElement('div');
       ov.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;pointer-events:none;border-radius:var(--r-md);';
       ov.innerHTML='<i class="ti ti-zoom-in" style="font-size:22px;color:#fff;opacity:.85;"></i>';
-      el.innerHTML=''; el.appendChild(imgEl); el.appendChild(ov);
+      el.innerHTML='<img src="'+photo+'" alt="'+meal+'" style="width:100%;height:100%;object-fit:cover;display:block;">';
+      el.appendChild(ov);
       el.style.position='relative';
     } else {
       el.innerHTML='<i class="ti ti-camera" style="font-size:40px;color:#fff;"></i>';
       el.style.position='';
-      var sk2=slotMap[meal];
-      el.onclick=function(){ A.openMealSlot(sk2); };
-      el.style.cursor='pointer';
     }
   });
 }
@@ -1885,6 +1878,20 @@ function _openViewer(cid,meal){
   var photo=slot.getAttribute('data-photo'); if(!photo) return;
   _vCtx={cid:cid,meal:meal}; _vRot=_loadRot(cid,meal);
   $id('viewer-img').src=photo; $id('viewer-img').style.transform='rotate('+_vRot+'deg)';
+  // 분석 내용 표시
+  var dateVal = card.querySelector('.day-date') ? card.querySelector('.day-date').value : '';
+  var days=_getRecs();
+  var dayRec=days.find(function(d){return d.date===dateVal;});
+  var ana = dayRec&&dayRec.analysis ? (dayRec.analysis[meal]||dayRec.analysis.latest||'') : '';
+  var note = dayRec&&dayRec.mealNotes ? (dayRec.mealNotes[meal]||'') : '';
+  var infoEl=$id('viewer-analysis');
+  if(infoEl){
+    var txt='';
+    if(note) txt+='<div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:4px;">📝 '+esc(note)+'</div>';
+    if(ana)  txt+='<div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.7;">'+md(ana)+'</div>';
+    infoEl.style.display=txt?'block':'none';
+    infoEl.innerHTML=txt;
+  }
   $id('viewer').classList.add('on');
 }
 function closeViewer(){ $id('viewer').classList.remove('on'); _vCtx=null; }
@@ -2114,52 +2121,30 @@ var _viewerMeal = null; // 현재 뷰어에서 보고 있는 끼니 키
 
 function _openHomeMealViewer(photoUrl, mealName, analysis, meal){
   _viewerMeal = meal;
-  var img=$id('hv-img'); if(img) img.src=photoUrl;
-  var viewer=$id('home-viewer'); if(viewer) viewer.classList.add('on');
-
-  // 기존 메모 가져오기
+  var mealKey={breakfast:'morning',lunch:'lunch',dinner:'dinner'}[meal]||meal;
   var today=todayStr(); var days=_getRecs();
   var dayRec=days.find(function(d){return d.date===today;});
-  var mealKey={breakfast:'morning',lunch:'lunch',dinner:'dinner'}[meal]||meal;
-  var existNote = dayRec&&dayRec.mealNotes ? (dayRec.mealNotes[mealKey]||'') : '';
+  var note = dayRec&&dayRec.mealNotes ? (dayRec.mealNotes[mealKey]||'') : '';
 
-  var analysisEl=$id('home-meal-analysis');
-  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">'
-    + '<div style="font-size:15px;font-weight:700;color:var(--navy);">' + mealName + '</div>'
-    + '<button onclick="A.closeHomeMealViewer()" style="background:none;border:none;font-size:20px;color:var(--mu);padding:2px;">×</button>'
-    + '</div>'
-    // 메모 수정
-    + '<div style="margin-bottom:12px;">'
-    + '<div style="font-size:11px;font-weight:700;color:var(--mu2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px;">식사 메모</div>'
-    + '<textarea id="viewer-meal-note" class="inp-sm" rows="2" style="resize:none;" placeholder="식사 내용을 입력하세요">' + esc(existNote) + '</textarea>'
-    + '</div>'
-    // AI 분석 내용
-    + '<div style="margin-bottom:14px;">'
-    + '<div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;">AI 분석</div>'
-    + '<div style="font-size:13px;line-height:1.8;color:var(--navy);">' + (analysis ? md(analysis) : '<span style="color:var(--mu);">분석 내용이 없습니다</span>') + '</div>'
-    + '</div>'
-    // 버튼들
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">'
-    + '<button onclick="A.saveMealViewerNote()" style="padding:12px;background:var(--teal);color:#fff;border:none;border-radius:var(--r-sm);font-size:13px;font-weight:700;">메모 저장</button>'
-    + '<button onclick="A.reanalyzeMealPhoto()" style="padding:12px;background:var(--navy);color:#fff;border:none;border-radius:var(--r-sm);font-size:13px;font-weight:700;"><i class="ti ti-sparkles"></i> 재분석</button>'
-    + '</div>'
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
-    + '<button onclick="A.replaceHomeMealPhoto(\"' + meal + '\")" style="padding:12px;background:var(--warn);color:#fff;border:none;border-radius:var(--r-sm);font-size:13px;font-weight:700;">사진 교체</button>'
-    + '<button onclick="A.deleteMealPhoto(\"' + meal + '\")" style="padding:12px;background:var(--red);color:#fff;border:none;border-radius:var(--r-sm);font-size:13px;font-weight:700;">삭제</button>'
-    + '</div>';
+  // 뷰어 이미지
+  var img=$id('hv-img'); if(img) img.src=photoUrl;
 
-  var panelStyle='position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-radius:22px 22px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom,0px)+16px);z-index:9000;max-height:75vh;overflow-y:auto;box-shadow:0 -4px 32px rgba(15,30,49,.25);';
-  if(!analysisEl){
-    var div=document.createElement('div');
-    div.id='home-meal-analysis';
-    div.style.cssText=panelStyle;
-    div.innerHTML=html;
-    document.body.appendChild(div);
-  } else {
-    analysisEl.style.cssText=panelStyle;
-    analysisEl.style.display='block';
-    analysisEl.innerHTML=html;
+  // 뷰어 하단 분석 텍스트
+  var infoEl=$id('home-viewer-analysis');
+  if(infoEl){
+    var txt='';
+    if(note) txt+='<div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:4px;">📝 '+esc(note)+'</div>';
+    if(analysis) txt+='<div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.7;">'+md(analysis)+'</div>';
+    infoEl.style.display=txt?'block':'none';
+    infoEl.innerHTML=txt;
   }
+
+  // 버튼에 meal 값 세팅
+  var replBtn=$id('hv-replace-btn'); if(replBtn) replBtn.onclick=function(){ A.replaceHomeMealPhoto(meal); };
+  var delBtn=$id('hv-delete-btn');   if(delBtn)  delBtn.onclick=function(){ A.deleteMealPhoto(meal); };
+  var reBtn=$id('hv-reanalyze-btn'); if(reBtn)   reBtn.onclick=function(){ A.reanalyzeMealPhoto(); };
+
+  var viewer=$id('home-viewer'); if(viewer) viewer.classList.add('on');
 }
 
 function saveMealViewerNote(){
