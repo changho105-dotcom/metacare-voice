@@ -1676,9 +1676,28 @@ function _schedSafetyBackup(){
 }
 
 function addLogDay(){
-  var card=_makeCard({date:todayStr(),photos:{},steps:''});
-  $id('log-cards').appendChild(card); $id('log-empty').style.display='none';
-  card.scrollIntoView({behavior:'smooth',block:'nearest'}); _schedSave();
+  var days=_getRecs();
+  // 날짜 선택 (기본값: 오늘)
+  var dateInput=prompt('추가할 날짜를 입력하세요 (YYYY-MM-DD)', todayStr());
+  if(!dateInput) return;
+  // 형식 검사
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateInput)){ toast('날짜 형식이 올바르지 않아요 (YYYY-MM-DD)'); return; }
+  // 중복 확인
+  if(days.find(function(d){return d.date===dateInput;})){ toast('이미 있는 날짜예요'); return; }
+  // 추가 후 날짜순 정렬
+  days.push({date:dateInput,photos:{},steps:''});
+  days.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:0; });
+  _setRecs(days);
+  // 기록장 새로고침 후 해당 카드로 스크롤
+  _xlLoad();
+  setTimeout(function(){
+    var cards=document.querySelectorAll('.day-date');
+    cards.forEach(function(el){
+      if(el.value===dateInput){
+        el.closest('.day-card').scrollIntoView({behavior:'smooth',block:'start'});
+      }
+    });
+  }, 200);
 }
 
 function _makeCard(d){
@@ -1821,12 +1840,14 @@ function _doSave(){
 
 function _xlLoad(){
   var days=_getRecs();
-  // 오늘 날짜 없으면 자동 추가
+  // 오늘 날짜 없으면 자동 추가 (맨 뒤에 추가 = 오름차순에서 맨 마지막)
   var today=todayStr();
   if(!days.find(function(d){return d.date===today;})){
     days.push({date:today,photos:{},steps:''});
     _setRecs(days);
   }
+  // 날짜순 정렬 보장
+  days.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:0; });
   var c=$id('log-cards'); c.innerHTML=''; _cardSeq=0;
   $id('log-empty').style.display='none';
   days.forEach(function(d){ c.appendChild(_makeCard(d)); });
@@ -1932,14 +1953,20 @@ function _openViewer(cid,meal){
   var dateVal = card.querySelector('.day-date') ? card.querySelector('.day-date').value : '';
   var days=_getRecs();
   var dayRec=days.find(function(d){return d.date===dateVal;});
-  var ana = dayRec&&dayRec.analysis ? (dayRec.analysis[meal]||dayRec.analysis.latest||'') : '';
-  var note = dayRec&&dayRec.mealNotes ? (dayRec.mealNotes[meal]||'') : '';
+  // 키 변환 (morning↔breakfast 모두 시도)
+  var altMeal = {morning:'breakfast',breakfast:'morning',lunch:'lunch',dinner:'dinner'}[meal]||meal;
+  var ana = '';
+  if(dayRec&&dayRec.analysis){
+    ana = dayRec.analysis[meal]||dayRec.analysis[altMeal]||dayRec.analysis.latest||'';
+  }
+  var note = dayRec&&dayRec.mealNotes ? (dayRec.mealNotes[meal]||dayRec.mealNotes[altMeal]||'') : '';
   var infoEl=$id('viewer-analysis');
   if(infoEl){
     var txt='';
     if(note) txt+='<div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:4px;">📝 '+esc(note)+'</div>';
     if(ana)  txt+='<div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.7;">'+md(ana)+'</div>';
-    infoEl.style.display=txt?'block':'none';
+    else txt+='<div style="font-size:12px;color:rgba(255,255,255,.45);">AI 분석 없음 — 교체 버튼으로 사진을 다시 올리면 분석됩니다</div>';
+    infoEl.style.display='block';
     infoEl.innerHTML=txt;
   }
   $id('viewer').classList.add('on');
