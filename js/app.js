@@ -1852,9 +1852,19 @@ function _refreshPhotos(){
     var el = $id(slotId); if(!el) return;
     var photo = todayRec && todayRec.photos && todayRec.photos[meal];
     if(photo){
-      el.innerHTML = '<img src="'+photo+'" alt="'+meal+'" style="width:100%;height:100%;object-fit:cover;">';
+      var sk=slotMap[meal];
+      var imgEl=document.createElement('img');
+      imgEl.src=photo; imgEl.alt=meal;
+      imgEl.style.cssText='width:100%;height:100%;object-fit:cover;cursor:pointer;display:block;';
+      imgEl.onclick=function(){ A.openMealSlot(sk); };
+      var ov=document.createElement('div');
+      ov.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;pointer-events:none;border-radius:var(--r-md);';
+      ov.innerHTML='<i class="ti ti-zoom-in" style="font-size:22px;color:#fff;opacity:.85;"></i>';
+      el.innerHTML=''; el.appendChild(imgEl); el.appendChild(ov);
+      el.style.position='relative';
     } else {
-      el.innerHTML = '<i class="ti ti-camera" style="font-size:40px;color:#fff;"></i>';
+      el.innerHTML='<i class="ti ti-camera" style="font-size:40px;color:#fff;"></i>';
+      el.style.position='';
     }
   });
 }
