@@ -941,17 +941,19 @@ h2 { font-size:21px; font-weight:700; }
    컨디션 기록 버튼
 ════════════════════════════════════════ */
 .condition-btn {
-  width:100%; background:var(--white);
-  border: 1.5px solid var(--bd);
+  width:100%;
+  background: linear-gradient(135deg,#1a6b4a,#0d4f35);
+  border: none;
   border-radius: var(--r-md);
   padding:14px 16px;
   display:flex; align-items:center; justify-content:space-between;
-  cursor:pointer; box-shadow:var(--sh-sm);
+  cursor:pointer;
+  box-shadow: 0 4px 16px rgba(26,107,74,.3);
   -webkit-tap-highlight-color:transparent;
-  transition: background .12s;
+  transition: opacity .15s;
 }
-.condition-btn:active { background:var(--cream); }
-.condition-btn-left { display:flex; align-items:center; gap:13px; color:var(--navy); }
+.condition-btn:active { opacity:.85; }
+.condition-btn-left { display:flex; align-items:center; gap:13px; color:#fff; }
 .cond-state-btn {
   flex:1; padding:11px; border:2px solid var(--bd);
   border-radius:var(--r-sm); background:var(--white);
