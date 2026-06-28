@@ -1659,14 +1659,7 @@ function onFile(e,src){
   }); }; r.readAsDataURL(f);
 }
 
-function saveMealWithMemo(){
-  var img = _pendingImg; var meal = _pendingImgMeal;
-  _pendingImg = null; _pendingImgMeal = null;
-  var memoEl=$id('sh-memo-text');
-  var note = memoEl ? memoEl.value.trim() : '';
-  closeSheet('sh-meal-memo');
-  if(img) _autoSavePhotoToLog(img, meal, note);
-}
+
 
 function _autoSavePhotoToLog(imgData, forceMeal, note){
   var today = todayStr();
@@ -1724,37 +1717,106 @@ function onMealFile(e,src){
     var p=_pendMeal; _pendMeal=null;
     var card=$id(p.cardId); if(!card) return;
     var slot=card.querySelector('[data-meal="'+p.meal+'"]'); if(!slot) return;
-    // Storage에 업로드
-    var path = 'photos/'+USER.id+'/'+p.cardId+'_'+p.meal+'_'+Date.now()+'.jpg';
-    var ref = _storage.ref(path);
-    // base64 → blob 변환
-    var byteStr = atob(small.split(',')[1]);
-    var ab = new ArrayBuffer(byteStr.length);
-    var ia = new Uint8Array(ab);
-    for(var i=0;i<byteStr.length;i++) ia[i]=byteStr.charCodeAt(i);
-    var blob = new Blob([ab],{type:'image/jpeg'});
-    toast('사진 업로드 중...');
-    // 바텀시트 메모 저장
-    var mNoteEl=$id('sh-meal-note');
-    var mNote = mNoteEl ? mNoteEl.value.trim() : '';
-    if(mNote){
-      var days2=_getRecs();
-      var card2=$id(p.cardId);
-      var dateVal2 = card2 ? card2.querySelector('.day-date').value : '';
-      var dayRec2 = days2.find(function(d){return d.date===dateVal2;});
-      if(dayRec2){ if(!dayRec2.mealNotes) dayRec2.mealNotes={}; dayRec2.mealNotes[p.meal]=mNote; _setRecs(days2); }
-      // 카드 메모 textarea 업데이트
-      if(card2){ var na=card2.querySelector('[data-note-cardid]'); if(na){ var allN=Object.values(dayRec2&&dayRec2.mealNotes||{}).filter(Boolean).join(' / '); na.value=allN; } }
-    }
-    ref.put(blob).then(function(){ return ref.getDownloadURL(); }).then(function(url){
-      _saveRot(p.cardId,p.meal,0); _renderFilled(slot,url,0); _schedSave(); _refreshPhotos(); _refreshStats();
-      toast('사진이 저장됐어요 ✓');
-    }).catch(function(err){
-      console.error('Storage 업로드 실패', err);
-      toast('사진 업로드 실패 - 네트워크를 확인하고 다시 시도하세요');
-      // base64를 Firestore에 저장하지 않음 (용량 초과 방지)
-    });
+    var dateVal = card.querySelector('.day-date').value;
+    var mealName={morning:'🌅 아침',lunch:'☀️ 점심',dinner:'🌙 저녁'}[p.meal]||p.meal;
+
+    // 메모 입력 시트 열기 (홈과 동일)
+    _pendingImg = small;
+    _pendingImgMeal = p.meal;
+    _pendingLogCtx = {cardId:p.cardId, slot:slot, dateVal:dateVal};
+    var thumb=$id('sh-memo-thumb');
+    if(thumb) thumb.innerHTML='<img src="'+small+'" style="width:100%;height:100%;object-fit:cover;">';
+    var titleEl=$id('sh-memo-title');
+    if(titleEl) titleEl.textContent = mealName + ' 메모';
+    var memoEl=$id('sh-memo-text');
+    // 기존 메모 로드
+    var days=_getRecs();
+    var dayRec=days.find(function(d){return d.date===dateVal;});
+    var existNote=dayRec&&dayRec.mealNotes?(dayRec.mealNotes[p.meal]||''):'';
+    if(memoEl){ memoEl.value=existNote; setTimeout(function(){ memoEl.focus(); },300); }
+    openSheet('sh-meal-memo');
   }); }; r.readAsDataURL(f);
+}
+
+var _pendingLogCtx = null; // 기록장에서 사진 저장 컨텍스트
+
+function saveMealWithMemo(){
+  var img = _pendingImg; var meal = _pendingImgMeal;
+  var logCtx = _pendingLogCtx;
+  _pendingImg = null; _pendingImgMeal = null; _pendingLogCtx = null;
+  var memoEl=$id('sh-memo-text');
+  var note = memoEl ? memoEl.value.trim() : '';
+  closeSheet('sh-meal-memo');
+
+  if(!img) return;
+
+  // 기록장에서 온 경우
+  if(logCtx){
+    var card=$id(logCtx.cardId); if(!card) return;
+    var slot=logCtx.slot||card.querySelector('[data-meal="'+meal+'"]'); if(!slot) return;
+    var dateVal=logCtx.dateVal;
+    var mealName={morning:'아침',lunch:'점심',dinner:'저녁'}[meal]||meal;
+    // 메모 저장
+    if(note){
+      var days=_getRecs();
+      var dayRec=days.find(function(d){return d.date===dateVal;});
+      if(!dayRec){ dayRec={date:dateVal,photos:{},steps:''}; days.push(dayRec); }
+      if(!dayRec.mealNotes) dayRec.mealNotes={};
+      dayRec.mealNotes[meal]=note;
+      _setRecs(days);
+      var na=card.querySelector('[data-note-cardid]');
+      if(na){ var allN=Object.values(dayRec.mealNotes).filter(Boolean).join(' / '); na.value=allN; }
+    }
+    // Storage 업로드
+    var path='photos/'+USER.id+'/'+logCtx.cardId+'_'+meal+'_'+Date.now()+'.jpg';
+    var ref=_storage.ref(path);
+    var byteStr=atob(img.split(',')[1]);
+    var ab=new ArrayBuffer(byteStr.length);
+    var ia=new Uint8Array(ab);
+    for(var i=0;i<byteStr.length;i++) ia[i]=byteStr.charCodeAt(i);
+    var blob=new Blob([ab],{type:'image/jpeg'});
+    toast('업로드 중...');
+    ref.put(blob).then(function(){ return ref.getDownloadURL(); }).then(function(url){
+      _saveRot(logCtx.cardId,meal,0); _renderFilled(slot,url,0); _schedSave(); _refreshPhotos();
+      toast(mealName+' 사진 저장됐어요 ✓');
+      // AI 분석 자동 실행
+      var mealNameFull={morning:'🌅 아침',lunch:'☀️ 점심',dinner:'🌙 저녁'}[meal]||meal;
+      _analyzeLogMeal(img, mealNameFull, note, dateVal, meal);
+    }).catch(function(err){
+      console.error('Storage 업로드 실패:', err);
+      toast('사진 업로드 실패 - 네트워크를 확인하세요');
+    });
+    return;
+  }
+
+  // 홈에서 온 경우
+  _autoSavePhotoToLog(img, meal, note);
+}
+
+// 기록장 전용 AI 분석
+function _analyzeLogMeal(imgData, mealName, note, dateVal, mealKey){
+  if(!KEY) return;
+  toast('AI 분석 중...');
+  var mode=USER?USER.mode:'lchf';
+  var modeDesc={keto:'케토제닉(탄수화물 20g 이하)',carnivore:'카니보어(동물성 식품)',lchf:'저탄고지(탄수화물 100g 이하)',diet:'균형 건강식',cancer:'암 환자 항산화 식단'}[mode]||mode;
+  var prompt='['+mealName+' 식사 사진] '+modeDesc+' 관점에서 분석해주세요.';
+  if(note) prompt+=' 사용자 메모: "'+note+'"';
+  prompt+=' 주요 음식명, 적합도, 개선 제안을 2~3문장으로 간결하게.';
+  _api({max_tokens:300,messages:[{role:'user',content:[
+    {type:'image',source:{type:'base64',media_type:'image/jpeg',data:imgData.split(',')[1]}},
+    {type:'text',text:prompt}
+  ]}]}, function(reply){
+    if(!reply) return;
+    var days=_getRecs();
+    var dayRec=days.find(function(d){return d.date===dateVal;});
+    if(!dayRec) return;
+    if(!dayRec.analysis) dayRec.analysis={};
+    dayRec.analysis[mealKey]=reply;
+    if(dateVal===todayStr()) dayRec.analysis.latest=reply;
+    _setRecs(days);
+    toast('분석 완료 ✓');
+    if(dateVal===todayStr()) _refreshHomeAnalysis();
+  });
 }
 
 /* ── 식단 기록장 ── */
