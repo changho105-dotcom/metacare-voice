@@ -59,38 +59,35 @@ var _saveCloudTimer = null;
 function _saveCloud(){
   if(_saveCloudTimer) clearTimeout(_saveCloudTimer);
   _saveCloudTimer = setTimeout(function(){
-    // 핵심 데이터만 저장 - base64와 백업 스냅샷 절대 포함 안 함
+    // 사용자별 records는 컬렉션에 저장 - 메인 문서에서 제외
     var slim = {};
     Object.keys(_cache).forEach(function(k){
       var v = _cache[k];
-      if(typeof v === 'string' && v.includes('data:image')) return; // base64 제외
-      if(k.startsWith('mc_backup_')) return; // 백업 스냅샷 제외
-      // records 안의 base64도 제거
-      if(k.endsWith('_records') && typeof v === 'string'){
-        try{
-          var recs = JSON.parse(v);
-          var changed = false;
-          recs.forEach(function(r){
-            if(r&&r.photos) Object.keys(r.photos).forEach(function(m){
-              if(r.photos[m]&&r.photos[m].startsWith('data:image')){ delete r.photos[m]; changed=true; }
-            });
-          });
-          slim[k] = changed ? JSON.stringify(recs) : v;
-          return;
-        }catch(e){}
-      }
+      if(typeof v === 'string' && v.includes('data:image')) return;
+      if(k.startsWith('mc_backup_')) return;
+      if(k.endsWith('_records')) return; // records는 컬렉션에 별도 저장
       slim[k] = v;
     });
-    // 크기 체크 후 저장
     var size = JSON.stringify(slim).length;
     if(size > 900000){
       console.error('🚨 저장 데이터 크기 초과:', size, 'bytes');
       toast('⚠️ 데이터 크기 초과 - 관리자에게 문의하세요');
       return;
     }
-    _docRef.set(slim).catch(function(err){
-      console.error('Firestore 저장 오류', err);
-    });
+    _docRef.set(slim).catch(function(err){ console.error('Firestore 저장 오류', err); });
+  }, 500);
+}
+
+// records 전용 컬렉션 저장
+var _saveRecsTimer = null;
+function _saveRecsCloud(userId, recs){
+  if(!userId) return;
+  if(_saveRecsTimer) clearTimeout(_saveRecsTimer);
+  _saveRecsTimer = setTimeout(function(){
+    var ref = _db.collection('users').doc(userId).collection('data').doc('records');
+    ref.set({records: JSON.stringify(recs), ts: Date.now()})
+      .then(function(){ console.log('✅ records 저장:', recs.length+'개'); })
+      .catch(function(err){ console.error('records 저장 오류:', err); });
   }, 500);
 }
 
@@ -782,8 +779,11 @@ function loginUser(u){
     var quickBtn=$id('quick-login-btn'); if(quickBtn) quickBtn.style.display='none';
   }catch(e){}
   if(!KEY){ toast('API 키가 없습니다. Admin에서 설정해주세요.'); return; }
-  _initApp();
-  goScreen('scr-app');
+  // 컬렉션에서 해당 사용자 records 로드
+  _loadUserRecords(u.id, function(){
+    _initApp();
+    goScreen('scr-app');
+  });
   // 마지막 페이지 복원 (같은 사용자일 때만)
   try{
     var s=localStorage.getItem('mc_last_user');
@@ -827,6 +827,27 @@ function _tryAutoLogin(){
     }
     return false; // 로그인 화면은 항상 표시
   }catch(e){ return false; }
+}
+
+/* ── 사용자 records 컬렉션 로드 ── */
+function _loadUserRecords(userId, cb){
+  var ref = _db.collection('users').doc(userId).collection('data').doc('records');
+  ref.get().then(function(doc){
+    if(doc.exists && doc.data().records){
+      try{
+        var recs = JSON.parse(doc.data().records);
+        console.log('✅ 컬렉션에서 records 로드:', recs.length+'개');
+        // 캐시 업데이트 (메인 문서의 records보다 컬렉션 우선)
+        _cache['mc_'+userId+'_records'] = JSON.stringify(recs);
+      }catch(e){ console.warn('컬렉션 records 파싱 실패:', e); }
+    } else {
+      console.log('ℹ️ 컬렉션 records 없음 - 메인 문서 사용');
+    }
+    cb();
+  }).catch(function(err){
+    console.warn('컬렉션 records 로드 실패:', err);
+    cb();
+  });
 }
 
 /* ── 앱 초기화 ── */
@@ -1739,27 +1760,27 @@ function _getRecs(){ return ugj('records',[]); }
 function _setRecs(d){
   if(!Array.isArray(d)){ console.error('🚨 _setRecs: 배열이 아닌 값 저장 차단'); return; }
   var existing = ugj('records',[]);
-  // 빈 배열 저장 차단 (기존 데이터가 3개 이상일 때)
   if(existing.length > 3 && d.length === 0){
     console.error('🚨 _setRecs: 빈 배열 저장 차단 (기존:', existing.length, '개)');
     toast('⚠️ 데이터 저장 오류 - 관리자에게 문의하세요');
     return;
   }
-  // 데이터 급감 감지
   if(existing.length > 5 && d.length < existing.length * 0.5){
     console.warn('⚠️ _setRecs: 데이터 급감 감지 ('+existing.length+'→'+d.length+')');
   }
-  // records 안의 base64 자동 제거
+  // base64 자동 제거
   d.forEach(function(rec){
     if(!rec||!rec.photos) return;
     Object.keys(rec.photos).forEach(function(meal){
       if(rec.photos[meal]&&rec.photos[meal].startsWith('data:image')){
-        console.warn('🧹 _setRecs: base64 자동 제거', rec.date, meal);
+        console.warn('🧹 base64 자동 제거:', rec.date, meal);
         delete rec.photos[meal];
       }
     });
   });
-  usj('records',d);
+  usj('records', d);
+  // 컬렉션에도 저장 (이중 저장으로 안전성 확보)
+  if(USER) _saveRecsCloud(USER.id, d);
   _schedSafetyBackup();
 }
 
@@ -1768,9 +1789,11 @@ function _schedSafetyBackup(){
   if(_safetyBackupTimer) clearTimeout(_safetyBackupTimer);
   _safetyBackupTimer = setTimeout(function(){
     try{
+      if(!USER) return;
       var recs = ugj('records',[]);
       if(!recs.length) return;
-      var backupDoc = _db.collection('backups').doc(USER.id);
+      // 컬렉션에 저장 (이미 _saveRecsCloud가 즉시 저장하므로 여기서는 백업용)
+      var backupDoc = _db.collection('users').doc(USER.id).collection('data').doc('records_backup');
       backupDoc.set({
         records: JSON.stringify(recs),
         ts: Date.now(),
