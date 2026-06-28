@@ -1167,7 +1167,7 @@ function goPage(p){
     var saved=localStorage.getItem('mc_last_user');
     if(saved){ var info=JSON.parse(saved); info.lastPage=p; localStorage.setItem('mc_last_user',JSON.stringify(info)); }
   }catch(e){}
-  if(p==='log'){ _xlLoad(); if(USER&&USER.mode==='cancer') _loadSymCards(); }
+  if(p==='log'){ _schedSave(); setTimeout(function(){ _xlLoad(); if(USER&&USER.mode==='cancer') _loadSymCards(); }, 100); }
   if(p==='ex'){ _refreshExPage(); }
   if(p==='track'){
     if(USER&&USER.mode==='cancer'){ _initMarkerTrack(); _loadPSAHistory(); _loadSymAvg(); }
@@ -1395,18 +1395,20 @@ function analyzeEx(){
   var p='"'+type+'"'+(dur?' '+dur:'')+(steps?' 걸음수:'+steps:'')+' ';
   p+=ic?'암 환자 관점에서(면역 기능, 체력 유지, 피로 관리) 분석해 주세요. 3~4문장.':
     (u&&u.mode?({keto:'케토제닉',carnivore:'카니보어',lchf:'저탄고지',diet:'다이어트'}[u.mode]||''):'')+' 식단 관점에서(지방 연소, 체력, 운동 후 식사 주의사항) 분석해 주세요. 3~4문장.';
+  var exDateEl=$id('ex-date');
+  var exDate = (exDateEl&&exDateEl.value.trim()) || todayStr();
   _api({max_tokens:350,messages:[{role:'user',content:p}]}, function(reply){
     var result=reply||'분석 결과를 가져오지 못했어요.';
     ar.innerHTML='<div class="tip-lbl">AI 운동 분석</div>'+md(result);
-    _saveExerciseResult(type, dur, steps, memo, result);
+    _saveExerciseResult(type, dur, steps, memo, result, exDate);
   });
 }
 
-function _saveExerciseResult(type, dur, steps, memo, analysis){
-  var today=todayStr();
+function _saveExerciseResult(type, dur, steps, memo, analysis, targetDate){
+  var today=targetDate||todayStr();
   var days=_getRecs();
   var dayRec=days.find(function(d){return d.date===today;});
-  if(!dayRec){ dayRec={date:today,photos:{},steps:''}; days.push(dayRec); }
+  if(!dayRec){ dayRec={date:today,photos:{},steps:''}; days.push(dayRec); days.sort(function(a,b){return a.date<b.date?-1:1;}); }
   // 하루 1회만 - 기존 기록 덮어쓰기
   dayRec.exercise=[{type:type,dur:dur,steps:steps,memo:memo,analysis:analysis,ts:Date.now()}];
   // 걸음 수를 steps 필드에도 저장
@@ -1897,10 +1899,10 @@ function _openExerciseSheet(cardId, date){
   // 식단 탭 운동 폼으로 이동
   goPage('ex');
   setTimeout(function(){
+    var dateEl=$id('ex-date'); if(dateEl) dateEl.value=date;
     var typeEl=$id('ex-type'); if(typeEl) typeEl.value=ex?ex.type:'';
     var durEl=$id('ex-dur'); if(durEl) durEl.value=ex?ex.dur:'';
     var memoEl=$id('ex-memo'); if(memoEl) memoEl.value=ex?ex.memo:'';
-    // 저장 후 기록장으로 돌아오도록 플래그
     _exFromLog={cardId:cardId, date:date};
   }, 200);
 }

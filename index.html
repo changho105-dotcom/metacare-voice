@@ -330,11 +330,15 @@
       <!-- 운동 탭 -->
       <div id="pg-ex" class="page">
         <div class="card p12" style="background:linear-gradient(135deg,var(--warn),#C8830A);color:#fff;border:none;border-radius:var(--r-md);box-shadow:0 4px 16px rgba(240,165,0,.25);">
-          <div style="font-size:var(--fs-lg);font-weight:700;margin-bottom:4px;">🏃 오늘의 운동 기록</div>
-          <div style="font-size:var(--fs-xs);opacity:.85;">운동 종류와 시간을 입력하면 AI가 분석해드려요 · 하루 1회</div>
+          <div style="font-size:var(--fs-lg);font-weight:700;margin-bottom:4px;">🏃 운동 기록</div>
+          <div style="font-size:var(--fs-xs);opacity:.85;">운동 종류와 시간을 입력하면 AI가 분석해드려요</div>
         </div>
         <div id="today-ex-status" style="display:none;" class="tip-box"></div>
-        <input class="inp-sm" id="ex-type" type="text" placeholder="운동 종류 (예: 빠르게 걷기, 수영, 자전거)">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:12px;font-weight:700;color:var(--mu2);white-space:nowrap;">날짜</label>
+          <input class="inp-sm" id="ex-date" type="text" placeholder="YYYY-MM-DD" style="flex:1;">
+        </div>
+        <input class="inp-sm" id="ex-type" type="text" placeholder="운동 종류 (예: 빠르게 걷기, 수영, 자전거)" style="margin-top:8px;">
         <input class="inp-sm" id="ex-dur" type="text" placeholder="운동 시간 (예: 30분, 1시간)" style="margin-top:8px;">
         <input class="inp-sm" id="ex-steps" type="number" placeholder="걸음 수 (선택, 예: 8000)" style="margin-top:8px;">
         <input class="inp-sm" id="ex-memo" type="text" placeholder="메모 (선택)" style="margin-top:8px;">
