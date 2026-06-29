@@ -929,6 +929,7 @@ function _initApp(){
 
   tts('안녕하세요 '+u.name+' 님!');
   _showGreeting(u.name);
+  setTimeout(_initDragDrop, 500);
 }
 
 /* ── 건강관리 홈 ── */
@@ -1375,8 +1376,8 @@ function _refreshHomeAnalysis(){
   ['morning','lunch','dinner'].forEach(function(k){
     if(ana[k]) parts.push('<div style="margin-bottom:8px;"><span style="font-size:11px;font-weight:700;color:var(--teal);">'+labels[k]+'</span><div style="margin-top:3px;">'+md(ana[k])+'</div></div>');
   });
-  if(!parts.length && ana.latest) parts.push('<div>'+md(ana.latest)+'</div>');
-  if(!parts.length){ el.style.display='none'; return; }
+  // latest 폴백 제거 - 끼니별 분석만 표시
+  if(!parts.length){ el.style.display='none'; return; } // 분석 없으면 숨김
   el.style.display='block';
   el.innerHTML='<div class="tip-lbl"><i class="ti ti-salad" style="font-size:10px;"></i> 오늘의 식단 분석</div>'+parts.join('');
 }
@@ -2180,7 +2181,7 @@ function _openViewer(cid,meal){
     var txt='';
     if(note) txt+='<div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:4px;">📝 '+esc(note)+'</div>';
     if(ana)  txt+='<div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.7;">'+md(ana)+'</div>';
-    else txt+='<div style="font-size:12px;color:rgba(255,255,255,.45);">AI 분석 없음 — 교체 버튼으로 사진을 다시 올리면 분석됩니다</div>';
+    else txt+='<div style="font-size:12px;color:rgba(255,255,255,.45);">AI 분석 없음 — AI분석 버튼을 눌러주세요</div>';
     infoEl.style.display='block';
     infoEl.innerHTML=txt;
   }
@@ -2653,7 +2654,8 @@ function _analyzeHomeMeal(imgData, mealName, note){
     if(!dayRec){ dayRec={date:today,photos:{},steps:''}; days.push(dayRec); }
     if(!dayRec.analysis) dayRec.analysis={};
     if(rawKey) dayRec.analysis[rawKey]=reply;
-    // latest는 종합 분석용으로만 사용 - 끼니별 분석이 섞이지 않도록
+    // latest는 종합평가용으로 유지 (홈에서 가장 최근 분석)
+    dayRec.analysis.latest=reply;
     dayRec.analysis.ts=Date.now();
     _setRecs(days);
     _refreshHomeAnalysis();
@@ -2724,6 +2726,89 @@ function _prepHomeMealSlot(meal){
   var todayRec=days.find(function(d){return d.date===today;});
   if(!todayRec){ todayRec={date:today,photos:{},steps:''}; days.push(todayRec); }
   _homeMealSlot={meal:mealKey, today:today, days:days, todayRec:todayRec};
+}
+
+/* ── 드래그 앤 드롭 ── */
+function _handleHomeMealDrop(file, meal){
+  if(!file||!file.type.startsWith('image/')) return;
+  _prepHomeMealSlot(meal);
+  var s=_homeMealSlot; _homeMealSlot=null;
+  var mealName={morning:'아침',lunch:'점심',dinner:'저녁'}[s.meal]||s.meal;
+  var r=new FileReader(); r.onload=function(ev){ _compress(ev.target.result,function(small){
+    var previewImg=$id('preview-img'), previewWrap=$id('preview-wrap');
+    if(previewImg) previewImg.src=small;
+    if(previewWrap) previewWrap.style.display='';
+    if(!s.todayRec.mealNotes) s.todayRec.mealNotes={};
+    var path='photos/'+USER.id+'/'+s.today+'_'+s.meal+'_'+Date.now()+'.jpg';
+    var ref=_storage.ref(path);
+    var byteStr=atob(small.split(',')[1]);
+    var ab=new ArrayBuffer(byteStr.length);
+    var ia=new Uint8Array(ab);
+    for(var i=0;i<byteStr.length;i++) ia[i]=byteStr.charCodeAt(i);
+    var blob=new Blob([ab],{type:'image/jpeg'});
+    toast('저장 중...');
+    ref.put(blob).then(function(){return ref.getDownloadURL();}).then(function(url){
+      s.todayRec.photos[s.meal]=url; _setRecs(s.days); _refreshPhotos();
+      toast(mealName+' 사진 저장됐어요 ✓');
+      _analyzeHomeMeal(small, mealName, '');
+    }).catch(function(err){
+      console.error('Storage 업로드 실패:',err);
+      toast('사진 업로드 실패 - 네트워크를 확인하고 다시 시도하세요');
+    });
+  }); }; r.readAsDataURL(file);
+}
+
+function _handleRecordMealDrop(file, cardId, meal){
+  if(!file||!file.type.startsWith('image/')) return;
+  _pendMeal={cardId:cardId, meal:meal};
+  onMealFile({target:{files:[file], value:''}}, 'gal');
+}
+
+function _initDragDrop(){
+  // 홈 식사 슬롯
+  var homeSlots=$id('home-meal-slots');
+  if(homeSlots){
+    homeSlots.addEventListener('dragover',function(e){
+      e.preventDefault();
+      var slot=e.target.closest('.home-meal-slot');
+      if(slot){ e.dataTransfer.dropEffect='copy'; slot.classList.add('drag-over'); }
+    });
+    homeSlots.addEventListener('dragleave',function(e){
+      var slot=e.target.closest('.home-meal-slot');
+      if(slot&&!slot.contains(e.relatedTarget)) slot.classList.remove('drag-over');
+    });
+    homeSlots.addEventListener('drop',function(e){
+      e.preventDefault();
+      var slot=e.target.closest('.home-meal-slot');
+      if(!slot) return;
+      slot.classList.remove('drag-over');
+      var meal=slot.id.replace('ms-',''); // breakfast, lunch, dinner
+      _handleHomeMealDrop(e.dataTransfer.files[0], meal);
+    });
+  }
+  // 기록장 식사 슬롯 (동적 렌더링이므로 부모에 위임)
+  var logCards=$id('log-cards');
+  if(logCards){
+    logCards.addEventListener('dragover',function(e){
+      e.preventDefault();
+      var slot=e.target.closest('.meal-slot');
+      if(slot&&!slot.getAttribute('data-photo')){ e.dataTransfer.dropEffect='copy'; slot.classList.add('drag-over'); }
+    });
+    logCards.addEventListener('dragleave',function(e){
+      var slot=e.target.closest('.meal-slot');
+      if(slot&&!slot.contains(e.relatedTarget)) slot.classList.remove('drag-over');
+    });
+    logCards.addEventListener('drop',function(e){
+      e.preventDefault();
+      var slot=e.target.closest('.meal-slot');
+      if(!slot) return;
+      slot.classList.remove('drag-over');
+      var meal=slot.getAttribute('data-meal');
+      var card=slot.closest('.day-card');
+      if(!meal||!card) return;
+      _handleRecordMealDrop(e.dataTransfer.files[0], card.id, meal);
+    });
+  }
 }
 
 /* ── 공개 API ── */
