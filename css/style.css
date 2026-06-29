@@ -75,6 +75,7 @@ input, textarea { font-family: inherit; }
 /* ── 화면 전환 ── */
 .screen { display:none; flex-direction:column; position:absolute; inset:0; overflow:hidden; }
 .screen.active { display:flex; }
+#scr-profile { overflow-y:auto; background:#0D1F33; }
 .dark  { background: var(--navy); }
 .light { background: var(--cream); }
 .center { align-items:center; justify-content:center; gap:20px; padding:44px 28px; }
@@ -392,11 +393,13 @@ h2 { font-size:21px; font-weight:700; }
 ════════════════════════════════════════ */
 #app-topbar {
   background: var(--navy);
-  padding: env(safe-area-inset-top,16px) 20px 16px;
-  display:flex; align-items:center; justify-content:space-between;
+  padding: env(safe-area-inset-top,16px) 12px 14px;
+  display:flex; align-items:center; gap:6px;
   flex-shrink:0;
   border-bottom: 1px solid rgba(255,255,255,.06);
 }
+#tb-user-btn { opacity:.7; transition:opacity .15s; }
+#tb-user-btn:active { opacity:1; }
 .topbar-title { color:#fff; font-size:var(--fs-lg); font-weight:700; }
 .topbar-sub   { color:rgba(255,255,255,.38); font-size:var(--fs-xs); margin-top:2px; }
 

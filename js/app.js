@@ -927,6 +927,7 @@ function _initApp(){
   var pdi=$id('psa-date'); if(pdi) pdi.value=todayStr();
   _updateDays();
 
+  _refreshHomeProgress();
   tts('안녕하세요 '+u.name+' 님!');
   _showGreeting(u.name);
   setTimeout(_initDragDrop, 500);
@@ -1303,6 +1304,7 @@ function goPage(p){
     _refreshHomeExercise();
     _refreshComprehensiveBtn();
     _refreshYesterdayFeedback();
+    _refreshHomeProgress();
     if(USER&&USER.mode!=='cancer'){ _refreshStats(); }
     else{ _refreshMedHome(); _refreshTodaySym(); if(USER.ctype==='prostate') _refreshPSABanner(); }
   }
@@ -1320,6 +1322,48 @@ function _setVS(s){
 function onMic(){
   if(VS==='listening') _stopRec();
   else _startRec();
+}
+
+function _refreshHomeProgress(){
+  var el=$id('home-progress-items'); if(!el) return;
+  var today=todayStr();
+  var days=_getRecs();
+  var rec=days.find(function(d){return d.date===today;})||{};
+  var ic=USER&&USER.mode==='cancer';
+
+  var photos=rec.photos?Object.keys(rec.photos).filter(function(k){return rec.photos[k];}).length:0;
+  var hasEx=!!(rec.exercise&&rec.exercise.length);
+  var hasCond=!!(rec.cond||rec.weight||rec.glucose);
+  var hasMed=ic&&rec.meds&&Object.keys(rec.meds).some(function(k){return rec.meds[k];});
+  var hasSym=ic&&(rec.pain!==undefined||rec.urine!==undefined||rec.fatigue!==undefined);
+
+  function chip(done, label){
+    return '<div style="display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:20px;font-size:12px;font-weight:700;'
+      +(done?'background:#D1FAE5;color:#065F46;':'background:#F3F4F6;color:#9CA3AF;')
+      +'">'+(done?'✓ ':' ')+'<span>'+label+'</span></div>';
+  }
+
+  var html='';
+  html+=chip(photos>=1, '아침'+(photos>=1?' ✓':''));
+  html+=chip(photos>=2, '점심'+(photos>=2?' ✓':''));
+  html+=chip(photos>=3, '저녁'+(photos>=3?' ✓':''));
+  html+=chip(hasEx, '운동');
+  html+=chip(hasCond, '컨디션');
+  if(ic){
+    html+=chip(hasSym, '증상');
+    html+=chip(hasMed, '복약');
+  }
+
+  // 달성률 계산
+  var total=ic?5:5;
+  var done=(photos>=1?1:0)+(photos>=2?1:0)+(photos>=3?1:0)+(hasEx?1:0)+(hasCond?1:0);
+  if(ic){ total=7; done+=(hasSym?1:0)+(hasMed?1:0); }
+  var pct=Math.round(done/total*100);
+
+  var titleEl=el.previousElementSibling;
+  if(titleEl) titleEl.innerHTML='📋 오늘 달성 현황 <span style="float:right;color:'+(pct===100?'#059669':'var(--teal)')+';">'+pct+'%</span>';
+
+  el.innerHTML=html;
 }
 
 function goBack(){
@@ -2284,6 +2328,7 @@ function _refreshPhotos(){
       el.style.position='';
     }
   });
+  _refreshHomeProgress();
 }
 
 function _refreshStats(){
@@ -2451,6 +2496,7 @@ function saveCondition(){
   _setCondRecs(recs);
   closeSheet('sh-condition');
   _refreshCondSummary();
+  _refreshHomeProgress();
   toast('컨디션이 저장됐어요 ✓');
 }
 
@@ -2557,6 +2603,7 @@ function deleteExItem(idx){
   _refreshExPage();
   _refreshHomeExercise();
   _refreshComprehensiveBtn();
+  _refreshHomeProgress();
   toast('운동 기록을 삭제했어요');
 }
 
