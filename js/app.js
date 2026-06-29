@@ -1334,19 +1334,21 @@ function _refreshHomeProgress(){
   var photos=rec.photos?Object.keys(rec.photos).filter(function(k){return rec.photos[k];}).length:0;
   var hasEx=!!(rec.exercise&&rec.exercise.length);
   var hasCond=!!(rec.cond||rec.weight||rec.glucose);
-  var hasMed=ic&&rec.meds&&Object.keys(rec.meds).some(function(k){return rec.meds[k];});
+  // 복약: med_done[today] 에 하나라도 체크된 항목이 있으면 완료
+  var medDone=ic?(_getMedDone()[todayStr()]||{}):{};
+  var hasMed=ic&&Object.keys(medDone).some(function(k){return medDone[k];});
   var hasSym=ic&&(rec.pain!==undefined||rec.urine!==undefined||rec.fatigue!==undefined);
 
   function chip(done, label){
     return '<div style="display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:20px;font-size:12px;font-weight:700;'
       +(done?'background:#D1FAE5;color:#065F46;':'background:#F3F4F6;color:#9CA3AF;')
-      +'">'+(done?'✓ ':' ')+'<span>'+label+'</span></div>';
+      +'">'+(done?'✓ ':'')+'<span>'+label+'</span></div>';
   }
 
   var html='';
-  html+=chip(photos>=1, '아침'+(photos>=1?' ✓':''));
-  html+=chip(photos>=2, '점심'+(photos>=2?' ✓':''));
-  html+=chip(photos>=3, '저녁'+(photos>=3?' ✓':''));
+  html+=chip(photos>=1, '아침');
+  html+=chip(photos>=2, '점심');
+  html+=chip(photos>=3, '저녁');
   html+=chip(hasEx, '운동');
   html+=chip(hasCond, '컨디션');
   if(ic){
