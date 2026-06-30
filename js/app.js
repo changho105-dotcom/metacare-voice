@@ -2681,8 +2681,7 @@ function _openHomeMealViewer(photoUrl, mealName, analysis, meal){
   var infoEl=$id('home-viewer-analysis');
   if(infoEl){
     var txt='';
-    if(note) txt+='<div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:4px;">📝 '+esc(note)+'</div>';
-    if(mealAna) txt+='<div style="font-size:12px;color:rgba(255,255,255,.85);line-height:1.7;">'+md(mealAna)+'</div>';
+    if(mealAna) txt+='<div style="font-size:13px;color:#fff;line-height:1.8;">'+md(mealAna)+'</div>';
     infoEl.style.display=txt?'block':'none';
     infoEl.innerHTML=txt;
   }
@@ -2712,6 +2711,9 @@ function saveMealViewerNote(){
   dayRec.mealNotes[mealKey]=note;
   _setRecs(days);
   toast('메모가 저장됐어요 ✓');
+  var btn=$id('hv-note-save');
+  if(btn){ btn.textContent='✓ 저장됨'; btn.style.opacity='1'; btn.style.background='#0e8f79';
+    setTimeout(function(){ btn.innerHTML='<i class="ti ti-check"></i> 메모 저장'; btn.style.background='#19B89B'; btn.style.opacity='.5'; },2000); }
 }
 
 function reanalyzeMealPhoto(){
@@ -2750,7 +2752,8 @@ function reanalyzeMealPhoto(){
         dayRec.analysis.latest=reply;
         _setRecs(days);
         _refreshHomeAnalysis();
-        _openHomeMealViewer(photoUrl, mealName, reply, meal);
+        var anaEl2=$id('home-viewer-analysis');
+        if(anaEl2){ anaEl2.style.display='block'; anaEl2.innerHTML='<div style="font-size:13px;color:#fff;line-height:1.8;">'+md(reply)+'</div>'; }
         toast('분석 완료 ✓');
       });
     })();
