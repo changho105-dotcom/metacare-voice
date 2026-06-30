@@ -2701,7 +2701,7 @@ function _openHomeMealViewer(photoUrl, mealName, analysis, meal){
 }
 
 function saveMealViewerNote(){
-  var noteEl=$id('viewer-meal-note'); if(!noteEl) return;
+  var noteEl=$id('hv-note-input'); if(!noteEl) return;
   var note=noteEl.value.trim();
   var meal=_viewerMeal;
   var mealKey={breakfast:'morning',lunch:'lunch',dinner:'dinner'}[meal]||meal;
@@ -2726,12 +2726,8 @@ function reanalyzeMealPhoto(){
   if(!photoUrl){ toast('사진이 없습니다'); return; }
 
   // 분석 중 표시
-  var anaEl=document.querySelector('#home-meal-analysis');
-  if(anaEl){
-    var anaBody=anaEl.querySelector('div[style*="AI 분석"] + div, div:nth-child(3) > div:last-child');
-    var aiSection=anaEl.querySelectorAll('div')[3];
-    if(aiSection) aiSection.innerHTML='<div class="dots"><span></span><span></span><span></span></div>';
-  }
+  var anaEl=$id('home-viewer-analysis');
+  if(anaEl) anaEl.innerHTML='<div class="dots"><span></span><span></span><span></span></div>';
   toast('분석 중...');
 
   // Firebase Storage URL → fetch → base64 변환 후 API 전송
