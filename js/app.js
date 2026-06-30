@@ -791,7 +791,7 @@ function loginUser(u){
   }catch(e){}
 }
 
-/* ── 자동 재로그인 ── */
+/* ── 자동 재로그인 (한 번 로그인하면 유지) ── */
 function _tryAutoLogin(){
   try{
     var saved = localStorage.getItem('mc_last_user');
@@ -800,32 +800,9 @@ function _tryAutoLogin(){
     var users = _getUsers();
     var match = users.find(function(u){ return u.id===info.id; });
     if(!match) return false;
-    
-    // 자동 로그인 대신 로그인 화면에 이름 미리 채워두기
-    var nameEl=$id('login-name');
-    var yearEl=$id('login-year');
-    if(nameEl) nameEl.value = match.name;
-    if(yearEl) yearEl.value = match.birthYear;
-    
-    // 빠른 입장 버튼 표시
-    var quickBtn=$id('quick-login-btn');
-    if(!quickBtn){
-      var btn=document.createElement('button');
-      btn.id='quick-login-btn';
-      btn.className='btn-primary';
-      btn.style.cssText='background:var(--teal);margin-top:-8px;';
-      btn.innerHTML='⚡ '+match.name+'님으로 바로 입장';
-      btn.onclick=function(){
-        loginUser(match);
-      };
-      var loginBtn=document.querySelector('#scr-profile .btn-primary');
-      if(loginBtn) loginBtn.parentNode.insertBefore(btn, loginBtn);
-    } else {
-      quickBtn.style.display='block';
-      quickBtn.innerHTML='⚡ '+match.name+'님으로 바로 입장';
-      quickBtn.onclick=function(){ loginUser(match); };
-    }
-    return false; // 로그인 화면은 항상 표시
+    // 바로 앱으로 진입
+    loginUser(match);
+    return true;
   }catch(e){ return false; }
 }
 
@@ -1376,8 +1353,12 @@ function goBack(){
   if(id==='scr-profile') return; // 로그인 화면에서는 동작 안 함
 
   if(id==='scr-app'){
-    if(_currentPage!=='home'){ goPage('home'); }
-    else { goScreen('scr-profile'); }
+    if(_currentPage!=='home'){ goPage('home'); return; }
+    // 홈에서 사용자 아이콘 탭 → 로그아웃 확인
+    if(!confirm(USER ? (USER.name+'님, 로그아웃 할까요?') : '로그아웃 할까요?')) return;
+    try{ localStorage.removeItem('mc_last_user'); }catch(e){}
+    USER = null;
+    goScreen('scr-profile');
     return;
   }
 
