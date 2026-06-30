@@ -642,18 +642,20 @@
 </div>
 <div class="viewer" id="home-viewer">
   <div class="viewer-wrap"><img id="hv-img" src="" alt=""></div>
-  <div id="home-viewer-analysis" style="padding:10px 16px;max-height:18vh;overflow-y:auto;width:100%;min-height:40px;"></div>
-  <!-- 메모 수정 영역 -->
-  <div id="hv-note-wrap" style="padding:0 16px 10px;width:100%;box-sizing:border-box;display:none;">
-    <textarea id="hv-note-input" class="inp-sm" rows="2" placeholder="예: 현미밥 반공기, 된장국, 두부조림" style="resize:none;background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25);font-size:13px;"></textarea>
-    <div style="display:flex;gap:8px;margin-top:6px;">
-      <button onclick="A.saveMealViewerNote()" style="flex:1;background:#19B89B;color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;"><i class="ti ti-check"></i> 저장</button>
-      <button onclick="document.getElementById('hv-note-wrap').style.display='none'" style="flex:1;background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;cursor:pointer;">취소</button>
-    </div>
+  <!-- 메모 입력 (항상 표시) -->
+  <div style="padding:10px 16px 6px;width:100%;box-sizing:border-box;">
+    <div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:5px;">📝 식단 메모 (수정 가능)</div>
+    <textarea id="hv-note-input" rows="2" placeholder="예: 계란 2개, 소고기국, 견과류, 야채 절임, 블루베리&#10;더 자세히 적을수록 AI 분석이 정확해져요"
+      style="width:100%;box-sizing:border-box;resize:none;background:rgba(255,255,255,.1);color:#fff;border:1.5px solid rgba(255,255,255,.2);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.5;font-family:inherit;outline:none;"
+      oninput="document.getElementById('hv-note-save').style.opacity=1"></textarea>
+    <button id="hv-note-save" onclick="A.saveMealViewerNote()"
+      style="width:100%;margin-top:6px;background:#19B89B;color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;opacity:.5;transition:opacity .2s;">
+      <i class="ti ti-check"></i> 메모 저장
+    </button>
   </div>
+  <div id="home-viewer-analysis" style="padding:4px 16px 6px;max-height:14vh;overflow-y:auto;width:100%;"></div>
   <div class="viewer-btns">
     <button class="vbtn teal" id="hv-reanalyze-btn"><i class="ti ti-sparkles"></i> 재분석</button>
-    <button class="vbtn teal" id="hv-note-btn"><i class="ti ti-pencil"></i> 메모수정</button>
     <button class="vbtn teal" id="hv-replace-btn"><i class="ti ti-replace"></i> 교체</button>
     <button class="vbtn red"  id="hv-delete-btn"><i class="ti ti-trash"></i> 삭제</button>
     <button class="vbtn" onclick="A.closeHomeMealViewer()"><i class="ti ti-x"></i> 닫기</button>

@@ -2687,19 +2687,15 @@ function _openHomeMealViewer(photoUrl, mealName, analysis, meal){
     infoEl.innerHTML=txt;
   }
 
+  // 메모 입력창에 기존 메모 채우기
+  var noteInp=$id('hv-note-input'), noteSave=$id('hv-note-save');
+  if(noteInp){ noteInp.value=note; }
+  if(noteSave){ noteSave.style.opacity=note?'1':'.5'; }
+
   // 버튼에 meal 값 세팅
   var replBtn=$id('hv-replace-btn'); if(replBtn) replBtn.onclick=function(){ A.replaceHomeMealPhoto(meal); };
   var delBtn=$id('hv-delete-btn');   if(delBtn)  delBtn.onclick=function(){ A.deleteMealPhoto(meal); };
   var reBtn=$id('hv-reanalyze-btn'); if(reBtn)   reBtn.onclick=function(){ A.reanalyzeMealPhoto(); };
-  // 메모 수정 버튼
-  var noteBtn=$id('hv-note-btn');
-  if(noteBtn) noteBtn.onclick=function(){
-    var wrap=$id('hv-note-wrap'), inp=$id('hv-note-input');
-    if(!wrap||!inp) return;
-    inp.value=note;
-    wrap.style.display='block';
-    setTimeout(function(){ inp.focus(); },150);
-  };
 
   var viewer=$id('home-viewer'); if(viewer) viewer.classList.add('on');
 }
@@ -2780,7 +2776,6 @@ function deleteMealPhoto(meal){
 }
 
 function closeHomeMealViewer(){
-  var wrap=$id('hv-note-wrap'); if(wrap) wrap.style.display='none';
   var viewer=$id('home-viewer'); if(viewer) viewer.classList.remove('on');
   var analysisEl=$id('home-meal-analysis'); if(analysisEl) analysisEl.style.display='none';
 }
