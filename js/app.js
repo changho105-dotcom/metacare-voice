@@ -1530,6 +1530,16 @@ function _refreshHomeAnalysis(){
   el.innerHTML='<div class="tip-lbl"><i class="ti ti-salad" style="font-size:10px;"></i> 오늘의 식단 분석</div>'+parts.join('');
 }
 
+function pickExType(type){
+  var inp=$id('ex-type'); if(!inp) return;
+  inp.value=type;
+  // 선택된 칩 하이라이트
+  document.querySelectorAll('.ex-chip').forEach(function(c){
+    c.classList.toggle('active', c.textContent.trim().includes(type));
+  });
+  inp.focus();
+}
+
 function analyzeEx(){
   if(!KEY){ toast('API 키가 없습니다'); return; }
   var type=$id('ex-type').value.trim(); if(!type){ toast('운동 종류를 입력하세요'); return; }
@@ -1573,6 +1583,7 @@ function _saveExerciseResult(type, dur, steps, memo, analysis, targetDate){
   if($id('ex-dur')) $id('ex-dur').value='';
   if($id('ex-steps')) $id('ex-steps').value='';
   if($id('ex-memo')) $id('ex-memo').value='';
+  document.querySelectorAll('.ex-chip').forEach(function(c){ c.classList.remove('active'); });
   var ar=$id('ex-result'); if(ar) ar.style.display='none';
   _refreshExPage();
   // 기록장에서 왔으면 기록장으로 돌아가기
@@ -2680,6 +2691,15 @@ function _openHomeMealViewer(photoUrl, mealName, analysis, meal){
   var replBtn=$id('hv-replace-btn'); if(replBtn) replBtn.onclick=function(){ A.replaceHomeMealPhoto(meal); };
   var delBtn=$id('hv-delete-btn');   if(delBtn)  delBtn.onclick=function(){ A.deleteMealPhoto(meal); };
   var reBtn=$id('hv-reanalyze-btn'); if(reBtn)   reBtn.onclick=function(){ A.reanalyzeMealPhoto(); };
+  // 메모 수정 버튼
+  var noteBtn=$id('hv-note-btn');
+  if(noteBtn) noteBtn.onclick=function(){
+    var wrap=$id('hv-note-wrap'), inp=$id('hv-note-input');
+    if(!wrap||!inp) return;
+    inp.value=note;
+    wrap.style.display='block';
+    setTimeout(function(){ inp.focus(); },150);
+  };
 
   var viewer=$id('home-viewer'); if(viewer) viewer.classList.add('on');
 }
@@ -2760,6 +2780,7 @@ function deleteMealPhoto(meal){
 }
 
 function closeHomeMealViewer(){
+  var wrap=$id('hv-note-wrap'); if(wrap) wrap.style.display='none';
   var viewer=$id('home-viewer'); if(viewer) viewer.classList.remove('on');
   var analysisEl=$id('home-meal-analysis'); if(analysisEl) analysisEl.style.display='none';
 }
@@ -3018,7 +3039,7 @@ return {
   // 컨디션 기록
   openConditionSheet:openConditionSheet, selectCondState:selectCondState, saveCondition:saveCondition,
   // 종합 분석
-  analyzeEx:analyzeEx, deleteExItem:deleteExItem,
+  analyzeEx:analyzeEx, deleteExItem:deleteExItem, pickExType:pickExType,
   analyzeComprehensive:analyzeComprehensive,
   // 증상
   openSymSheet:openSymSheet, saveSymQuick:saveSymQuick, saveSym:saveSym,

@@ -433,7 +433,28 @@
           <label style="font-size:12px;font-weight:700;color:var(--mu2);white-space:nowrap;">날짜</label>
           <input class="inp-sm" id="ex-date" type="text" placeholder="YYYY-MM-DD" style="flex:1;">
         </div>
-        <input class="inp-sm" id="ex-type" type="text" placeholder="운동 종류 (예: 빠르게 걷기, 수영, 자전거)" style="margin-top:8px;">
+        <!-- 빠른 선택 칩 -->
+        <div style="margin-top:10px;">
+          <div style="font-size:11px;font-weight:700;color:var(--mu2);margin-bottom:7px;">빠른 선택 (탭하면 입력)</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;" id="ex-quick-chips">
+            <button class="ex-chip" onclick="A.pickExType('걷기')">🚶 걷기</button>
+            <button class="ex-chip" onclick="A.pickExType('빠르게 걷기')">🚶 빠르게 걷기</button>
+            <button class="ex-chip" onclick="A.pickExType('런닝')">🏃 런닝</button>
+            <button class="ex-chip" onclick="A.pickExType('등산')">⛰️ 등산</button>
+            <button class="ex-chip" onclick="A.pickExType('계단 오르기')">🪜 계단 오르기</button>
+            <button class="ex-chip" onclick="A.pickExType('자전거')">🚴 자전거</button>
+            <button class="ex-chip" onclick="A.pickExType('수영')">🏊 수영</button>
+            <button class="ex-chip" onclick="A.pickExType('스쿼트')">🏋️ 스쿼트</button>
+            <button class="ex-chip" onclick="A.pickExType('윗몸 일으키기')">💪 윗몸 일으키기</button>
+            <button class="ex-chip" onclick="A.pickExType('플랭크')">🧘 플랭크</button>
+            <button class="ex-chip" onclick="A.pickExType('푸시업')">💪 푸시업</button>
+            <button class="ex-chip" onclick="A.pickExType('스트레칭')">🤸 스트레칭</button>
+            <button class="ex-chip" onclick="A.pickExType('줄넘기')">🪢 줄넘기</button>
+            <button class="ex-chip" onclick="A.pickExType('요가')">🧘 요가</button>
+            <button class="ex-chip" onclick="A.pickExType('헬스')">🏋️ 헬스</button>
+          </div>
+        </div>
+        <input class="inp-sm" id="ex-type" type="text" placeholder="운동 종류 (직접 입력 또는 위에서 선택)" style="margin-top:10px;">
         <input class="inp-sm" id="ex-dur" type="text" placeholder="운동 시간 (예: 30분, 1시간)" style="margin-top:8px;">
         <input class="inp-sm" id="ex-steps" type="number" placeholder="걸음 수 (선택, 예: 8000)" style="margin-top:8px;">
         <input class="inp-sm" id="ex-memo" type="text" placeholder="메모 (선택)" style="margin-top:8px;">
@@ -621,9 +642,18 @@
 </div>
 <div class="viewer" id="home-viewer">
   <div class="viewer-wrap"><img id="hv-img" src="" alt=""></div>
-  <div id="home-viewer-analysis" style="padding:10px 16px;max-height:24vh;overflow-y:auto;width:100%;min-height:40px;"></div>
+  <div id="home-viewer-analysis" style="padding:10px 16px;max-height:18vh;overflow-y:auto;width:100%;min-height:40px;"></div>
+  <!-- 메모 수정 영역 -->
+  <div id="hv-note-wrap" style="padding:0 16px 10px;width:100%;box-sizing:border-box;display:none;">
+    <textarea id="hv-note-input" class="inp-sm" rows="2" placeholder="예: 현미밥 반공기, 된장국, 두부조림" style="resize:none;background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25);font-size:13px;"></textarea>
+    <div style="display:flex;gap:8px;margin-top:6px;">
+      <button onclick="A.saveMealViewerNote()" style="flex:1;background:#19B89B;color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;"><i class="ti ti-check"></i> 저장</button>
+      <button onclick="document.getElementById('hv-note-wrap').style.display='none'" style="flex:1;background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;cursor:pointer;">취소</button>
+    </div>
+  </div>
   <div class="viewer-btns">
     <button class="vbtn teal" id="hv-reanalyze-btn"><i class="ti ti-sparkles"></i> 재분석</button>
+    <button class="vbtn teal" id="hv-note-btn"><i class="ti ti-pencil"></i> 메모수정</button>
     <button class="vbtn teal" id="hv-replace-btn"><i class="ti ti-replace"></i> 교체</button>
     <button class="vbtn red"  id="hv-delete-btn"><i class="ti ti-trash"></i> 삭제</button>
     <button class="vbtn" onclick="A.closeHomeMealViewer()"><i class="ti ti-x"></i> 닫기</button>

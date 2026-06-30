@@ -519,6 +519,9 @@ h2 { font-size:21px; font-weight:700; }
 }
 .home-meal-slot:active { opacity:.85; transform:scale(.97); }
 .home-meal-slot.drag-over { outline: 3px dashed #19B89B; outline-offset:-3px; opacity:.9; }
+.ex-chip { background:var(--cream); border:1.5px solid var(--bd); border-radius:20px; padding:6px 12px; font-size:12px; font-weight:600; color:var(--navy); cursor:pointer; transition:background .12s, border-color .12s; white-space:nowrap; }
+.ex-chip:active { background:var(--tl); }
+.ex-chip.active { background:var(--tl); border-color:var(--teal); color:var(--teal); font-weight:700; }
 .home-meal-slot-lbl {
   font-size:var(--fs-xs); font-weight:700;
   padding:9px 8px 4px; text-align:center; color:rgba(255,255,255,.9);
