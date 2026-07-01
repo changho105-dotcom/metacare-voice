@@ -2727,7 +2727,7 @@ function _refreshComprehensiveBtn(){
   var today=todayStr();
   var days=_getRecs();
   var dayRec=days.find(function(d){return d.date===today;});
-  var hasFood=dayRec&&dayRec.analysis&&dayRec.analysis.latest;
+  var hasFood=dayRec&&((dayRec.analysis&&dayRec.analysis.latest)||(dayRec.photos&&(dayRec.photos.morning||dayRec.photos.lunch||dayRec.photos.dinner)));
   var hasEx=dayRec&&dayRec.exercise&&dayRec.exercise.length;
   var wrap=$id('home-comprehensive-wrap');
   if(wrap) wrap.style.display=(hasFood&&hasEx)?'block':'none';
@@ -2756,7 +2756,7 @@ function analyzeComprehensive(){
   var prompt='['+modeDesc+' 모드] 오늘의 종합 평가를 해주세요.\n\n[식단 분석]\n'+foodAnalysis+'\n\n[운동 기록]\n'+exSummary+'\n\n식단과 운동을 종합해서 오늘 하루 건강 관리를 평가하고, 내일을 위한 조언을 3~4문장으로 해주세요.';
   _api({max_tokens:700,messages:[{role:'user',content:prompt}]},function(reply){
     var result=reply||'종합 평가를 가져오지 못했어요.';
-    compEl.innerHTML='<div class="tip-lbl">오늘의 종합 평가</div>'+esc(result);
+    compEl.innerHTML='<div class="tip-lbl">오늘의 종합 평가</div>'+md(result);
     dayRec.comprehensive=result; _setRecs(days);
   });
 }
