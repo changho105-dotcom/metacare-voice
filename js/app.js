@@ -1531,13 +1531,22 @@ function _refreshHomeAnalysis(){
   el.innerHTML='<div class="tip-lbl"><i class="ti ti-salad" style="font-size:10px;"></i> 오늘의 식단 분석</div>'+parts.join('');
 }
 
+var _stepsExTypes = ['걷기','빠르게 걷기','런닝','등산','계단 오르기','줄넘기'];
+
+function _toggleStepsField(type){
+  var wrap=$id('ex-steps-wrap'); if(!wrap) return;
+  var needSteps=_stepsExTypes.some(function(t){ return type.includes(t); });
+  wrap.style.display=needSteps?'':'none';
+  if(!needSteps && $id('ex-steps')) $id('ex-steps').value='';
+}
+
 function pickExType(type){
   var inp=$id('ex-type'); if(!inp) return;
   inp.value=type;
-  // 선택된 칩 하이라이트
   document.querySelectorAll('.ex-chip').forEach(function(c){
     c.classList.toggle('active', c.textContent.trim().includes(type));
   });
+  _toggleStepsField(type);
   inp.focus();
 }
 
