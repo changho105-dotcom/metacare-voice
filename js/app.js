@@ -1597,10 +1597,23 @@ function analyzeExAll(){
   _api({max_tokens:400,messages:[{role:'user',content:prompt}]}, function(reply){
     var result=reply||'분석 결과를 가져오지 못했어요.';
     if(ar) ar.innerHTML='<div class="tip-lbl">AI 운동 분석</div>'+md(result);
-    // 각 운동 개별 저장
-    list.forEach(function(ex){ _saveExerciseResult(ex.type, ex.dur, ex.steps, ex.memo, result, exDate); });
+    // 한 번에 모두 저장 (중복 _xlLoad 방지)
+    var days=_getRecs();
+    var dayRec=days.find(function(d){return d.date===exDate;});
+    if(!dayRec){ dayRec={date:exDate,photos:{},steps:''}; days.push(dayRec); days.sort(function(a,b){return a.date<b.date?-1:1;}); }
+    if(!dayRec.exercise) dayRec.exercise=[];
+    list.forEach(function(ex){
+      dayRec.exercise.push({type:ex.type,dur:ex.dur,steps:ex.steps,memo:ex.memo,analysis:result,ts:Date.now()});
+      if(ex.steps) dayRec.steps=ex.steps;
+    });
+    _setRecs(days);
     _exPendingList=[];
     _renderExPending();
+    _refreshHomeExercise();
+    _refreshComprehensiveBtn();
+    _xlLoad();
+    _refreshExPage();
+    toast('운동 '+list.length+'개 저장됐어요 ✓');
   });
 }
 
@@ -2292,14 +2305,25 @@ function _doSave(){
 
 function _xlLoad(){
   var days=_getRecs();
-  // 오늘 날짜 없으면 자동 추가 (맨 뒤에 추가 = 오름차순에서 맨 마지막)
+  // 오늘 날짜 없으면 자동 추가
   var today=todayStr();
   if(!days.find(function(d){return d.date===today;})){
     days.push({date:today,photos:{},steps:''});
     _setRecs(days);
   }
-  // 날짜순 정렬 보장
+  // 날짜순 정렬
   days.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:0; });
+  // 중복 날짜 제거 (데이터 많은 쪽 우선)
+  var seen={};
+  days=days.filter(function(d){
+    if(!seen[d.date]){ seen[d.date]=d; return true; }
+    // 이미 있으면 데이터 많은 쪽 유지
+    var existing=seen[d.date];
+    var existingScore=(existing.photos&&Object.keys(existing.photos).length||0)+(existing.exercise&&existing.exercise.length||0);
+    var newScore=(d.photos&&Object.keys(d.photos).length||0)+(d.exercise&&d.exercise.length||0);
+    if(newScore>existingScore){ seen[d.date]=d; days.splice(days.indexOf(existing),1,d); }
+    return false;
+  });
   var c=$id('log-cards'); c.innerHTML=''; _cardSeq=0;
   $id('log-empty').style.display='none';
   days.forEach(function(d){ c.appendChild(_makeCard(d)); });
@@ -2677,7 +2701,7 @@ function _refreshComprehensiveBtn(){
   var compEl=$id('home-comprehensive-result');
   if(compEl&&dayRec&&dayRec.comprehensive){
     compEl.style.display='block';
-    compEl.innerHTML='<div class="tip-lbl">오늘의 종합 평가</div>'+esc(dayRec.comprehensive);
+    compEl.innerHTML='<div class="tip-lbl">오늘의 종합 평가</div>'+md(dayRec.comprehensive);
   }
 }
 
