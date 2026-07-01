@@ -309,11 +309,7 @@ function goScreen(id, opts){
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   var el = $id(id);
   if(el) el.classList.add('active');
-  if(id==='scr-profile'){
-    // 로그아웃 시 자동 로그인 정보 삭제
-    try{ localStorage.removeItem('mc_last_user'); }catch(e){}
-    USER = null;
-  }
+  // scr-profile 이동 시 자동 로그인 정보는 유지 (명시적 로그아웃 시에만 삭제)
   if(id==='scr-admin-users') _renderAdminList();
   if(id==='scr-admin-monitor') _renderMonitorList();
   if(id==='scr-add-user') _resetAddForm();
@@ -324,6 +320,8 @@ function goScreen(id, opts){
 }
 
 function _handlePopState(e){
+  // 뒤로가기 시 로그인 상태면 홈으로, 아니면 기본 동작
+  if(USER){ goPage('home'); try{ history.pushState({navIdx:0},'',location.href); }catch(e2){} return; }
   goBack();
   try{ history.pushState({navIdx:0}, '', location.href); }catch(e2){}
 }
