@@ -359,6 +359,15 @@
           <div style="font-size:12px;font-weight:700;color:var(--mu2);margin-bottom:10px;">📋 오늘 달성 현황</div>
           <div id="home-progress-items" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
         </div>
+        <!-- 홈 화면 바로가기 설치 버튼 -->
+        <div id="home-install-card" style="display:none;background:linear-gradient(135deg,#0e5c42,#19B89B22);border:1.5px solid #19B89B55;border-radius:var(--r-md);padding:13px 16px;display:flex;align-items:center;gap:12px;">
+          <div style="font-size:28px;line-height:1;">📲</div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;color:#fff;">홈 화면에 바로가기 추가</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:2px;">앱처럼 바로 실행할 수 있어요</div>
+          </div>
+          <button id="home-install-btn" style="background:#19B89B;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">설치</button>
+        </div>
         <div id="home-goal-card" style="width:100%;padding:15px;border-radius:var(--r-md);display:flex;align-items:center;gap:12px;color:#fff;">
           <i class="ti ti-target" style="font-size:24px;flex-shrink:0;"></i>
           <div>
@@ -768,23 +777,30 @@ window.addEventListener('beforeinstallprompt', function(e){
   _pwaPrompt = e;
   var banner = document.getElementById('pwa-install-banner');
   if(banner) banner.style.display = 'block';
+  var homeCard = document.getElementById('home-install-card');
+  if(homeCard) homeCard.style.display = 'flex';
 });
 
 document.addEventListener('DOMContentLoaded', function(){
-  var installBtn = document.getElementById('pwa-install-btn');
-  if(installBtn){
-    installBtn.addEventListener('click', function(){
-      if(_pwaPrompt){
-        _pwaPrompt.prompt();
-        _pwaPrompt.userChoice.then(function(r){
-          if(r.outcome === 'accepted'){
-            document.getElementById('pwa-install-banner').style.display = 'none';
-          }
-          _pwaPrompt = null;
-        });
+  function _triggerInstall(){
+    if(!_pwaPrompt) return;
+    _pwaPrompt.prompt();
+    _pwaPrompt.userChoice.then(function(r){
+      if(r.outcome === 'accepted'){
+        var b = document.getElementById('pwa-install-banner');
+        if(b) b.style.display = 'none';
+        var hc = document.getElementById('home-install-card');
+        if(hc) hc.style.display = 'none';
       }
+      _pwaPrompt = null;
     });
   }
+
+  var installBtn = document.getElementById('pwa-install-btn');
+  if(installBtn) installBtn.addEventListener('click', _triggerInstall);
+
+  var homeInstallBtn = document.getElementById('home-install-btn');
+  if(homeInstallBtn) homeInstallBtn.addEventListener('click', _triggerInstall);
 
   // iOS Safari 감지 → 홈 화면 추가 안내 표시
   var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
