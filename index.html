@@ -455,7 +455,12 @@
         </div>
         <input class="inp-sm" id="ex-type" type="text" placeholder="운동 종류 (직접 입력 또는 위에서 선택)" style="margin-top:10px;">
         <div style="display:flex;gap:8px;margin-top:8px;">
-          <input class="inp-sm" id="ex-dur" type="text" placeholder="운동 시간 (예: 30분, 1시간)" style="flex:1;margin:0;">
+          <div id="ex-dur-wrap" style="flex:1;">
+            <input class="inp-sm" id="ex-dur" type="text" placeholder="운동 시간 (예: 30분, 1시간)" style="width:100%;margin:0;box-sizing:border-box;">
+          </div>
+          <div id="ex-reps-wrap" style="flex:1;display:none;">
+            <input class="inp-sm" id="ex-reps" type="number" placeholder="횟수 (예: 30)" style="width:100%;margin:0;box-sizing:border-box;">
+          </div>
           <div id="ex-steps-wrap" style="flex:1;display:none;">
             <input class="inp-sm" id="ex-steps" type="number" placeholder="걸음 수" style="width:100%;margin:0;box-sizing:border-box;">
           </div>
