@@ -783,6 +783,7 @@ function loginUser(u){
   _loadUserRecords(u.id, function(){
     _initApp();
     goScreen('scr-app');
+    if(typeof initInstallBanner==='function') initInstallBanner();
   });
   // 마지막 페이지 복원 (같은 사용자일 때만)
   try{

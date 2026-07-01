@@ -73,18 +73,6 @@
       </div>
     </div>
 
-    <!-- 앱 설치 배너 (항상 표시) -->
-    <div id="pwa-install-banner" style="margin:16px 20px 0;background:linear-gradient(135deg,#0D7A52,#19B89B);border-radius:16px;padding:18px 20px;">
-      <div style="display:flex;align-items:center;gap:14px;">
-        <div style="font-size:36px;flex-shrink:0;">📲</div>
-        <div style="flex:1;">
-          <div style="color:#fff;font-size:15px;font-weight:800;margin-bottom:3px;">홈 화면에 바로가기 추가</div>
-          <div style="color:rgba(255,255,255,.8);font-size:12px;" id="pwa-install-desc">한 번만 설치하면 앱처럼 바로 실행!</div>
-        </div>
-        <button id="pwa-install-btn" style="background:#fff;color:#19B89B;border:none;border-radius:12px;padding:11px 18px;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.15);">설치하기</button>
-      </div>
-    </div>
-
     <!-- iOS 설치 안내 (Safari) -->
     <div id="ios-install-banner" style="display:none;margin:16px 20px 0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:14px 16px;">
       <div style="color:#fff;font-size:13px;font-weight:700;margin-bottom:8px;">📲 iPhone 홈 화면에 추가하는 방법</div>
@@ -352,6 +340,17 @@
           <div class="text-right" style="flex-shrink:0;margin-left:10px;">
             <div class="sub" id="home-days-lbl"></div>
             <div class="days-count" id="home-days"></div>
+          </div>
+        </div>
+        <!-- 바로가기 설치 안내 (로그인 후, 설치 전에만 표시) -->
+        <div id="pwa-install-banner" style="display:none;background:linear-gradient(135deg,#0D7A52,#19B89B);border-radius:16px;padding:16px 18px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="font-size:32px;flex-shrink:0;">📲</div>
+            <div style="flex:1;">
+              <div style="color:#fff;font-size:14px;font-weight:800;margin-bottom:2px;">홈 화면에 바로가기 추가</div>
+              <div style="color:rgba(255,255,255,.8);font-size:12px;" id="pwa-install-desc">한 번만 설치하면 앱처럼 바로 실행!</div>
+            </div>
+            <button id="pwa-install-btn" style="background:#fff;color:#19B89B;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;">설치하기</button>
           </div>
         </div>
         <!-- 오늘 달성 현황 -->
@@ -770,73 +769,61 @@ window.addEventListener('beforeinstallprompt', function(e){
   if(banner) banner.style.display = 'block';
 });
 
-document.addEventListener('DOMContentLoaded', function(){
-  function _triggerInstall(){
-    if(!_pwaPrompt) return;
-    _pwaPrompt.prompt();
-    _pwaPrompt.userChoice.then(function(r){
-      if(r.outcome === 'accepted'){
-        var b = document.getElementById('pwa-install-banner');
-        if(b) b.style.display = 'none';
-        var hc = document.getElementById('home-install-card');
-        if(hc) hc.style.display = 'none';
+// PWA 설치 관련 공통 변수
+var _ua = navigator.userAgent;
+var _isIOS = /iphone|ipad|ipod/i.test(_ua);
+var _isSafari = /^((?!chrome|android).)*safari/i.test(_ua);
+var _isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+var _isInApp = /KAKAOTALK|NAVER|Instagram|FB_IAB|FBAN|Line|Whale/i.test(_ua);
+
+// 로그인 후 홈 화면에서 배너 초기화 (app.js의 loginUser 후 호출)
+function initInstallBanner(){
+  var banner = document.getElementById('pwa-install-banner');
+  var desc   = document.getElementById('pwa-install-desc');
+  var btn    = document.getElementById('pwa-install-btn');
+  if(!banner || !btn) return;
+
+  // 이미 설치된 앱으로 실행 중이면 숨김
+  if(_isStandalone){ banner.style.display='none'; return; }
+
+  if(_isInApp){
+    // 카카오톡 등 인앱브라우저
+    if(desc) desc.textContent = '카카오톡 안에서는 설치 불가 → Chrome으로 열어주세요';
+    btn.textContent = 'Chrome으로 열기';
+    btn.onclick = function(){
+      var url = 'https://changho105-dotcom.github.io/metacare-voice/';
+      if(_isIOS){
+        if(navigator.clipboard) navigator.clipboard.writeText(url);
+        alert('주소를 복사했습니다!\nSafari를 열고 주소창에 붙여넣기 해주세요.');
+      } else {
+        location.href = 'intent://'+url.replace('https://','')+' #Intent;scheme=https;package=com.android.chrome;end';
       }
-      _pwaPrompt = null;
-    });
-  }
-
-  var ua = navigator.userAgent;
-  var isIOS = /iphone|ipad|ipod/i.test(ua);
-  var isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-  var isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
-  // 카카오톡·네이버·인스타 등 인앱브라우저 감지
-  var isInApp = /KAKAOTALK|NAVER|Instagram|FB_IAB|FBAN|Line|Whale/i.test(ua);
-
-  var installBanner = document.getElementById('pwa-install-banner');
-  var installDesc   = document.getElementById('pwa-install-desc');
-  var installBtn    = document.getElementById('pwa-install-btn');
-
-  if(isStandalone){
-    // 이미 설치돼서 앱으로 실행 중 → 배너 숨김
-    if(installBanner) installBanner.style.display = 'none';
-
-  } else if(isInApp){
-    // 카카오톡 등 인앱브라우저 → Chrome으로 열기 안내
-    if(installDesc) installDesc.textContent = '카카오톡 안에서는 설치 불가 → Chrome으로 열어주세요';
-    if(installBtn){
-      installBtn.textContent = 'Chrome으로 열기';
-      installBtn.addEventListener('click', function(){
-        // intent:// URL로 Android Chrome 강제 오픈, iOS는 clipboard 복사
-        var url = 'https://changho105-dotcom.github.io/metacare-voice/';
-        if(isIOS){
-          if(navigator.clipboard){ navigator.clipboard.writeText(url); }
-          alert('주소를 복사했습니다!\nSafari를 열고 주소창에 붙여넣기 해주세요.');
-        } else {
-          location.href = 'intent://' + url.replace('https://','') + '#Intent;scheme=https;package=com.android.chrome;end';
-        }
-      });
-    }
-
+    };
   } else {
-    // 일반 브라우저 → 설치 버튼 정상 동작
-    if(installBtn){
-      installBtn.addEventListener('click', function(){
-        if(_pwaPrompt){
-          _triggerInstall();
-        } else if(isIOS && isSafari){
-          var iosBanner = document.getElementById('ios-install-banner');
-          if(iosBanner){ iosBanner.style.display='block'; iosBanner.scrollIntoView({behavior:'smooth'}); }
-        } else {
-          // Chrome 메뉴로 안내
-          alert('브라우저 오른쪽 위 메뉴(⋮) → "홈 화면에 추가"를 눌러주세요.');
-        }
-      });
-    }
+    // 일반 Chrome / Safari
+    btn.onclick = function(){
+      if(_pwaPrompt){
+        _pwaPrompt.prompt();
+        _pwaPrompt.userChoice.then(function(r){
+          if(r.outcome==='accepted') banner.style.display='none';
+          _pwaPrompt=null;
+        });
+      } else if(_isIOS && _isSafari){
+        var iosBanner = document.getElementById('ios-install-banner');
+        if(iosBanner){ iosBanner.style.display='block'; iosBanner.scrollIntoView({behavior:'smooth'}); }
+      } else {
+        alert('브라우저 오른쪽 위 메뉴(⋮) → "홈 화면에 추가"를 눌러주세요.');
+      }
+    };
   }
 
-  window.addEventListener('appinstalled', function(){
-    if(installBanner) installBanner.style.display = 'none';
-  });
+  banner.style.display = 'block';
+}
+
+// 설치 완료 시 자동 숨김
+window.addEventListener('appinstalled', function(){
+  var b = document.getElementById('pwa-install-banner');
+  if(b) b.style.display = 'none';
 });
 </script>
 </body>
