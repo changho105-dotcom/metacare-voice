@@ -74,14 +74,14 @@
     </div>
 
     <!-- 앱 설치 배너 (조건부 표시) -->
-    <div id="pwa-install-banner" style="display:none;margin:16px 20px 0;background:linear-gradient(135deg,#0D4F35,#0A3D2A);border:1px solid rgba(25,184,155,.3);border-radius:14px;padding:14px 16px;">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div style="font-size:28px;">📲</div>
+    <div id="pwa-install-banner" style="display:none;margin:16px 20px 0;background:linear-gradient(135deg,#0D7A52,#19B89B);border-radius:16px;padding:18px 20px;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="font-size:36px;flex-shrink:0;">📲</div>
         <div style="flex:1;">
-          <div style="color:#fff;font-size:13px;font-weight:700;margin-bottom:2px;">홈 화면에 앱 추가하기</div>
-          <div style="color:rgba(255,255,255,.6);font-size:11px;" id="pwa-install-desc">설치하면 앱처럼 바로 실행됩니다</div>
+          <div style="color:#fff;font-size:15px;font-weight:800;margin-bottom:3px;">홈 화면에 바로가기 추가</div>
+          <div style="color:rgba(255,255,255,.8);font-size:12px;" id="pwa-install-desc">한 번만 설치하면 앱처럼 바로 실행!</div>
         </div>
-        <button id="pwa-install-btn" style="background:#19B89B;color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">설치</button>
+        <button id="pwa-install-btn" style="background:#fff;color:#19B89B;border:none;border-radius:12px;padding:11px 18px;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.15);">설치하기</button>
       </div>
     </div>
 
@@ -358,15 +358,6 @@
         <div id="home-progress-card" style="background:#fff;border:1px solid var(--bd);border-radius:var(--r-md);padding:14px 16px;">
           <div style="font-size:12px;font-weight:700;color:var(--mu2);margin-bottom:10px;">📋 오늘 달성 현황</div>
           <div id="home-progress-items" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
-        </div>
-        <!-- 홈 화면 바로가기 설치 버튼 -->
-        <div id="home-install-card" style="display:none;background:linear-gradient(135deg,#0e5c42,#19B89B22);border:1.5px solid #19B89B55;border-radius:var(--r-md);padding:13px 16px;display:flex;align-items:center;gap:12px;">
-          <div style="font-size:28px;line-height:1;">📲</div>
-          <div style="flex:1;">
-            <div style="font-size:14px;font-weight:700;color:#fff;">홈 화면에 바로가기 추가</div>
-            <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:2px;">앱처럼 바로 실행할 수 있어요</div>
-          </div>
-          <button id="home-install-btn" style="background:#19B89B;color:#fff;border:none;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">설치</button>
         </div>
         <div id="home-goal-card" style="width:100%;padding:15px;border-radius:var(--r-md);display:flex;align-items:center;gap:12px;color:#fff;">
           <i class="ti ti-target" style="font-size:24px;flex-shrink:0;"></i>
@@ -777,8 +768,6 @@ window.addEventListener('beforeinstallprompt', function(e){
   _pwaPrompt = e;
   var banner = document.getElementById('pwa-install-banner');
   if(banner) banner.style.display = 'block';
-  var homeCard = document.getElementById('home-install-card');
-  if(homeCard) homeCard.style.display = 'flex';
 });
 
 document.addEventListener('DOMContentLoaded', function(){
@@ -799,8 +788,6 @@ document.addEventListener('DOMContentLoaded', function(){
   var installBtn = document.getElementById('pwa-install-btn');
   if(installBtn) installBtn.addEventListener('click', _triggerInstall);
 
-  var homeInstallBtn = document.getElementById('home-install-btn');
-  if(homeInstallBtn) homeInstallBtn.addEventListener('click', _triggerInstall);
 
   // iOS Safari 감지 → 홈 화면 추가 안내 표시
   var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
