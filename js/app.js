@@ -2305,25 +2305,39 @@ function _doSave(){
 
 function _xlLoad(){
   var days=_getRecs();
+  // 중복 날짜 제거 (데이터 많은 쪽 병합)
+  var merged={};
+  days.forEach(function(d){
+    if(!d||!d.date) return;
+    if(!merged[d.date]){
+      merged[d.date]=d;
+    } else {
+      var a=merged[d.date];
+      // photos 병합
+      if(d.photos) a.photos=Object.assign({},d.photos,a.photos);
+      // exercise 병합 (중복 ts 제거)
+      if(d.exercise&&d.exercise.length){
+        if(!a.exercise) a.exercise=[];
+        var tss=a.exercise.map(function(e){return e.ts;});
+        d.exercise.forEach(function(e){ if(!tss.includes(e.ts)) a.exercise.push(e); });
+      }
+      // analysis 병합
+      if(d.analysis&&!a.analysis) a.analysis=d.analysis;
+      if(d.steps&&!a.steps) a.steps=d.steps;
+    }
+  });
+  days=Object.keys(merged).sort().map(function(k){return merged[k];});
+
   // 오늘 날짜 없으면 자동 추가
   var today=todayStr();
-  if(!days.find(function(d){return d.date===today;})){
+  if(!merged[today]){
     days.push({date:today,photos:{},steps:''});
-    _setRecs(days);
   }
   // 날짜순 정렬
   days.sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:0; });
-  // 중복 날짜 제거 (데이터 많은 쪽 우선)
-  var seen={};
-  days=days.filter(function(d){
-    if(!seen[d.date]){ seen[d.date]=d; return true; }
-    // 이미 있으면 데이터 많은 쪽 유지
-    var existing=seen[d.date];
-    var existingScore=(existing.photos&&Object.keys(existing.photos).length||0)+(existing.exercise&&existing.exercise.length||0);
-    var newScore=(d.photos&&Object.keys(d.photos).length||0)+(d.exercise&&d.exercise.length||0);
-    if(newScore>existingScore){ seen[d.date]=d; days.splice(days.indexOf(existing),1,d); }
-    return false;
-  });
+  // 중복 제거된 결과를 저장 (Firestore에도 반영)
+  _setRecs(days);
+
   var c=$id('log-cards'); c.innerHTML=''; _cardSeq=0;
   $id('log-empty').style.display='none';
   days.forEach(function(d){ c.appendChild(_makeCard(d)); });
