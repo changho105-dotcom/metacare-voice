@@ -1541,6 +1541,60 @@ function pickExType(type){
   inp.focus();
 }
 
+var _exPendingList = [];
+
+function addExToList(){
+  var type=($id('ex-type')||{}).value.trim(); if(!type){ toast('운동 종류를 입력하세요'); return; }
+  var dur=($id('ex-dur')||{}).value.trim();
+  var steps=($id('ex-steps')||{}).value.trim();
+  var memo=($id('ex-memo')||{}).value.trim();
+  _exPendingList.push({type:type, dur:dur, steps:steps, memo:memo});
+  // 폼 초기화
+  if($id('ex-type')) $id('ex-type').value='';
+  if($id('ex-dur')) $id('ex-dur').value='';
+  if($id('ex-steps')) $id('ex-steps').value='';
+  if($id('ex-memo')) $id('ex-memo').value='';
+  document.querySelectorAll('.ex-chip').forEach(function(c){ c.classList.remove('active'); });
+  _renderExPending();
+  toast(type+' 추가됐어요 ✓');
+}
+
+function _renderExPending(){
+  var wrap=$id('ex-pending-wrap'), list=$id('ex-pending-list'); if(!wrap||!list) return;
+  wrap.style.display=_exPendingList.length?'block':'none';
+  list.innerHTML=_exPendingList.map(function(ex,i){
+    return '<div style="display:flex;align-items:center;gap:8px;background:#fff;border-radius:8px;padding:8px 10px;border:1px solid var(--bd);">'
+      +'<div style="flex:1;font-size:13px;font-weight:700;">🏃 '+esc(ex.type)+(ex.dur?' <span style="font-weight:400;color:var(--mu);">· '+esc(ex.dur)+'</span>':'')+(ex.steps?' <span style="font-weight:400;color:var(--mu);">· '+esc(ex.steps)+'보</span>':'')+'</div>'
+      +'<button onclick="A.removeExFromList('+i+')" style="background:none;border:none;color:var(--mu);font-size:16px;cursor:pointer;padding:0 4px;">✕</button>'
+      +'</div>';
+  }).join('');
+}
+
+function removeExFromList(i){
+  _exPendingList.splice(i,1);
+  _renderExPending();
+}
+
+function analyzeExAll(){
+  if(!KEY){ toast('API 키가 없습니다'); return; }
+  if(!_exPendingList.length){ toast('운동을 먼저 추가해주세요'); return; }
+  var exDate=($id('ex-date')||{}).value.trim()||todayStr();
+  var ar=$id('ex-result'); if(ar){ ar.style.display='block'; ar.innerHTML='<div class="tip-lbl">AI 운동 분석 중...</div><div class="dots"><span></span><span></span><span></span></div>'; }
+  var list=_exPendingList.slice();
+  var u=USER, ic=u&&u.mode==='cancer';
+  var modeLabel=ic?'암 환자 관점(면역·체력·피로 관리)':({keto:'케토제닉',carnivore:'카니보어',lchf:'저탄고지',diet:'다이어트'}[(u&&u.mode)||'']||'건강 관리')+' 관점(지방 연소·체력·운동 후 식사)';
+  var summary=list.map(function(ex){ return ex.type+(ex.dur?' '+ex.dur:'')+(ex.steps?' 걸음:'+ex.steps:''); }).join(', ');
+  var prompt='오늘 운동 기록: '+summary+'. '+modeLabel+'에서 전체 평가를 3~4문장으로 해주세요.';
+  _api({max_tokens:400,messages:[{role:'user',content:prompt}]}, function(reply){
+    var result=reply||'분석 결과를 가져오지 못했어요.';
+    if(ar) ar.innerHTML='<div class="tip-lbl">AI 운동 분석</div>'+md(result);
+    // 각 운동 개별 저장
+    list.forEach(function(ex){ _saveExerciseResult(ex.type, ex.dur, ex.steps, ex.memo, result, exDate); });
+    _exPendingList=[];
+    _renderExPending();
+  });
+}
+
 function analyzeEx(){
   if(!KEY){ toast('API 키가 없습니다'); return; }
   var type=$id('ex-type').value.trim(); if(!type){ toast('운동 종류를 입력하세요'); return; }
@@ -3043,7 +3097,7 @@ return {
   // 컨디션 기록
   openConditionSheet:openConditionSheet, selectCondState:selectCondState, saveCondition:saveCondition,
   // 종합 분석
-  analyzeEx:analyzeEx, deleteExItem:deleteExItem, pickExType:pickExType,
+  analyzeEx:analyzeEx, analyzeExAll:analyzeExAll, addExToList:addExToList, removeExFromList:removeExFromList, deleteExItem:deleteExItem, pickExType:pickExType,
   analyzeComprehensive:analyzeComprehensive,
   // 증상
   openSymSheet:openSymSheet, saveSymQuick:saveSymQuick, saveSym:saveSym,

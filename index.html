@@ -454,10 +454,21 @@
           </div>
         </div>
         <input class="inp-sm" id="ex-type" type="text" placeholder="운동 종류 (직접 입력 또는 위에서 선택)" style="margin-top:10px;">
-        <input class="inp-sm" id="ex-dur" type="text" placeholder="운동 시간 (예: 30분, 1시간)" style="margin-top:8px;">
-        <input class="inp-sm" id="ex-steps" type="number" placeholder="걸음 수 (선택, 예: 8000)" style="margin-top:8px;">
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <input class="inp-sm" id="ex-dur" type="text" placeholder="운동 시간 (예: 30분, 1시간)" style="flex:1;margin:0;">
+          <input class="inp-sm" id="ex-steps" type="number" placeholder="걸음 수" style="flex:1;margin:0;">
+        </div>
         <input class="inp-sm" id="ex-memo" type="text" placeholder="메모 (선택)" style="margin-top:8px;">
-        <button class="btn-full warn" onclick="A.analyzeEx()" style="margin-top:8px;"><i class="ti ti-sparkles"></i> AI 운동 분석</button>
+        <!-- 추가 버튼 -->
+        <button onclick="A.addExToList()" style="width:100%;margin-top:10px;padding:13px;background:var(--teal);color:#fff;border:none;border-radius:var(--r-sm);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <i class="ti ti-plus"></i> 목록에 추가
+        </button>
+        <!-- 추가된 운동 목록 -->
+        <div id="ex-pending-wrap" style="display:none;margin-top:10px;background:var(--cream);border:1.5px solid var(--bd);border-radius:var(--r-sm);padding:10px 12px;">
+          <div style="font-size:12px;font-weight:700;color:var(--mu2);margin-bottom:8px;">📋 오늘 기록할 운동 목록</div>
+          <div id="ex-pending-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+          <button class="btn-full warn" onclick="A.analyzeExAll()" style="margin-top:10px;"><i class="ti ti-sparkles"></i> AI 분석 후 전체 저장</button>
+        </div>
         <div id="ex-result" style="display:none" class="tip-box"></div>
       </div>
 
