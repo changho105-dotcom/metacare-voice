@@ -1354,7 +1354,7 @@ function _refreshHomeProgress(){
 
   // 김창호 계정에만 관리자 메뉴 버튼 표시
   var adminBtn=$id('home-admin-btn');
-  if(adminBtn){ adminBtn.style.display=USER?'flex':'none'; }
+  if(adminBtn){ adminBtn.style.display=(USER&&localStorage.getItem('mc_is_admin')==='1')?'flex':'none'; }
 }
 
 function goBack(){
