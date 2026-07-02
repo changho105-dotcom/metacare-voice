@@ -1350,6 +1350,10 @@ function _refreshHomeProgress(){
   if(pctEl){ pctEl.textContent=pct+'%'; pctEl.style.color=pct===100?'#059669':'var(--teal)'; }
 
   el.innerHTML=html;
+
+  // 김창호 계정에만 관리자 메뉴 버튼 표시
+  var adminBtn=$id('home-admin-btn');
+  if(adminBtn){ adminBtn.style.display=(USER&&USER.name==='김창호')?'flex':'none'; }
 }
 
 function goBack(){
