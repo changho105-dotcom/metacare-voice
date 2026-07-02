@@ -355,6 +355,7 @@ function checkPw(){
   if(!stored) stored = 'Kevin';
   if(pw === stored){
     $id('admin-pw-input').value = '';
+    localStorage.setItem('mc_is_admin','1');
     goScreen('scr-admin');
   } else {
     toast('비밀번호가 틀렸습니다');
@@ -1353,7 +1354,8 @@ function _refreshHomeProgress(){
 
   // 김창호 계정에만 관리자 메뉴 버튼 표시
   var adminBtn=$id('home-admin-btn');
-  if(adminBtn){ adminBtn.style.display=(USER&&USER.name==='김창호')?'flex':'none'; }
+  var _isAdmin = USER && USER.name && (USER.name.trim()==='김창호' || localStorage.getItem('mc_is_admin')==='1');
+  if(adminBtn){ adminBtn.style.display=_isAdmin?'flex':'none'; }
 }
 
 function goBack(){

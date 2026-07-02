@@ -426,6 +426,7 @@ h2 { font-size:21px; font-weight:700; }
   flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
   padding-bottom:80px;
   background: var(--cream);
+  height:0; /* flex:1 컨테이너에서 스크롤 강제 */
 }
 .page { display:none; padding:18px; flex-direction:column; gap:16px; }
 .page.active { display:flex; }
