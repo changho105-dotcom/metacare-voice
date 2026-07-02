@@ -346,6 +346,17 @@ function logoTap(){
     goScreen('scr-admin-pw');
   }
 }
+var _nameTapCount=0, _nameTapTimer=null;
+function nameTap(){
+  _nameTapCount++;
+  if(_nameTapTimer) clearTimeout(_nameTapTimer);
+  _nameTapTimer = setTimeout(function(){ _nameTapCount=0; }, 1500);
+  if(_nameTapCount>=5){
+    _nameTapCount=0;
+    $id('admin-pw-input').value='';
+    goScreen('scr-admin-pw');
+  }
+}
 
 /* ── Admin 로그인 ── */
 function checkPw(){
@@ -3146,7 +3157,7 @@ function _initDragDrop(){
 /* ── 공개 API ── */
 return {
   // 화면
-  goScreen:goScreen, logoTap:logoTap, enterByName:enterByName, goHelp:goHelp, goBack:goBack,
+  goScreen:goScreen, logoTap:logoTap, nameTap:nameTap, enterByName:enterByName, goHelp:goHelp, goBack:goBack,
   // 설정
   checkPw:checkPw,
   // Admin
